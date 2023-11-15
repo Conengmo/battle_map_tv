@@ -32,8 +32,9 @@ class GMWindow(pyglet.window.Window):
         self.slider_scale = MySlider(
             x=0,
             y=200,
+            value_min=0.1,
+            value_max=4,
             default=1,
-            scale=4 / 100,
             batch=self.batch,
             callback=image_window.image_scale,
         )
@@ -41,8 +42,9 @@ class GMWindow(pyglet.window.Window):
         self.slider_pan_x = MySlider(
             x=0,
             y=100,
+            value_min=-image_window.width,
+            value_max=image_window.width,
             default=0,
-            scale=image_window.width/100,
             batch=self.batch,
             callback=image_window.image_pan_x,
         )
@@ -50,8 +52,9 @@ class GMWindow(pyglet.window.Window):
         self.slider_pan_y = MySlider(
             x=0,
             y=0,
+            value_min=-image_window.height,
+            value_max=image_window.height,
             default=0,
-            scale=image_window.height/100,
             batch=self.batch,
             callback=image_window.image_pan_y,
         )
@@ -63,23 +66,25 @@ class GMWindow(pyglet.window.Window):
 
 class MySlider(pyglet.gui.Slider):
 
-    def __init__(self, x, y, default, scale, batch, callback):
+    def __init__(self, x, y, value_min, value_max, default, batch, callback):
         base = pyglet.image.load(r"C:\Users\frank\Downloads\slider-base.png").get_texture()
         knob = pyglet.image.load(r"C:\Users\frank\Downloads\slider-knob.png").get_texture()
         super().__init__(x=x, y=y, base=base, knob=knob, batch=batch)
-        self.value = default / scale
-        self.scale = scale
+        self.value_min = value_min
+        self.value_max = value_max
+        self.value = (default - value_min) * 100 / (value_max - value_min)
         self.callback = callback
 
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)
-        self.callback(self.value * self.scale)
+        value_scaled = ((self.value_max - self.value_min) * self.value / 100) + self.value_min
+        self.callback(value_scaled)
 
 
 def main():
     image_path = r"C:\Users\frank\Downloads\Evrys Castle final.JPG"
 
-    image_window = ImageDisplayWindow(image_path, width=1600, height=1000, caption="TV window")
+    image_window = ImageDisplayWindow(image_path, width=1600, height=1000, fullscreen=False, caption="TV window")
 
     GMWindow(image_window=image_window, width=600, height=500, caption="GM window")
 
