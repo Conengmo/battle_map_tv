@@ -3,7 +3,6 @@ import pyglet.gui
 
 
 class ImageDisplayWindow(pyglet.window.Window):
-
     def __init__(self, image_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         image = pyglet.image.load(image_path)
@@ -24,7 +23,6 @@ class ImageDisplayWindow(pyglet.window.Window):
 
 
 class GMWindow(pyglet.window.Window):
-
     def __init__(self, image_window, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.batch = pyglet.graphics.Batch()
@@ -65,7 +63,6 @@ class GMWindow(pyglet.window.Window):
 
 
 class MySlider(pyglet.gui.Slider):
-
     def __init__(self, x, y, value_min, value_max, default, batch, callback):
         base = pyglet.image.load(r"C:\Users\frank\Downloads\slider-base.png").get_texture()
         knob = pyglet.image.load(r"C:\Users\frank\Downloads\slider-knob.png").get_texture()
@@ -84,11 +81,22 @@ class MySlider(pyglet.gui.Slider):
 def main():
     image_path = r"C:\Users\frank\Downloads\Evrys Castle final.JPG"
 
-    image_window = ImageDisplayWindow(image_path, width=1600, height=1000, fullscreen=False, caption="TV window")
+    image_window = ImageDisplayWindow(
+        image_path=image_path,
+        width=1600,
+        height=1000,
+        fullscreen=False,
+        caption="TV window",
+    )
 
-    GMWindow(image_window=image_window, width=600, height=500, caption="GM window")
+    GMWindow(
+        image_window=image_window,
+        width=600,
+        height=500,
+        caption="GM window",
+    )
 
-    pyglet.app.run(interval=1/20)
+    pyglet.app.run(interval=1 / 20)
 
 
 if __name__ == "__main__":
