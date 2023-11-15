@@ -1,4 +1,1 @@
-PySimpleGUI
-Pillow
-pygame
 pyglet
