@@ -64,8 +64,8 @@ class GMWindow(pyglet.window.Window):
 
 class MySlider(pyglet.gui.Slider):
     def __init__(self, x, y, value_min, value_max, default, batch, callback):
-        base = pyglet.image.load(r"C:\Users\frank\Downloads\slider-base.png").get_texture()
-        knob = pyglet.image.load(r"C:\Users\frank\Downloads\slider-knob.png").get_texture()
+        base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
+        knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
         super().__init__(x=x, y=y, base=base, knob=knob, batch=batch)
         self.value_min = value_min
         self.value_max = value_max
