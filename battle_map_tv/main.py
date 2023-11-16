@@ -5,21 +5,44 @@ import pyglet.gui
 class ImageDisplayWindow(pyglet.window.Window):
     def __init__(self, image_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        image = pyglet.image.load(image_path)
-        self.sprite = pyglet.sprite.Sprite(image)
+        self.sprite = self._load_sprite(image_path)
+        self.sprite_dx = 0
+        self.sprite_dy = 0
+        self._recalculate_sprite_size()
 
     def on_draw(self):
         self.clear()
         self.sprite.draw()
 
+    def on_resize(self, width, height):
+        print('resize image window', (width, height))
+
+    @staticmethod
+    def _load_sprite(image_path):
+        image = pyglet.image.load(image_path)
+        return pyglet.sprite.Sprite(image)
+
+    def _recalculate_sprite_size(self):
+        self.sprite.x = (self.width - self.sprite.width) / 2 + self.sprite_dx
+        self.sprite.y = (self.height - self.sprite.height) / 2 + self.sprite_dy
+
     def image_scale(self, value: float):
         self.sprite.scale = value
+        self._recalculate_sprite_size()
 
     def image_pan_x(self, value: float):
-        self.sprite.x = int(value)
+        self.sprite_dx = int(value)
+        self._recalculate_sprite_size()
 
     def image_pan_y(self, value: float):
-        self.sprite.y = int(value)
+        self.sprite_dy = int(value)
+        self._recalculate_sprite_size()
+
+    def image_change(self, image_path):
+        print('change image to', image_path)
+        self.sprite.delete()
+        self.sprite = self._load_sprite(image_path)
+        self._recalculate_sprite_size()
 
 
 class GMWindow(pyglet.window.Window):
