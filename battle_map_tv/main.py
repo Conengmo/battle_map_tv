@@ -112,12 +112,16 @@ class MySlider(pyglet.gui.Slider):
 def main():
     image_path = r"C:\Users\frank\Downloads\Evrys Castle final.JPG"
 
+    display = pyglet.canvas.get_display()
+    screens = display.get_screens()
+
     image_window = ImageDisplayWindow(
         image_path=image_path,
-        width=1600,
-        height=1000,
-        fullscreen=False,
         caption="TV window",
+        resizable=True,
+        screen=screens[-1],
+        width=screens[-1].width,
+        height=screens[-1].height,
     )
 
     GMWindow(
