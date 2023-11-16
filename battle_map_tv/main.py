@@ -1,3 +1,5 @@
+import math
+
 import pyglet
 import pyglet.gui
 
@@ -9,13 +11,49 @@ class ImageDisplayWindow(pyglet.window.Window):
         self.sprite_dx = 0
         self.sprite_dy = 0
         self._recalculate_sprite_size()
+        self.batch = pyglet.graphics.Batch()
+        self.lines = []
 
     def on_draw(self):
         self.clear()
         self.sprite.draw()
+        self.batch.draw()
 
     def on_resize(self, width, height):
         print('resize image window', (width, height))
+        for line in self.lines:
+            line.delete()
+        screen_width_mm = 590
+        screen_height_mm = 335
+        mm_to_inch = 0.03937007874
+        pixels_per_inch_x = width / screen_width_mm / mm_to_inch
+        pixels_per_inch_y = height / screen_height_mm / mm_to_inch
+        n_lines_vertical = math.floor(width / pixels_per_inch_x)
+        n_lines_horizontal = math.floor(height / pixels_per_inch_y)
+        offset_x = (width - (n_lines_vertical * pixels_per_inch_x)) / 2
+        offset_y = (height - (n_lines_horizontal * pixels_per_inch_x)) / 2
+        self.lines = [
+            *[
+                pyglet.shapes.Line(
+                    x=int(i * pixels_per_inch_x + offset_x),
+                    y=0,
+                    x2=int(i * pixels_per_inch_x + offset_x),
+                    y2=height,
+                    batch=self.batch
+                )
+                for i in range(n_lines_vertical)
+            ],
+            *[
+                pyglet.shapes.Line(
+                    x=0,
+                    y=int(i * pixels_per_inch_y + offset_y),
+                    x2=width,
+                    y2=int(i * pixels_per_inch_y + offset_y),
+                    batch=self.batch
+                )
+                for i in range(n_lines_horizontal)
+            ]
+        ]
 
     @staticmethod
     def _load_sprite(image_path):
