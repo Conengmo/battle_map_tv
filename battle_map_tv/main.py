@@ -48,6 +48,7 @@ class ImageDisplayWindow(pyglet.window.Window):
 class GMWindow(pyglet.window.Window):
     def __init__(self, image_window, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.image_window = image_window
         self.batch = pyglet.graphics.Batch()
         self.frame = pyglet.gui.Frame(self)
         self.slider_scale = MySlider(
@@ -84,6 +85,12 @@ class GMWindow(pyglet.window.Window):
     def on_draw(self):
         self.batch.draw()
 
+    def on_file_drop(self, x, y, paths):
+        self.image_window.image_change(paths[0])
+        self.slider_scale.value = self.slider_scale.default_value
+        self.slider_pan_x.value = self.slider_pan_x.default_value
+        self.slider_pan_y.value = self.slider_pan_y.default_value
+
 
 class MySlider(pyglet.gui.Slider):
     def __init__(self, x, y, value_min, value_max, default, batch, callback):
@@ -92,7 +99,8 @@ class MySlider(pyglet.gui.Slider):
         super().__init__(x=x, y=y, base=base, knob=knob, batch=batch)
         self.value_min = value_min
         self.value_max = value_max
-        self.value = (default - value_min) * 100 / (value_max - value_min)
+        self.default_value = (default - value_min) * 100 / (value_max - value_min)
+        self.value = self.default_value
         self.callback = callback
 
     def on_mouse_drag(self, *args, **kwargs):
@@ -117,6 +125,7 @@ def main():
         width=600,
         height=500,
         caption="GM window",
+        file_drops=True,
     )
 
     pyglet.app.run(interval=1 / 20)
