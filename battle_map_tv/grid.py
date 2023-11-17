@@ -12,12 +12,12 @@ class Grid:
     # height_mm = 335
 
     def __init__(
-            self,
-            width_px: int,
-            height_px: int,
-            width_mm: int,
-            height_mm: int,
-            batch: Batch,
+        self,
+        width_px: int,
+        height_px: int,
+        width_mm: int,
+        height_mm: int,
+        batch: Batch,
     ):
         self.lines: List[Line] = []
         self.width_px = width_px
@@ -56,7 +56,7 @@ class Grid:
                     y=0,
                     x2=int(i * pixels_per_inch_x + offset_x),
                     y2=self.height_px,
-                    batch=self.batch
+                    batch=self.batch,
                 )
                 for i in range(n_lines_vertical)
             ],
@@ -66,8 +66,8 @@ class Grid:
                     y=int(i * pixels_per_inch_y + offset_y),
                     x2=self.width_px,
                     y2=int(i * pixels_per_inch_y + offset_y),
-                    batch=self.batch
+                    batch=self.batch,
                 )
                 for i in range(n_lines_horizontal)
-            ]
+            ],
         ]

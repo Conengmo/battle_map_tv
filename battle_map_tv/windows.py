@@ -27,7 +27,7 @@ class ImageWindow(Window):
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
-        print('resize image window', (width, height))
+        print("resize image window", (width, height))
         if self.grid is not None:
             self.grid.update_screen_px(width_px=width, height_px=height)
 
@@ -68,7 +68,7 @@ class ImageWindow(Window):
         self._recalculate_sprite_size()
 
     def image_change(self, image_path: str):
-        print('change image to', image_path)
+        print("change image to", image_path)
         self.sprite.delete()
         self.sprite = self._load_sprite(image_path)
         self._recalculate_sprite_size()
@@ -81,18 +81,18 @@ class GMWindow(Window):
         self.batch = Batch()
         self.frame = Frame(window=self)
         self.text_entries: Dict[str, TextEntry] = {
-            'screen_width': TextEntry(
+            "screen_width": TextEntry(
                 x=0,
                 y=300,
                 width=200,
                 batch=self.batch,
             ),
-            'screen_height': TextEntry(
+            "screen_height": TextEntry(
                 x=250,
                 y=300,
                 width=200,
                 batch=self.batch,
-            )
+            ),
         }
         for widget in self.text_entries.values():
             self.frame.add_widget(widget)
@@ -100,10 +100,10 @@ class GMWindow(Window):
         def button_callback_grid(button_value: bool) -> bool:
             if button_value:
                 try:
-                    width_mm = int(self.text_entries['screen_width'].value)
-                    height_mm = int(self.text_entries['screen_height'].value)
+                    width_mm = int(self.text_entries["screen_width"].value)
+                    height_mm = int(self.text_entries["screen_height"].value)
                 except ValueError:
-                    print('Invalid input for screen size')
+                    print("Invalid input for screen size")
                     return False
                 else:
                     self.image_window.add_grid(
