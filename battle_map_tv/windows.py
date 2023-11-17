@@ -18,13 +18,13 @@ class ImageWindow(Window):
         self.sprite_dx: int = 0
         self.sprite_dy: int = 0
         self._recalculate_sprite_size()
-        self.batch = Batch()
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
         self.clear()
         self.sprite.draw()
-        self.batch.draw()
+        if self.grid is not None:
+            self.grid.draw()
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
@@ -48,7 +48,6 @@ class ImageWindow(Window):
             height_px=height_px,
             width_mm=width_mm,
             height_mm=height_mm,
-            batch=self.batch,
         )
 
     def remove_grid(self):

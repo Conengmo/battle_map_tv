@@ -17,31 +17,33 @@ class Grid:
         height_px: int,
         width_mm: int,
         height_mm: int,
-        batch: Batch,
     ):
         self.lines: List[Line] = []
         self.width_px = width_px
         self.height_px = height_px
         self.width_mm = width_mm
         self.height_mm = height_mm
-        self.batch = batch
-        self.draw()
+        self.batch = Batch()
+        self.reset()
+
+    def draw(self):
+        self.batch.draw()
 
     def update_screen_px(self, width_px: int, height_px: int):
         self.width_px = width_px
         self.height_px = height_px
-        self.draw()
+        self.reset()
 
     def update_screen_mm(self, width_mm: int, height_mm: int):
         self.width_mm = width_mm
         self.height_mm = height_mm
-        self.draw()
+        self.reset()
 
     def delete(self):
         for line in self.lines:
             line.delete()
 
-    def draw(self):
+    def reset(self):
         self.delete()
         pixels_per_inch_x = self.width_px / self.width_mm / mm_to_inch
         pixels_per_inch_y = self.height_px / self.height_mm / mm_to_inch
