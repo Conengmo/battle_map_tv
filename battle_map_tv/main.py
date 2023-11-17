@@ -28,10 +28,10 @@ class ImageDisplayWindow(pyglet.window.Window):
         mm_to_inch = 0.03937007874
         pixels_per_inch_x = width / screen_width_mm / mm_to_inch
         pixels_per_inch_y = height / screen_height_mm / mm_to_inch
-        n_lines_vertical = math.floor(width / pixels_per_inch_x)
-        n_lines_horizontal = math.floor(height / pixels_per_inch_y)
-        offset_x = (width - (n_lines_vertical * pixels_per_inch_x)) / 2
-        offset_y = (height - (n_lines_horizontal * pixels_per_inch_x)) / 2
+        n_lines_vertical = math.ceil(width / pixels_per_inch_x)
+        n_lines_horizontal = math.ceil(height / pixels_per_inch_y)
+        offset_x = (width - ((n_lines_vertical - 1) * pixels_per_inch_x)) / 2
+        offset_y = (height - ((n_lines_horizontal - 1) * pixels_per_inch_x)) / 2
         self.lines = [
             *[
                 pyglet.shapes.Line(
