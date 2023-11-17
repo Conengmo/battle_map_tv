@@ -1,19 +1,23 @@
-from typing import Optional
+from typing import Optional, Dict, List
 
 import pyglet
+from pyglet.graphics import Batch
+from pyglet.gui import Frame
+from pyglet.sprite import Sprite
+from pyglet.window import Window
 
 from .grid import Grid
-from .gui_elements import MyToggleButton, MyTextEntry, MySlider
+from .gui_elements import ToggleButton, TextEntry, Slider
 
 
-class ImageWindow(pyglet.window.Window):
-    def __init__(self, image_path, *args, **kwargs):
+class ImageWindow(Window):
+    def __init__(self, image_path: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sprite = self._load_sprite(image_path)
-        self.sprite_dx = 0
-        self.sprite_dy = 0
+        self.sprite: Sprite = self._load_sprite(image_path)
+        self.sprite_dx: int = 0
+        self.sprite_dy: int = 0
         self._recalculate_sprite_size()
-        self.batch = pyglet.graphics.Batch()
+        self.batch = Batch()
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
@@ -28,9 +32,9 @@ class ImageWindow(pyglet.window.Window):
             self.grid.update_screen_px(width_px=width, height_px=height)
 
     @staticmethod
-    def _load_sprite(image_path):
+    def _load_sprite(image_path: str) -> Sprite:
         image = pyglet.image.load(image_path)
-        return pyglet.sprite.Sprite(image)
+        return Sprite(image)
 
     def _recalculate_sprite_size(self):
         self.sprite.x = (self.width - self.sprite.width) / 2 + self.sprite_dx
@@ -63,27 +67,27 @@ class ImageWindow(pyglet.window.Window):
         self.sprite_dy = int(value)
         self._recalculate_sprite_size()
 
-    def image_change(self, image_path):
+    def image_change(self, image_path: str):
         print('change image to', image_path)
         self.sprite.delete()
         self.sprite = self._load_sprite(image_path)
         self._recalculate_sprite_size()
 
 
-class GMWindow(pyglet.window.Window):
+class GMWindow(Window):
     def __init__(self, image_window: ImageWindow, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_window = image_window
-        self.batch = pyglet.graphics.Batch()
-        self.frame = pyglet.gui.Frame(window=self)
-        self.text_entries = {
-            'screen_width': MyTextEntry(
+        self.batch = Batch()
+        self.frame = Frame(window=self)
+        self.text_entries: Dict[str, TextEntry] = {
+            'screen_width': TextEntry(
                 x=0,
                 y=300,
                 width=200,
                 batch=self.batch,
             ),
-            'screen_height': MyTextEntry(
+            'screen_height': TextEntry(
                 x=250,
                 y=300,
                 width=200,
@@ -93,7 +97,7 @@ class GMWindow(pyglet.window.Window):
         for widget in self.text_entries.values():
             self.frame.add_widget(widget)
 
-        def button_callback_grid(button_value):
+        def button_callback_grid(button_value: bool) -> bool:
             if button_value:
                 try:
                     width_mm = int(self.text_entries['screen_width'].value)
@@ -111,7 +115,7 @@ class GMWindow(pyglet.window.Window):
                 self.image_window.remove_grid()
                 return False
 
-        self.button = MyToggleButton(
+        self.button = ToggleButton(
             x=500,
             y=300,
             batch=self.batch,
@@ -119,7 +123,7 @@ class GMWindow(pyglet.window.Window):
         )
         self.frame.add_widget(self.button)
 
-        self.slider_scale = MySlider(
+        self.slider_scale = Slider(
             x=0,
             y=200,
             value_min=0.1,
@@ -129,7 +133,7 @@ class GMWindow(pyglet.window.Window):
             callback=image_window.image_scale,
         )
         self.frame.add_widget(self.slider_scale)
-        self.slider_pan_x = MySlider(
+        self.slider_pan_x = Slider(
             x=0,
             y=100,
             value_min=-image_window.width,
@@ -139,7 +143,7 @@ class GMWindow(pyglet.window.Window):
             callback=image_window.image_pan_x,
         )
         self.frame.add_widget(self.slider_pan_x)
-        self.slider_pan_y = MySlider(
+        self.slider_pan_y = Slider(
             x=0,
             y=0,
             value_min=-image_window.height,
@@ -153,9 +157,8 @@ class GMWindow(pyglet.window.Window):
     def on_draw(self):
         self.batch.draw()
 
-    def on_file_drop(self, x, y, paths):
+    def on_file_drop(self, x: int, y: int, paths: List[str]):
         self.image_window.image_change(paths[0])
         self.slider_scale.value = self.slider_scale.default_value
         self.slider_pan_x.value = self.slider_pan_x.default_value
         self.slider_pan_y.value = self.slider_pan_y.default_value
-

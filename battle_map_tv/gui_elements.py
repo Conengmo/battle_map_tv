@@ -1,19 +1,22 @@
+from typing import Callable
+
 import pyglet
+from pyglet.graphics import Batch
 
 
-class MyTextEntry(pyglet.gui.TextEntry):
-    def __init__(self, x, y, width, batch):
+class TextEntry(pyglet.gui.TextEntry):
+    def __init__(self, x: int, y: int, width: int, batch: Batch):
         super().__init__(text='', x=x, y=y, width=width, batch=batch)
 
 
-class MyToggleButton(pyglet.gui.ToggleButton):
+class ToggleButton(pyglet.gui.ToggleButton):
     pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
     depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
 
-    def __init__(self, x, y, batch, callback):
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable):
         super().__init__(
-            x,
-            y,
+            x=x,
+            y=y,
             pressed=self.pressed,
             depressed=self.depressed,
             batch=batch
@@ -25,11 +28,20 @@ class MyToggleButton(pyglet.gui.ToggleButton):
         self.value = self.callback(self.value)
 
 
-class MySlider(pyglet.gui.Slider):
+class Slider(pyglet.gui.Slider):
     base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
     knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
 
-    def __init__(self, x, y, value_min, value_max, default, batch, callback):
+    def __init__(
+            self,
+            x: int,
+            y: int,
+            value_min: float,
+            value_max: float,
+            default: float,
+            batch: Batch,
+            callback: Callable,
+    ):
         super().__init__(x=x, y=y, base=self.base, knob=self.knob, batch=batch)
         self.value_min = value_min
         self.value_max = value_max
