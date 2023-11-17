@@ -1,51 +1,42 @@
 from typing import Optional, Dict, List
 
-import pyglet
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
-from pyglet.sprite import Sprite
 from pyglet.window import Window
 
 from .grid import Grid
 from .gui_elements import ToggleButton, TextEntry, Slider
+from .image import Image
 from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
 class ImageWindow(Window):
     def __init__(self, image_path: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sprite: Sprite = self._load_sprite(image_path)
-        self.sprite_dx: int = 0
-        self.sprite_dy: int = 0
-        self._recalculate_sprite_size()
+        self.image = Image(
+            image_path=image_path,
+            screen_width_px=self.width,
+            screen_height_px=self.height,
+        )
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
         self.clear()
-        self.sprite.draw()
+        self.image.draw()
         if self.grid is not None:
             self.grid.draw()
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
         print("resize image window", (width, height))
+        self.image.update_screen_px(width_px=width, height_px=height)
         if self.grid is not None:
             self.grid.update_screen_px(width_px=width, height_px=height)
 
-    @staticmethod
-    def _load_sprite(image_path: str) -> Sprite:
-        image = pyglet.image.load(image_path)
-        return Sprite(image)
-
-    def _recalculate_sprite_size(self):
-        self.sprite.x = (self.width - self.sprite.width) / 2 + self.sprite_dx
-        self.sprite.y = (self.height - self.sprite.height) / 2 + self.sprite_dy
-
     def add_grid(self, width_mm: int, height_mm: int):
-        width_px, height_px = self.get_framebuffer_size()
         self.grid = Grid(
-            width_px=width_px,
-            height_px=height_px,
+            width_px=self.width,
+            height_px=self.height,
             width_mm=width_mm,
             height_mm=height_mm,
         )
@@ -54,24 +45,6 @@ class ImageWindow(Window):
         if self.grid is not None:
             self.grid.delete()
             self.grid = None
-
-    def image_scale(self, value: float):
-        self.sprite.scale = value
-        self._recalculate_sprite_size()
-
-    def image_pan_x(self, value: float):
-        self.sprite_dx = int(value)
-        self._recalculate_sprite_size()
-
-    def image_pan_y(self, value: float):
-        self.sprite_dy = int(value)
-        self._recalculate_sprite_size()
-
-    def image_change(self, image_path: str):
-        print("change image to", image_path)
-        self.sprite.delete()
-        self.sprite = self._load_sprite(image_path)
-        self._recalculate_sprite_size()
 
 
 class GMWindow(Window):
@@ -134,7 +107,7 @@ class GMWindow(Window):
             value_max=4,
             default=1,
             batch=self.batch,
-            callback=image_window.image_scale,
+            callback=image_window.image.scale,
         )
         self.frame.add_widget(self.slider_scale)
         self.slider_pan_x = Slider(
@@ -144,7 +117,7 @@ class GMWindow(Window):
             value_max=image_window.width,
             default=0,
             batch=self.batch,
-            callback=image_window.image_pan_x,
+            callback=image_window.image.pan_x,
         )
         self.frame.add_widget(self.slider_pan_x)
         self.slider_pan_y = Slider(
@@ -154,7 +127,7 @@ class GMWindow(Window):
             value_max=image_window.height,
             default=0,
             batch=self.batch,
-            callback=image_window.image_pan_y,
+            callback=image_window.image.pan_y,
         )
         self.frame.add_widget(self.slider_pan_y)
 
@@ -162,7 +135,7 @@ class GMWindow(Window):
         self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.image_window.image_change(paths[0])
+        self.image_window.image.change(paths[0])
         self.slider_scale.value = self.slider_scale.default_value
         self.slider_pan_x.value = self.slider_pan_x.default_value
         self.slider_pan_y.value = self.slider_pan_y.default_value
