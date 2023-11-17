@@ -22,8 +22,10 @@ def _load() -> Dict[str, Any]:
 
 
 def _dump(data: Dict[str, Any]):
+    # catch errors before start writing to the file
+    json_str = json.dumps(data, indent=2)
     with open(filepath, "w") as f:
-        json.dump(data, f)
+        f.write(json_str)
 
 
 class StorageKeys(Enum):
@@ -45,4 +47,26 @@ def get_from_storage(key: StorageKeys, optional: bool = False):
 def set_in_storage(key: StorageKeys, value: Any):
     data = _load()
     data[key.value] = value
+    _dump(data)
+
+
+class ImageKeys(Enum):
+    scale = "scale"
+    offset_x = "offset_x"
+    offset_y = "offset_y"
+
+
+def get_image_from_storage(image_filename: str, key: ImageKeys, default=None):
+    data = _load()
+    try:
+        image_data = data[image_filename]
+        return image_data[key.value]
+    except KeyError:
+        return default
+
+
+def set_image_in_storage(image_filename: str, key: ImageKeys, value):
+    data = _load()
+    image_data = data.setdefault(image_filename, {})
+    image_data[key.value] = value
     _dump(data)

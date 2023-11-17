@@ -53,13 +53,16 @@ class Slider(pyglet.gui.Slider):
         )
         self.value_min = value_min
         self.value_max = value_max
-        self.default_value = (default - value_min) * 100 / self._range
+        self.default_value = self._value_to_internal(default)
         self.value = self.default_value
         self.callback = callback
 
     @property
     def _range(self) -> float:
         return self.value_max - self.value_min
+
+    def _value_to_internal(self, value):
+        return (value - self.value_min) * 100 / self._range
 
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)
