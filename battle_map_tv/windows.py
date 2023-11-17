@@ -1,11 +1,12 @@
-import math
 from typing import Optional
 
 import pyglet
-import pyglet.gui
+
+from .grid import Grid
+from .gui_elements import MyToggleButton, MyTextEntry, MySlider
 
 
-class ImageDisplayWindow(pyglet.window.Window):
+class ImageWindow(pyglet.window.Window):
     def __init__(self, image_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sprite = self._load_sprite(image_path)
@@ -20,7 +21,7 @@ class ImageDisplayWindow(pyglet.window.Window):
         self.sprite.draw()
         self.batch.draw()
 
-    def on_resize(self, width, height):
+    def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
         print('resize image window', (width, height))
         if self.grid is not None:
@@ -70,7 +71,7 @@ class ImageDisplayWindow(pyglet.window.Window):
 
 
 class GMWindow(pyglet.window.Window):
-    def __init__(self, image_window: ImageDisplayWindow, *args, **kwargs):
+    def __init__(self, image_window: ImageWindow, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image_window = image_window
         self.batch = pyglet.graphics.Batch()
@@ -158,134 +159,3 @@ class GMWindow(pyglet.window.Window):
         self.slider_pan_x.value = self.slider_pan_x.default_value
         self.slider_pan_y.value = self.slider_pan_y.default_value
 
-
-class MyTextEntry(pyglet.gui.TextEntry):
-    def __init__(self, x, y, width, batch):
-        super().__init__(text='', x=x, y=y, width=width, batch=batch)
-
-
-class MyToggleButton(pyglet.gui.ToggleButton):
-    pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
-    depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
-
-    def __init__(self, x, y, batch, callback):
-        super().__init__(
-            x,
-            y,
-            pressed=self.pressed,
-            depressed=self.depressed,
-            batch=batch
-        )
-        self.callback = callback
-
-    def on_mouse_press(self, *args, **kwargs):
-        super().on_mouse_press(*args, **kwargs)
-        self.value = self.callback(self.value)
-
-
-class MySlider(pyglet.gui.Slider):
-    base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
-    knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
-
-    def __init__(self, x, y, value_min, value_max, default, batch, callback):
-        super().__init__(x=x, y=y, base=self.base, knob=self.knob, batch=batch)
-        self.value_min = value_min
-        self.value_max = value_max
-        self.default_value = (default - value_min) * 100 / (value_max - value_min)
-        self.value = self.default_value
-        self.callback = callback
-
-    def on_mouse_drag(self, *args, **kwargs):
-        super().on_mouse_drag(*args, **kwargs)
-        value_scaled = ((self.value_max - self.value_min) * self.value / 100) + self.value_min
-        self.callback(value_scaled)
-
-
-class Grid:
-    # width_mm = 590
-    # height_mm = 335
-
-    def __init__(self, width_px, height_px, width_mm, height_mm, batch):
-        self.lines = []
-        self.width_px = width_px
-        self.height_px = height_px
-        self.width_mm = width_mm
-        self.height_mm = height_mm
-        self.batch = batch
-        self.draw()
-
-    def update_screen_px(self, width_px, height_px):
-        self.width_px = width_px
-        self.height_px = height_px
-        self.draw()
-
-    def update_screen_mm(self, width_mm, height_mm):
-        self.width_mm = width_mm
-        self.height_mm = height_mm
-        self.draw()
-
-    def delete(self):
-        for line in self.lines:
-            line.delete()
-
-    def draw(self):
-        self.delete()
-        mm_to_inch = 0.03937007874
-        pixels_per_inch_x = self.width_px / self.width_mm / mm_to_inch
-        pixels_per_inch_y = self.height_px / self.height_mm / mm_to_inch
-        n_lines_vertical = math.ceil(self.width_px / pixels_per_inch_x)
-        n_lines_horizontal = math.ceil(self.height_px / pixels_per_inch_y)
-        offset_x = (self.width_px - ((n_lines_vertical - 1) * pixels_per_inch_x)) / 2
-        offset_y = (self.height_px - ((n_lines_horizontal - 1) * pixels_per_inch_x)) / 2
-        self.lines = [
-            *[
-                pyglet.shapes.Line(
-                    x=int(i * pixels_per_inch_x + offset_x),
-                    y=0,
-                    x2=int(i * pixels_per_inch_x + offset_x),
-                    y2=self.height_px,
-                    batch=self.batch
-                )
-                for i in range(n_lines_vertical)
-            ],
-            *[
-                pyglet.shapes.Line(
-                    x=0,
-                    y=int(i * pixels_per_inch_y + offset_y),
-                    x2=self.width_px,
-                    y2=int(i * pixels_per_inch_y + offset_y),
-                    batch=self.batch
-                )
-                for i in range(n_lines_horizontal)
-            ]
-        ]
-
-
-def main():
-    image_path = r"C:\Users\frank\Downloads\Evrys Castle final.JPG"
-
-    display = pyglet.canvas.get_display()
-    screens = display.get_screens()
-
-    image_window = ImageDisplayWindow(
-        image_path=image_path,
-        caption="TV window",
-        resizable=True,
-        screen=screens[-1],
-        width=screens[-1].width,
-        height=screens[-1].height,
-    )
-
-    GMWindow(
-        image_window=image_window,
-        width=600,
-        height=500,
-        caption="GM window",
-        file_drops=True,
-    )
-
-    pyglet.app.run(interval=1 / 20)
-
-
-if __name__ == "__main__":
-    main()
