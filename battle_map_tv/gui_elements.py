@@ -1,12 +1,20 @@
-from typing import Callable
+from typing import Callable, Union
 
 import pyglet
 from pyglet.graphics import Batch
 
 
 class TextEntry(pyglet.gui.TextEntry):
-    def __init__(self, x: int, y: int, width: int, batch: Batch):
-        super().__init__(text="", x=x, y=y, width=width, batch=batch)
+    def __init__(
+        self,
+        text: Union[str, int, None],
+        x: int,
+        y: int,
+        width: int,
+        batch: Batch,
+    ):
+        text_str = str(text) if text is not None else ""
+        super().__init__(text=text_str, x=x, y=y, width=width, batch=batch)
 
 
 class ToggleButton(pyglet.gui.ToggleButton):

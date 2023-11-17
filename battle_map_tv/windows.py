@@ -8,6 +8,7 @@ from pyglet.window import Window
 
 from .grid import Grid
 from .gui_elements import ToggleButton, TextEntry, Slider
+from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
 class ImageWindow(Window):
@@ -82,12 +83,14 @@ class GMWindow(Window):
         self.frame = Frame(window=self)
         self.text_entries: Dict[str, TextEntry] = {
             "screen_width": TextEntry(
+                text=get_from_storage(StorageKeys.width_mm, optional=True),
                 x=0,
                 y=300,
                 width=200,
                 batch=self.batch,
             ),
             "screen_height": TextEntry(
+                text=get_from_storage(StorageKeys.height_mm, optional=True),
                 x=250,
                 y=300,
                 width=200,
@@ -110,6 +113,8 @@ class GMWindow(Window):
                         width_mm=width_mm,
                         height_mm=height_mm,
                     )
+                    set_in_storage(StorageKeys.width_mm, width_mm)
+                    set_in_storage(StorageKeys.height_mm, height_mm)
                     return True
             else:
                 self.image_window.remove_grid()
