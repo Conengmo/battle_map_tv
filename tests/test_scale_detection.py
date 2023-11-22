@@ -1,4 +1,4 @@
-import os.path
+from pathlib import Path
 
 import pytest
 
@@ -27,7 +27,7 @@ def test_merge_close_together_lines():
     ],
 )
 def test_addition(image_filename, expected_px_per_inch):
-    filepath = os.path.join("images", image_filename)
-    assert os.path.exists(filepath)
-    px_per_inch = find_image_scale(filepath)
+    filepath = Path(__file__).parent / "images" / image_filename
+    assert filepath.exists()
+    px_per_inch = find_image_scale(str(filepath))
     assert abs(px_per_inch - expected_px_per_inch) <= 1
