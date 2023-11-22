@@ -150,13 +150,11 @@ def image_to_edges(image):
     # lower edge should be low enough to get low contract lines
     edges = cv2.Canny(grey, upper_threshold / 10, upper_threshold, apertureSize=3)
 
-    cv2.imwrite("canny.jpg", edges)
-
     return edges
 
 
 def edges_to_lines(edges, threshold: float) -> List[Tuple[float, float]]:
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, threshold)
+    lines = cv2.HoughLines(image=edges, rho=1, theta=np.pi / 180, threshold=threshold)  # type: ignore
     if lines is None:
         return []
     lines = [tuple(line[0]) for line in lines]
