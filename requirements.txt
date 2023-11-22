@@ -1,2 +1,5 @@
 pyglet
 platformdirs
+opencv-python
+numpy
+scipy
