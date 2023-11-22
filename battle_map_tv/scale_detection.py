@@ -29,7 +29,8 @@ def find_image_scale(image_path: str, show_result: bool = False) -> float:
 
     print()
     print(
-        f"horizontal: {int(px_per_inch_horizontal)} px/inch, vertical: {int(px_per_inch_vertical)} px/inch"
+        f"horizontal: {int(px_per_inch_horizontal)} px/inch (confidence {confidence_horizontal}, "
+        f"vertical: {int(px_per_inch_vertical)} px/inch (confidence {confidence_vertical}"
     )
 
     if show_result:

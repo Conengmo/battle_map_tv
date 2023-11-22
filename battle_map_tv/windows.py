@@ -4,9 +4,10 @@ from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.window import Window
 
-from .grid import Grid
+from .grid import Grid, mm_to_inch
 from .gui_elements import ToggleButton, TextEntry, Slider
 from .image import Image
+from .scale_detection import find_image_scale
 from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
@@ -99,6 +100,28 @@ class GMWindow(Window):
             callback=button_callback_grid,
         )
         self.frame.add_widget(self.button)
+
+        def button_callback_autoscale(button_value: bool) -> bool:
+            if button_value:
+                try:
+                    width_mm = get_from_storage(StorageKeys.width_mm)
+                except KeyError:
+                    return False
+                screen_px_per_mm = self.image_window.width / width_mm
+                px_per_inch = find_image_scale(self.image_window.image.filepath)
+                px_per_mm = px_per_inch * mm_to_inch
+                scale = screen_px_per_mm / px_per_mm
+                self.image_window.image.scale(scale)
+                return True
+            return False
+
+        self.button_autoscale = ToggleButton(
+            x=500,
+            y=400,
+            batch=self.batch,
+            callback=button_callback_autoscale,
+        )
+        self.frame.add_widget(self.button_autoscale)
 
         self.slider_scale = Slider(
             x=0,

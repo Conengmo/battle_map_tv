@@ -15,6 +15,7 @@ class Image:
     ):
         self.screen_width_px = screen_width_px
         self.screen_height_px = screen_height_px
+        self.filepath: str
         self.image_filename: str
         self.dx: int = 0
         self.dy: int = 0
@@ -30,6 +31,7 @@ class Image:
         self._recalculate_sprite_size()
 
     def _load_sprite(self, image_path: str) -> Sprite:
+        self.filepath = image_path
         self.image_filename = os.path.basename(image_path)
         image = pyglet.image.load(image_path)
         sprite = Sprite(image)
