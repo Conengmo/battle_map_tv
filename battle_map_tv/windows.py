@@ -2,6 +2,7 @@ from typing import Optional, Dict, List
 
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
+from pyglet.text import Label
 from pyglet.window import Window
 
 from .grid import Grid, mm_to_inch
@@ -54,6 +55,19 @@ class GMWindow(Window):
         self.image_window = image_window
         self.batch = Batch()
         self.frame = Frame(window=self)
+
+        self.label_width = Label(
+            text='Screen width (mm)',
+            x=0,
+            y=330,
+            batch=self.batch,
+        )
+        self.label_height = Label(
+            text='Screen height (mm)',
+            x=250,
+            y=330,
+            batch=self.batch,
+        )
         self.text_entries: Dict[str, TextEntry] = {
             "screen_width": TextEntry(
                 text=get_from_storage(StorageKeys.width_mm, optional=True),
@@ -93,6 +107,14 @@ class GMWindow(Window):
                 self.image_window.remove_grid()
                 return False
 
+        self.label_grid = Label(
+            text='Toggle grid overlay',
+            x=525,
+            y=360,
+            align="center",
+            anchor_x="center",
+            batch=self.batch,
+        )
         self.button = ToggleButton(
             x=500,
             y=300,
@@ -115,6 +137,14 @@ class GMWindow(Window):
                 return True
             return False
 
+        self.label_autoscale = Label(
+            text='Autoscale image',
+            x=525,
+            y=460,
+            align="center",
+            anchor_x="center",
+            batch=self.batch,
+        )
         self.button_autoscale = ToggleButton(
             x=500,
             y=400,
@@ -123,6 +153,12 @@ class GMWindow(Window):
         )
         self.frame.add_widget(self.button_autoscale)
 
+        self.label_scale = Label(
+            text='Scale',
+            x=0,
+            y=260,
+            batch=self.batch,
+        )
         self.slider_scale = Slider(
             x=0,
             y=200,
@@ -133,6 +169,13 @@ class GMWindow(Window):
             callback=image_window.image.scale,
         )
         self.frame.add_widget(self.slider_scale)
+
+        self.label_pan_x = Label(
+            text='Pan X',
+            x=0,
+            y=160,
+            batch=self.batch,
+        )
         self.slider_pan_x = Slider(
             x=0,
             y=100,
@@ -143,6 +186,13 @@ class GMWindow(Window):
             callback=image_window.image.pan_x,
         )
         self.frame.add_widget(self.slider_pan_x)
+
+        self.label_pan_y = Label(
+            text='Pan Y',
+            x=0,
+            y=60,
+            batch=self.batch,
+        )
         self.slider_pan_y = Slider(
             x=0,
             y=0,
