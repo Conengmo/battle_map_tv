@@ -127,7 +127,7 @@ class GMWindow(Window):
             value = float(value)
             image_window.image.scale(value)
             self.slider_scale.value = value
-            self.text_entry_scale.value = str(round(value, 2))
+            self.text_entry_scale.value = str(round(value, 3))
 
         self.label_scale = Label(
             text='Scale',
@@ -147,8 +147,8 @@ class GMWindow(Window):
         self.frame.add_widget(self.slider_scale)
         self.text_entry_scale = TextEntry(
             text=str(self.slider_scale.value),
-            x=510,
-            y=225,
+            x=520,
+            y=210,
             width=100,
             batch=self.batch,
             callback=slider_scale_callback,
@@ -159,7 +159,7 @@ class GMWindow(Window):
             value = float(value)
             image_window.image.pan_x(value)
             self.slider_pan_x.value = value
-            self.text_entry_pan_x.value = str(round(value, 2))
+            self.text_entry_pan_x.value = str(int(value))
 
         self.label_pan_x = Label(
             text='Pan X',
@@ -179,8 +179,8 @@ class GMWindow(Window):
         self.frame.add_widget(self.slider_pan_x)
         self.text_entry_pan_x = TextEntry(
             text=str(self.slider_pan_x.value),
-            x=510,
-            y=125,
+            x=520,
+            y=110,
             width=100,
             batch=self.batch,
         )
@@ -190,7 +190,7 @@ class GMWindow(Window):
             value = float(value)
             image_window.image.pan_y(value)
             self.slider_pan_y.value = value
-            self.text_entry_pan_y.value = str(round(value, 2))
+            self.text_entry_pan_y.value = str(int(value))
 
         self.label_pan_y = Label(
             text='Pan Y',
@@ -210,8 +210,8 @@ class GMWindow(Window):
         self.frame.add_widget(self.slider_pan_y)
         self.text_entry_pan_y = TextEntry(
             text=str(self.slider_pan_x.value),
-            x=510,
-            y=25,
+            x=520,
+            y=10,
             width=100,
             batch=self.batch,
         )
@@ -229,7 +229,7 @@ class GMWindow(Window):
                 scale = screen_px_per_mm / px_per_mm
                 self.image_window.image.scale(scale)
                 self.slider_scale.value = scale
-                self.text_entry_scale.value = str(scale)
+                self.text_entry_scale.value = str(round(scale, 3))
                 return True
             return False
 

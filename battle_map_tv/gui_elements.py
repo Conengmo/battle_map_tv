@@ -16,6 +16,9 @@ class TextEntry(pyglet.gui.TextEntry):
     ):
         text_str = str(text) if text is not None else ""
         super().__init__(text=text_str, x=x, y=y, width=width, batch=batch)
+        self._layout.x = x + 10
+        self._layout.y = y - 10
+        self.height = 30
         self.callback = callback
 
     def on_commit(self, text: str):
