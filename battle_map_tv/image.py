@@ -21,6 +21,7 @@ class Image:
         self.dy: int = 0
         self.sprite = self._load_sprite(image_path)
         self._recalculate_sprite_size()
+        self.dragging: bool = False
 
     def draw(self):
         self.sprite.draw()
@@ -36,28 +37,31 @@ class Image:
         image = pyglet.image.load(image_path)
         sprite = Sprite(image)
         sprite.scale = get_image_from_storage(self.image_filename, ImageKeys.scale, default=1.0)
-        self.dx = get_image_from_storage(self.image_filename, ImageKeys.offset_x, default=0)
-        self.dy = get_image_from_storage(self.image_filename, ImageKeys.offset_y, default=0)
+        self.dx, self.dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
         return sprite
 
     def _recalculate_sprite_size(self):
         self.sprite.x = (self.screen_width_px - self.sprite.width) / 2 + self.dx
         self.sprite.y = (self.screen_height_px - self.sprite.height) / 2 + self.dy
 
+    def are_coordinates_within_image(self, x: int, y: int) -> bool:
+        return (
+            self.sprite.x <= x <= self.sprite.x + self.sprite.width
+            and self.sprite.y <= y <= self.sprite.y + self.sprite.height
+        )
+
     def scale(self, value: float):
         self.sprite.scale = value
         self._recalculate_sprite_size()
         set_image_in_storage(self.image_filename, ImageKeys.scale, value)
 
-    def pan_x(self, value: float):
-        self.dx = int(value)
+    def pan(self, dx: int, dy: int):
+        self.dx += dx
+        self.dy += dy
         self._recalculate_sprite_size()
-        set_image_in_storage(self.image_filename, ImageKeys.offset_x, value)
 
-    def pan_y(self, value: float):
-        self.dy = int(value)
-        self._recalculate_sprite_size()
-        set_image_in_storage(self.image_filename, ImageKeys.offset_y, value)
+    def store_coordinates(self):
+        set_image_in_storage(self.image_filename, ImageKeys.offsets, (self.dx, self.dy))
 
     def change(self, image_path: str):
         print("change image to", image_path)

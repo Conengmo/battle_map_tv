@@ -52,8 +52,7 @@ def set_in_storage(key: StorageKeys, value: Any):
 
 class ImageKeys(Enum):
     scale = "scale"
-    offset_x = "offset_x"
-    offset_y = "offset_y"
+    offsets = "offsets"
 
 
 def get_image_from_storage(image_filename: str, key: ImageKeys, default=None):
