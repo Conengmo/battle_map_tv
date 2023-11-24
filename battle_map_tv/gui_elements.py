@@ -84,12 +84,10 @@ class Slider(pyglet.gui.Slider):
         self._value = value
         x = (
             (self._max_knob_x - self._min_knob_x) * value / 100
-            + self._min_knob_x + self._half_knob_width
+            + self._min_knob_x
+            + self._half_knob_width
         )
-        self._knob_spr.x = max(
-            self._min_knob_x,
-            min(x - self._half_knob_width, self._max_knob_x)
-        )
+        self._knob_spr.x = max(self._min_knob_x, min(x - self._half_knob_width, self._max_knob_x))
 
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)

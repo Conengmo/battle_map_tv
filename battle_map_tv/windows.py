@@ -56,13 +56,13 @@ class GMWindow(Window):
         self.frame = Frame(window=self)
 
         self.label_width = Label(
-            text='Screen width (mm)',
+            text="Screen width (mm)",
             x=0,
             y=330,
             batch=self.batch,
         )
         self.label_height = Label(
-            text='Screen height (mm)',
+            text="Screen height (mm)",
             x=250,
             y=330,
             batch=self.batch,
@@ -107,7 +107,7 @@ class GMWindow(Window):
                 return False
 
         self.label_grid = Label(
-            text='Toggle grid overlay',
+            text="Toggle grid overlay",
             x=525,
             y=360,
             align="center",
@@ -129,7 +129,7 @@ class GMWindow(Window):
             self.text_entry_scale.value = str(round(value, 3))
 
         self.label_scale = Label(
-            text='Scale',
+            text="Scale",
             x=0,
             y=260,
             batch=self.batch,
@@ -161,7 +161,7 @@ class GMWindow(Window):
             self.text_entry_pan_x.value = str(int(value))
 
         self.label_pan_x = Label(
-            text='Pan X',
+            text="Pan X",
             x=0,
             y=160,
             batch=self.batch,
@@ -192,7 +192,7 @@ class GMWindow(Window):
             self.text_entry_pan_y.value = str(int(value))
 
         self.label_pan_y = Label(
-            text='Pan Y',
+            text="Pan Y",
             x=0,
             y=60,
             batch=self.batch,
@@ -233,7 +233,7 @@ class GMWindow(Window):
             return False
 
         self.label_autoscale = Label(
-            text='Autoscale image',
+            text="Autoscale image",
             x=525,
             y=460,
             align="center",
