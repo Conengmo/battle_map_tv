@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 import pyglet
 from pyglet.graphics import Batch
@@ -12,9 +12,16 @@ class TextEntry(pyglet.gui.TextEntry):
         y: int,
         width: int,
         batch: Batch,
+        callback: Optional[Callable] = None,
     ):
         text_str = str(text) if text is not None else ""
         super().__init__(text=text_str, x=x, y=y, width=width, batch=batch)
+        self.callback = callback
+
+    def on_commit(self, text: str):
+        super().on_commit(text=text)
+        if self.callback is not None:
+            self.callback(text)
 
 
 class ToggleButton(pyglet.gui.ToggleButton):
@@ -53,8 +60,8 @@ class Slider(pyglet.gui.Slider):
         )
         self.value_min = value_min
         self.value_max = value_max
-        self.default_value = self._value_to_internal(default)
-        self.value = self.default_value
+        self.default = default
+        self.value = default
         self.callback = callback
 
     @property
@@ -64,7 +71,23 @@ class Slider(pyglet.gui.Slider):
     def _value_to_internal(self, value):
         return (value - self.value_min) * 100 / self._range
 
+    @property
+    def value(self):
+        return (self._range * self._value / 100) + self.value_min
+
+    @value.setter
+    def value(self, value: float):
+        value = self._value_to_internal(value)
+        self._value = value
+        x = (
+            (self._max_knob_x - self._min_knob_x) * value / 100
+            + self._min_knob_x + self._half_knob_width
+        )
+        self._knob_spr.x = max(
+            self._min_knob_x,
+            min(x - self._half_knob_width, self._max_knob_x)
+        )
+
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)
-        value_scaled = (self._range * self.value / 100) + self.value_min
-        self.callback(value_scaled)
+        self.callback(self.value)

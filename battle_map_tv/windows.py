@@ -1,10 +1,11 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.text import Label
 from pyglet.window import Window
 
+from .broker import event_broker, EventKeys
 from .grid import Grid, mm_to_inch
 from .gui_elements import ToggleButton, TextEntry, Slider
 from .image import Image
@@ -122,6 +123,100 @@ class GMWindow(Window):
         )
         self.frame.add_widget(self.button)
 
+        def slider_scale_callback(value: Union[float, str]):
+            value = float(value)
+            image_window.image.scale(value)
+            self.slider_scale.value = value
+            self.text_entry_scale.value = str(round(value, 2))
+
+        self.label_scale = Label(
+            text='Scale',
+            x=0,
+            y=260,
+            batch=self.batch,
+        )
+        self.slider_scale = Slider(
+            x=0,
+            y=200,
+            value_min=0.1,
+            value_max=4,
+            default=1,
+            batch=self.batch,
+            callback=slider_scale_callback,
+        )
+        self.frame.add_widget(self.slider_scale)
+        self.text_entry_scale = TextEntry(
+            text=str(self.slider_scale.value),
+            x=510,
+            y=225,
+            width=100,
+            batch=self.batch,
+            callback=slider_scale_callback,
+        )
+        self.frame.add_widget(self.text_entry_scale)
+
+        def slider_pan_x_callback(value: Union[float, str]):
+            value = float(value)
+            image_window.image.pan_x(value)
+            self.slider_pan_x.value = value
+            self.text_entry_pan_x.value = str(round(value, 2))
+
+        self.label_pan_x = Label(
+            text='Pan X',
+            x=0,
+            y=160,
+            batch=self.batch,
+        )
+        self.slider_pan_x = Slider(
+            x=0,
+            y=100,
+            value_min=-image_window.width,
+            value_max=image_window.width,
+            default=0,
+            batch=self.batch,
+            callback=slider_pan_x_callback,
+        )
+        self.frame.add_widget(self.slider_pan_x)
+        self.text_entry_pan_x = TextEntry(
+            text=str(self.slider_pan_x.value),
+            x=510,
+            y=125,
+            width=100,
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_pan_x)
+
+        def slider_pan_y_callback(value: Union[float, str]):
+            value = float(value)
+            image_window.image.pan_y(value)
+            self.slider_pan_y.value = value
+            self.text_entry_pan_y.value = str(round(value, 2))
+
+        self.label_pan_y = Label(
+            text='Pan Y',
+            x=0,
+            y=60,
+            batch=self.batch,
+        )
+        self.slider_pan_y = Slider(
+            x=0,
+            y=0,
+            value_min=-image_window.height,
+            value_max=image_window.height,
+            default=0,
+            batch=self.batch,
+            callback=slider_pan_y_callback,
+        )
+        self.frame.add_widget(self.slider_pan_y)
+        self.text_entry_pan_y = TextEntry(
+            text=str(self.slider_pan_x.value),
+            x=510,
+            y=25,
+            width=100,
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_pan_y)
+
         def button_callback_autoscale(button_value: bool) -> bool:
             if button_value:
                 try:
@@ -133,6 +228,8 @@ class GMWindow(Window):
                 px_per_mm = px_per_inch * mm_to_inch
                 scale = screen_px_per_mm / px_per_mm
                 self.image_window.image.scale(scale)
+                self.slider_scale.value = scale
+                self.text_entry_scale.value = str(scale)
                 return True
             return False
 
@@ -152,62 +249,11 @@ class GMWindow(Window):
         )
         self.frame.add_widget(self.button_autoscale)
 
-        self.label_scale = Label(
-            text='Scale',
-            x=0,
-            y=260,
-            batch=self.batch,
-        )
-        self.slider_scale = Slider(
-            x=0,
-            y=200,
-            value_min=0.1,
-            value_max=4,
-            default=1,
-            batch=self.batch,
-            callback=image_window.image.scale,
-        )
-        self.frame.add_widget(self.slider_scale)
-
-        self.label_pan_x = Label(
-            text='Pan X',
-            x=0,
-            y=160,
-            batch=self.batch,
-        )
-        self.slider_pan_x = Slider(
-            x=0,
-            y=100,
-            value_min=-image_window.width,
-            value_max=image_window.width,
-            default=0,
-            batch=self.batch,
-            callback=image_window.image.pan_x,
-        )
-        self.frame.add_widget(self.slider_pan_x)
-
-        self.label_pan_y = Label(
-            text='Pan Y',
-            x=0,
-            y=60,
-            batch=self.batch,
-        )
-        self.slider_pan_y = Slider(
-            x=0,
-            y=0,
-            value_min=-image_window.height,
-            value_max=image_window.height,
-            default=0,
-            batch=self.batch,
-            callback=image_window.image.pan_y,
-        )
-        self.frame.add_widget(self.slider_pan_y)
-
     def on_draw(self):
         self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
         self.image_window.image.change(paths[0])
-        self.slider_scale.value = self.slider_scale.default_value
-        self.slider_pan_x.value = self.slider_pan_x.default_value
-        self.slider_pan_y.value = self.slider_pan_y.default_value
+        self.slider_scale.value = self.slider_scale.default
+        self.slider_pan_x.value = self.slider_pan_x.default
+        self.slider_pan_y.value = self.slider_pan_y.default
