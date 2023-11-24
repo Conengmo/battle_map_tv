@@ -18,7 +18,6 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 ## To-do
 
 - Better GUI
-- Drag the image to move it
 - Release on Pypi
 - Investigate running it as executable
 
