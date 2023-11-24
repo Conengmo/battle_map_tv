@@ -64,6 +64,12 @@ class GMWindow(Window):
         self.batch = Batch()
         self.frame = Frame(window=self)
 
+        margin_x = 40
+        margin_y = 60
+        padding_x = 30
+        padding_y = 30
+        label_margin = 10
+
         self.label_width = Label(
             text="Screen width (mm)",
             x=0,
@@ -137,15 +143,9 @@ class GMWindow(Window):
             self.slider_scale.value = value
             self.text_entry_scale.value = str(round(value, 3))
 
-        self.label_scale = Label(
-            text="Scale",
-            x=0,
-            y=260,
-            batch=self.batch,
-        )
         self.slider_scale = Slider(
-            x=0,
-            y=200,
+            x=margin_x,
+            y=margin_y,
             value_min=0.1,
             value_max=4,
             default=1,
@@ -153,10 +153,16 @@ class GMWindow(Window):
             callback=slider_scale_callback,
         )
         self.frame.add_widget(self.slider_scale)
+        self.label_scale = Label(
+            text="Scale",
+            x=self.slider_scale.x,
+            y=self.slider_scale.y + self.slider_scale.height + label_margin,
+            batch=self.batch,
+        )
         self.text_entry_scale = TextEntry(
             text=str(self.slider_scale.value),
-            x=520,
-            y=210,
+            x=self.slider_scale.x + self.slider_scale.width + padding_x,
+            y=self.slider_scale.y + 10,
             width=100,
             batch=self.batch,
             callback=slider_scale_callback,
@@ -179,21 +185,21 @@ class GMWindow(Window):
                 return True
             return False
 
-        self.label_autoscale = Label(
-            text="Autoscale image",
-            x=525,
-            y=460,
-            align="center",
-            anchor_x="center",
-            batch=self.batch,
-        )
         self.button_autoscale = ToggleButton(
-            x=500,
-            y=400,
+            x=self.text_entry_scale.x + self.text_entry_scale.width + padding_x,
+            y=self.slider_scale.y,
             batch=self.batch,
             callback=button_callback_autoscale,
         )
         self.frame.add_widget(self.button_autoscale)
+        self.label_autoscale = Label(
+            text="Autoscale image",
+            x=self.button_autoscale.x + self.button_autoscale.width / 2,
+            y=self.button_autoscale.y + self.button_autoscale.height + label_margin,
+            align="center",
+            anchor_x="center",
+            batch=self.batch,
+        )
 
     def on_draw(self):
         self.batch.draw()

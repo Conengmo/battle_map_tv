@@ -21,7 +21,7 @@ def main():
 
     GMWindow(
         image_window=image_window,
-        width=700,
+        width=850,
         height=500,
         caption="GM window",
         file_drops=True,
