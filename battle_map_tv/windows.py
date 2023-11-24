@@ -33,14 +33,13 @@ class ImageWindow(Window):
         print("resize image window", (width, height))
         self.image.update_screen_px(width_px=width, height_px=height)
         if self.grid is not None:
-            self.grid.update_screen_px(width_px=width, height_px=height)
+            self.grid.update_window_px(width_px=width, height_px=height)
 
     def add_grid(self, width_mm: int, height_mm: int):
         self.grid = Grid(
-            width_px=self.width,
-            height_px=self.height,
-            width_mm=width_mm,
-            height_mm=height_mm,
+            screen_size_px=(self.screen.width, self.screen.height),
+            screen_size_mm=(width_mm, height_mm),
+            window_size_px=(self.width, self.height),
         )
 
     def remove_grid(self):
