@@ -5,7 +5,6 @@ from pyglet.gui import Frame
 from pyglet.text import Label
 from pyglet.window import Window
 
-from .broker import event_broker, EventKeys
 from .grid import Grid, mm_to_inch
 from .gui_elements import ToggleButton, TextEntry, Slider
 from .image import Image
