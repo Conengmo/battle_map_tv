@@ -17,10 +17,9 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 
 ## To-do
 
-- Better GUI
 - screen orientation
-- allow empty screen
 - rotate image
+- restore previous image
 - Release on Pypi
 - Investigate running it as executable
 
