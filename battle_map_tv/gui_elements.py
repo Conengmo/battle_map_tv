@@ -4,6 +4,8 @@ import pyglet
 from pyglet.graphics import Batch
 from pyglet.text import Label
 
+margin_y_label = 10
+
 
 class CoordinatesMixin:
     x: int
@@ -53,7 +55,7 @@ class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
         self.label = Label(
             text=label,
             x=x + self.width / 2,
-            y=self.y2 + 10,
+            y=self.y2 + margin_y_label,
             align="center",
             anchor_x="center",
             batch=batch,
@@ -83,6 +85,7 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         default: float,
         batch: Batch,
         callback: Callable,
+        label: str,
     ):
         super().__init__(
             x=x,
@@ -96,6 +99,23 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.default = default
         self.value = default
         self.callback = callback
+        self.label = Label(
+            text=label,
+            x=self.x,
+            y=self.y2 + margin_y_label,
+            batch=batch,
+        )
+        self.label_value = Label(
+            text=str(self.value),
+            x=super().x2 + 20,
+            y=self.y + self.height / 2,
+            anchor_y="center",
+            batch=batch,
+        )
+
+    @property
+    def x2(self) -> int:
+        return super().x2 + 50
 
     @property
     def _range(self) -> float:
@@ -118,6 +138,8 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
             + self._half_knob_width
         )
         self._knob_spr.x = max(self._min_knob_x, min(x - self._half_knob_width, self._max_knob_x))
+        if hasattr(self, "label_value"):
+            self.label_value.text = str(round(self.value, 3))
 
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)

@@ -85,6 +85,7 @@ class GMWindow(Window):
         self.gui = GMGui(image_window=image_window, parent_window=self)
 
     def on_draw(self):
+        self.clear()
         self.gui.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
@@ -110,7 +111,6 @@ class GMGui:
             if image_window.image is not None:
                 image_window.image.scale(value)
             self.slider_scale.value = value
-            self.text_entry_scale.value = str(round(value, 3))
 
         self.slider_scale = Slider(
             x=margin_x,
@@ -120,23 +120,9 @@ class GMGui:
             default=1,
             batch=self.batch,
             callback=slider_scale_callback,
+            label="Scale",
         )
         self.frame.add_widget(self.slider_scale)
-        self.label_scale = Label(
-            text="Scale",
-            x=self.slider_scale.x,
-            y=self.slider_scale.y2 + margin_label,
-            batch=self.batch,
-        )
-        self.text_entry_scale = TextEntry(
-            text=str(self.slider_scale.value),
-            x=self.slider_scale.x2 + padding_x,
-            y=row_y + 10,
-            width=100,
-            batch=self.batch,
-            callback=slider_scale_callback,
-        )
-        self.frame.add_widget(self.text_entry_scale)
 
         def button_callback_autoscale(button_value: bool) -> bool:
             if button_value and image_window.image is not None:
@@ -150,12 +136,11 @@ class GMGui:
                 scale = screen_px_per_mm / px_per_mm
                 image_window.image.scale(scale)
                 self.slider_scale.value = scale
-                self.text_entry_scale.value = str(round(scale, 3))
                 return True
             return False
 
         self.button_autoscale = ToggleButton(
-            x=self.text_entry_scale.x2 + padding_x,
+            x=self.slider_scale.x2 + padding_x,
             y=row_y,
             batch=self.batch,
             callback=button_callback_autoscale,
