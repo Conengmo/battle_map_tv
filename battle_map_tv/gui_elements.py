@@ -29,6 +29,7 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         x: int,
         y: int,
         width: int,
+        label: str,
         batch: Batch,
         callback: Optional[Callable] = None,
     ):
@@ -38,6 +39,12 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         self._layout.y = y - 5
         self.height = 30
         self.callback = callback
+        self.label = Label(
+            text=label,
+            x=self.x,
+            y=self.y2 + margin_y_label,
+            batch=batch,
+        )
 
     def on_commit(self, text: str):
         super().on_commit(text=text)

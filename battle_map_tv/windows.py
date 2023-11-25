@@ -1,8 +1,7 @@
-from typing import Optional, Dict, List, Union
+from typing import Optional, List, Union
 
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
-from pyglet.text import Label
 from pyglet.window import Window, mouse
 
 from .grid import Grid, mm_to_inch
@@ -155,6 +154,7 @@ class GMGui:
             x=margin_x,
             y=row_y,
             width=200,
+            label="Screen width (mm)",
             batch=self.batch,
         )
         self.frame.add_widget(self.text_entry_screen_width)
@@ -163,21 +163,10 @@ class GMGui:
             x=self.text_entry_screen_width.x2 + padding_x,
             y=row_y,
             width=200,
+            label="Screen height (mm)",
             batch=self.batch,
         )
         self.frame.add_widget(self.text_entry_screen_height)
-        self.label_width = Label(
-            text="Screen width (mm)",
-            x=margin_x,
-            y=self.text_entry_screen_width.y2 + margin_label,
-            batch=self.batch,
-        )
-        self.label_height = Label(
-            text="Screen height (mm)",
-            x=self.text_entry_screen_height.x,
-            y=self.text_entry_screen_height.y2 + margin_label,
-            batch=self.batch,
-        )
 
         def button_callback_grid(button_value: bool) -> bool:
             if button_value:
