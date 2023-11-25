@@ -2,6 +2,7 @@ from typing import Callable, Union, Optional
 
 import pyglet
 from pyglet.graphics import Batch
+from pyglet.text import Label
 
 
 class CoordinatesMixin:
@@ -42,30 +43,31 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
             self.callback(text)
 
 
-class ToggleButton(CoordinatesMixin, pyglet.gui.ToggleButton):
-    pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
-    depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
-
-    def __init__(self, x: int, y: int, batch: Batch, callback: Callable):
-        super().__init__(x=x, y=y, pressed=self.pressed, depressed=self.depressed, batch=batch)
-        self.callback = callback
-
-    def on_mouse_press(self, *args, **kwargs):
-        super().on_mouse_press(*args, **kwargs)
-        self.value = self.callback(self.value)
-
-
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
     pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
     depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
 
-    def __init__(self, x: int, y: int, batch: Batch, callback: Callable):
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str):
         super().__init__(x=x, y=y, pressed=self.pressed, depressed=self.depressed, batch=batch)
         self.callback = callback
+        self.label = Label(
+            text=label,
+            x=x + self.width / 2,
+            y=self.y2 + 10,
+            align="center",
+            anchor_x="center",
+            batch=batch,
+        )
 
     def on_mouse_release(self, *args, **kwargs):
         super().on_mouse_release(*args, **kwargs)
         self.callback()
+
+
+class ToggleButton(pyglet.gui.ToggleButton, PushButton):
+    def on_mouse_press(self, *args, **kwargs):
+        super().on_mouse_press(*args, **kwargs)
+        self.value = self.callback(self.value)
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):

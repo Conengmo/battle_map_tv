@@ -159,16 +159,9 @@ class GMGui:
             y=row_y,
             batch=self.batch,
             callback=button_callback_autoscale,
+            label="Autoscale image",
         )
         self.frame.add_widget(self.button_autoscale)
-        self.label_autoscale = Label(
-            text="Autoscale image",
-            x=self.button_autoscale.x + self.button_autoscale.width / 2,
-            y=self.button_autoscale.y2 + margin_label,
-            align="center",
-            anchor_x="center",
-            batch=self.batch,
-        )
 
         row_y += 100
 
@@ -226,16 +219,9 @@ class GMGui:
             y=row_y - int((50 - self.text_entry_screen_width.height) / 2),
             batch=self.batch,
             callback=button_callback_grid,
+            label="Grid overlay",
         )
         self.frame.add_widget(self.button_grid)
-        self.label_grid = Label(
-            text="Toggle grid overlay",
-            x=self.button_grid.x + self.button_grid.width / 2,
-            y=self.button_grid.y2 + margin_label,
-            align="center",
-            anchor_x="center",
-            batch=self.batch,
-        )
 
         row_y += 100
 
@@ -244,6 +230,7 @@ class GMGui:
             y=row_y,
             batch=self.batch,
             callback=lambda: image_window.remove_image(),
+            label="Remove image",
         )
         self.frame.add_widget(self.button_remove_image)
 
