@@ -35,6 +35,10 @@ class Grid:
         self.screen_size_mm = (width_mm, height_mm)
         self.reset()
 
+    def update_opacity(self, opacity: int):
+        for line in self.lines:
+            line.opacity = opacity
+
     def delete(self):
         for line in self.lines:
             line.delete()

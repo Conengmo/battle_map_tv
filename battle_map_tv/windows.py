@@ -149,6 +149,26 @@ class GMGui:
 
         row_y += 100
 
+        def slider_grid_opacity_callback(value: float):
+            if image_window.grid is not None:
+                image_window.grid.update_opacity(int(value))
+            self.slider_grid_opacity.value = value
+            return value
+
+        self.slider_grid_opacity = Slider(
+            x=margin_x,
+            y=row_y,
+            value_min=0,
+            value_max=255,
+            default=200,
+            batch=self.batch,
+            callback=slider_grid_opacity_callback,
+            label="Grid opacity",
+        )
+        self.frame.add_widget(self.slider_grid_opacity)
+
+        row_y += 100
+
         self.text_entry_screen_width = TextEntry(
             text=get_from_storage(StorageKeys.width_mm, optional=True),
             x=margin_x,
