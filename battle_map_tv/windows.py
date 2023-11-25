@@ -120,6 +120,7 @@ class GMGui:
             batch=self.batch,
             callback=slider_scale_callback,
             label="Scale",
+            label_formatter=lambda x: f"{x:.2f}",
         )
         self.frame.add_widget(self.slider_scale)
 
@@ -164,29 +165,9 @@ class GMGui:
             batch=self.batch,
             callback=slider_grid_opacity_callback,
             label="Grid opacity",
+            label_formatter=lambda value: str(int(value)),
         )
         self.frame.add_widget(self.slider_grid_opacity)
-
-        row_y += 100
-
-        self.text_entry_screen_width = TextEntry(
-            text=get_from_storage(StorageKeys.width_mm, optional=True),
-            x=margin_x,
-            y=row_y,
-            width=200,
-            label="Screen width (mm)",
-            batch=self.batch,
-        )
-        self.frame.add_widget(self.text_entry_screen_width)
-        self.text_entry_screen_height = TextEntry(
-            text=get_from_storage(StorageKeys.height_mm, optional=True),
-            x=self.text_entry_screen_width.x2 + padding_x,
-            y=row_y,
-            width=200,
-            label="Screen height (mm)",
-            batch=self.batch,
-        )
-        self.frame.add_widget(self.text_entry_screen_height)
 
         def button_callback_grid(button_value: bool) -> bool:
             if button_value:
@@ -209,13 +190,34 @@ class GMGui:
                 return False
 
         self.button_grid = ToggleButton(
-            x=self.text_entry_screen_height.x2 + padding_x,
-            y=row_y - int((50 - self.text_entry_screen_width.height) / 2),
+            x=self.slider_grid_opacity.x2 + padding_x,
+            y=row_y - int((50 - self.slider_grid_opacity.height) / 2),
             batch=self.batch,
             callback=button_callback_grid,
             label="Grid overlay",
         )
         self.frame.add_widget(self.button_grid)
+
+        row_y += 100
+
+        self.text_entry_screen_width = TextEntry(
+            text=get_from_storage(StorageKeys.width_mm, optional=True),
+            x=margin_x,
+            y=row_y,
+            width=200,
+            label="Screen width (mm)",
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_screen_width)
+        self.text_entry_screen_height = TextEntry(
+            text=get_from_storage(StorageKeys.height_mm, optional=True),
+            x=self.text_entry_screen_width.x2 + padding_x,
+            y=row_y,
+            width=200,
+            label="Screen height (mm)",
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_screen_height)
 
         row_y += 100
 

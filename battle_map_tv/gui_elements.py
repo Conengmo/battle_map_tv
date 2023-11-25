@@ -93,6 +93,7 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         batch: Batch,
         callback: Callable,
         label: str,
+        label_formatter: Callable = lambda x: str(x),
     ):
         super().__init__(
             x=x,
@@ -113,12 +114,13 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
             batch=batch,
         )
         self.label_value = Label(
-            text=str(self.value),
+            text=label_formatter(default),
             x=super().x2 + 20,
             y=self.y + self.height / 2,
             anchor_y="center",
             batch=batch,
         )
+        self.label_formatter = label_formatter
 
     @property
     def x2(self) -> int:
@@ -137,16 +139,16 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
 
     @value.setter
     def value(self, value: float):
-        value = self._value_to_internal(value)
-        self._value = value
+        value_internal = self._value_to_internal(value)
+        self._value = value_internal
         x = (
-            (self._max_knob_x - self._min_knob_x) * value / 100
+            (self._max_knob_x - self._min_knob_x) * value_internal / 100
             + self._min_knob_x
             + self._half_knob_width
         )
         self._knob_spr.x = max(self._min_knob_x, min(x - self._half_knob_width, self._max_knob_x))
         if hasattr(self, "label_value"):
-            self.label_value.text = str(round(self.value, 3))
+            self.label_value.text = self.label_formatter(value)
 
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)
