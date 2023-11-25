@@ -6,35 +6,49 @@ from pyglet.text import Label
 from pyglet.window import Window, mouse
 
 from .grid import Grid, mm_to_inch
-from .gui_elements import ToggleButton, TextEntry, Slider
+from .gui_elements import ToggleButton, TextEntry, Slider, PushButton
 from .image import Image
 from .scale_detection import find_image_scale
 from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
 class ImageWindow(Window):
-    def __init__(self, image_path: str, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.image = Image(
-            image_path=image_path,
-            screen_width_px=self.width,
-            screen_height_px=self.height,
-        )
+        self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
         self.clear()
-        self.image.draw()
+        if self.image is not None:
+            self.image.draw()
         if self.grid is not None:
             self.grid.draw()
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
-        self.image.update_screen_px(width_px=width, height_px=height)
+        if self.image is not None:
+            self.image.update_screen_px(width_px=width, height_px=height)
         if self.grid is not None:
             self.grid.update_window_px(width_px=width, height_px=height)
 
+    def add_image(self, image_path: str):
+        if self.image is not None:
+            self.remove_image()
+        self.image = Image(
+            image_path=image_path,
+            screen_width_px=self.width,
+            screen_height_px=self.height,
+        )
+
+    def remove_image(self):
+        if self.image is not None:
+            self.image.delete()
+            self.image = None
+
     def add_grid(self, width_mm: int, height_mm: int):
+        if self.grid is not None:
+            self.remove_grid()
         self.grid = Grid(
             screen_size_px=(self.screen.width, self.screen.height),
             screen_size_mm=(width_mm, height_mm),
@@ -47,22 +61,42 @@ class ImageWindow(Window):
             self.grid = None
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        if buttons and mouse.LEFT and self.image.are_coordinates_within_image(x, y):
+        if (
+            self.image is not None
+            and buttons
+            and mouse.LEFT
+            and self.image.are_coordinates_within_image(x, y)
+        ):
             self.image.pan(dx=dx, dy=dy)
             self.image.dragging = True
 
     def on_mouse_release(self, x, y, button, modifiers):
-        if self.image.dragging:
+        if self.image is not None and self.image.dragging:
             self.image.dragging = False
             self.image.store_coordinates()
 
 
 class GMWindow(Window):
-    def __init__(self, image_window: ImageWindow, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(file_drops=True, *args, **kwargs)
+        self.gui: GMGui
+
+    def add_gui(self, image_window: ImageWindow):
+        self.gui = GMGui(image_window=image_window, parent_window=self)
+
+    def on_draw(self):
+        self.gui.draw()
+
+    def on_file_drop(self, x: int, y: int, paths: List[str]):
+        self.gui.image_window.add_image(image_path=paths[0])
+        self.gui.slider_scale.reset()
+
+
+class GMGui:
+    def __init__(self, image_window: ImageWindow, parent_window: GMWindow):
         self.image_window = image_window
         self.batch = Batch()
-        self.frame = Frame(window=self)
+        self.frame = Frame(window=parent_window)
 
         margin_x = 40
         margin_y = 60
@@ -73,7 +107,8 @@ class GMWindow(Window):
 
         def slider_scale_callback(value: Union[float, str]):
             value = float(value)
-            image_window.image.scale(value)
+            if image_window.image is not None:
+                image_window.image.scale(value)
             self.slider_scale.value = value
             self.text_entry_scale.value = str(round(value, 3))
 
@@ -104,16 +139,16 @@ class GMWindow(Window):
         self.frame.add_widget(self.text_entry_scale)
 
         def button_callback_autoscale(button_value: bool) -> bool:
-            if button_value:
+            if button_value and image_window.image is not None:
                 try:
                     width_mm = get_from_storage(StorageKeys.width_mm)
                 except KeyError:
                     return False
-                screen_px_per_mm = self.image_window.width / width_mm
-                px_per_inch = find_image_scale(self.image_window.image.filepath)
+                screen_px_per_mm = image_window.width / width_mm
+                px_per_inch = find_image_scale(image_window.image.filepath)
                 px_per_mm = px_per_inch * mm_to_inch
                 scale = screen_px_per_mm / px_per_mm
-                self.image_window.image.scale(scale)
+                image_window.image.scale(scale)
                 self.slider_scale.value = scale
                 self.text_entry_scale.value = str(round(scale, 3))
                 return True
@@ -175,7 +210,7 @@ class GMWindow(Window):
                     print("Invalid input for screen size")
                     return False
                 else:
-                    self.image_window.add_grid(
+                    image_window.add_grid(
                         width_mm=width_mm,
                         height_mm=height_mm,
                     )
@@ -183,7 +218,7 @@ class GMWindow(Window):
                     set_in_storage(StorageKeys.height_mm, height_mm)
                     return True
             else:
-                self.image_window.remove_grid()
+                image_window.remove_grid()
                 return False
 
         self.button_grid = ToggleButton(
@@ -202,9 +237,15 @@ class GMWindow(Window):
             batch=self.batch,
         )
 
-    def on_draw(self):
-        self.batch.draw()
+        row_y += 100
 
-    def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.image_window.image.change(paths[0])
-        self.slider_scale.value = self.slider_scale.default
+        self.button_remove_image = PushButton(
+            x=margin_x,
+            y=row_y,
+            batch=self.batch,
+            callback=lambda: image_window.remove_image(),
+        )
+        self.frame.add_widget(self.button_remove_image)
+
+    def draw(self):
+        self.batch.draw()

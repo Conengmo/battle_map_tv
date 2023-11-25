@@ -5,13 +5,10 @@ from .windows import ImageWindow, GMWindow
 
 
 def main():
-    image_path = r"tests/images/pux2idlwle65yipahqnmukisnss54cyv.jpg"
-
     display = pyglet.canvas.get_display()
     screens = display.get_screens()
 
     image_window = ImageWindow(
-        image_path=image_path,
         caption="TV window",
         resizable=True,
         screen=screens[-1],
@@ -19,15 +16,15 @@ def main():
         height=screens[-1].height,
     )
 
-    GMWindow(
-        image_window=image_window,
+    gm_window = GMWindow(
         width=850,
         height=500,
         caption="GM window",
-        file_drops=True,
     )
+    gm_window.switch_to()
+    gm_window.add_gui(image_window=image_window)
 
-    pyglet.app.run(interval=1 / 20)
+    pyglet.app.run()
 
 
 if __name__ == "__main__":

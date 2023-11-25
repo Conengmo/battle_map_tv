@@ -55,6 +55,19 @@ class ToggleButton(CoordinatesMixin, pyglet.gui.ToggleButton):
         self.value = self.callback(self.value)
 
 
+class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
+    pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
+    depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
+
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable):
+        super().__init__(x=x, y=y, pressed=self.pressed, depressed=self.depressed, batch=batch)
+        self.callback = callback
+
+    def on_mouse_release(self, *args, **kwargs):
+        super().on_mouse_release(*args, **kwargs)
+        self.callback()
+
+
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
     base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
     knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
@@ -107,3 +120,6 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
     def on_mouse_drag(self, *args, **kwargs):
         super().on_mouse_drag(*args, **kwargs)
         self.callback(self.value)
+
+    def reset(self):
+        self.value = self.default

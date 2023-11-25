@@ -15,13 +15,23 @@ class Image:
     ):
         self.screen_width_px = screen_width_px
         self.screen_height_px = screen_height_px
-        self.filepath: str
-        self.image_filename: str
+        self.dragging: bool = False
+
+        self.filepath: str = image_path
+        self.image_filename = os.path.basename(image_path)
+        image = pyglet.image.load(image_path)
+        self.sprite = Sprite(image)
+        self.sprite.scale = get_image_from_storage(
+            self.image_filename, ImageKeys.scale, default=1.0
+        )
+
         self.dx: int = 0
         self.dy: int = 0
-        self.sprite = self._load_sprite(image_path)
+        self.dx, self.dy = get_image_from_storage(
+            self.image_filename, ImageKeys.offsets, default=(0, 0)
+        )
+
         self._recalculate_sprite_size()
-        self.dragging: bool = False
 
     def draw(self):
         self.sprite.draw()
@@ -30,15 +40,6 @@ class Image:
         self.screen_width_px = width_px
         self.screen_height_px = height_px
         self._recalculate_sprite_size()
-
-    def _load_sprite(self, image_path: str) -> Sprite:
-        self.filepath = image_path
-        self.image_filename = os.path.basename(image_path)
-        image = pyglet.image.load(image_path)
-        sprite = Sprite(image)
-        sprite.scale = get_image_from_storage(self.image_filename, ImageKeys.scale, default=1.0)
-        self.dx, self.dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
-        return sprite
 
     def _recalculate_sprite_size(self):
         self.sprite.x = (self.screen_width_px - self.sprite.width) / 2 + self.dx
@@ -63,8 +64,5 @@ class Image:
     def store_coordinates(self):
         set_image_in_storage(self.image_filename, ImageKeys.offsets, (self.dx, self.dy))
 
-    def change(self, image_path: str):
-        print("change image to", image_path)
+    def delete(self):
         self.sprite.delete()
-        self.sprite = self._load_sprite(image_path)
-        self._recalculate_sprite_size()
