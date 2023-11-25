@@ -5,7 +5,7 @@ from .windows import ImageWindow, GMWindow
 
 
 def main():
-    image_path = r"/Users/frank/Documents/battle maps/oie_WgD5GW1KV1FB.jpg"
+    image_path = r"tests/images/pux2idlwle65yipahqnmukisnss54cyv.jpg"
 
     display = pyglet.canvas.get_display()
     screens = display.get_screens()

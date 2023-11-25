@@ -67,75 +67,9 @@ class GMWindow(Window):
         margin_x = 40
         margin_y = 60
         padding_x = 30
-        padding_y = 30
-        label_margin = 10
+        margin_label = 10
 
-        self.label_width = Label(
-            text="Screen width (mm)",
-            x=0,
-            y=330,
-            batch=self.batch,
-        )
-        self.label_height = Label(
-            text="Screen height (mm)",
-            x=250,
-            y=330,
-            batch=self.batch,
-        )
-        self.text_entries: Dict[str, TextEntry] = {
-            "screen_width": TextEntry(
-                text=get_from_storage(StorageKeys.width_mm, optional=True),
-                x=0,
-                y=300,
-                width=200,
-                batch=self.batch,
-            ),
-            "screen_height": TextEntry(
-                text=get_from_storage(StorageKeys.height_mm, optional=True),
-                x=250,
-                y=300,
-                width=200,
-                batch=self.batch,
-            ),
-        }
-        for widget in self.text_entries.values():
-            self.frame.add_widget(widget)
-
-        def button_callback_grid(button_value: bool) -> bool:
-            if button_value:
-                try:
-                    width_mm = int(self.text_entries["screen_width"].value)
-                    height_mm = int(self.text_entries["screen_height"].value)
-                except ValueError:
-                    print("Invalid input for screen size")
-                    return False
-                else:
-                    self.image_window.add_grid(
-                        width_mm=width_mm,
-                        height_mm=height_mm,
-                    )
-                    set_in_storage(StorageKeys.width_mm, width_mm)
-                    set_in_storage(StorageKeys.height_mm, height_mm)
-                    return True
-            else:
-                self.image_window.remove_grid()
-                return False
-
-        self.label_grid = Label(
-            text="Toggle grid overlay",
-            x=525,
-            y=360,
-            align="center",
-            anchor_x="center",
-            batch=self.batch,
-        )
-        self.button = ToggleButton(
-            x=500,
-            y=300,
-            batch=self.batch,
-            callback=button_callback_grid,
-        )
-        self.frame.add_widget(self.button)
+        row_y = margin_y
 
         def slider_scale_callback(value: Union[float, str]):
             value = float(value)
@@ -145,7 +79,7 @@ class GMWindow(Window):
 
         self.slider_scale = Slider(
             x=margin_x,
-            y=margin_y,
+            y=row_y,
             value_min=0.1,
             value_max=4,
             default=1,
@@ -156,13 +90,13 @@ class GMWindow(Window):
         self.label_scale = Label(
             text="Scale",
             x=self.slider_scale.x,
-            y=self.slider_scale.y + self.slider_scale.height + label_margin,
+            y=self.slider_scale.y2 + margin_label,
             batch=self.batch,
         )
         self.text_entry_scale = TextEntry(
             text=str(self.slider_scale.value),
-            x=self.slider_scale.x + self.slider_scale.width + padding_x,
-            y=self.slider_scale.y + 10,
+            x=self.slider_scale.x2 + padding_x,
+            y=row_y + 10,
             width=100,
             batch=self.batch,
             callback=slider_scale_callback,
@@ -186,8 +120,8 @@ class GMWindow(Window):
             return False
 
         self.button_autoscale = ToggleButton(
-            x=self.text_entry_scale.x + self.text_entry_scale.width + padding_x,
-            y=self.slider_scale.y,
+            x=self.text_entry_scale.x2 + padding_x,
+            y=row_y,
             batch=self.batch,
             callback=button_callback_autoscale,
         )
@@ -195,7 +129,74 @@ class GMWindow(Window):
         self.label_autoscale = Label(
             text="Autoscale image",
             x=self.button_autoscale.x + self.button_autoscale.width / 2,
-            y=self.button_autoscale.y + self.button_autoscale.height + label_margin,
+            y=self.button_autoscale.y2 + margin_label,
+            align="center",
+            anchor_x="center",
+            batch=self.batch,
+        )
+
+        row_y += 100
+
+        self.text_entry_screen_width = TextEntry(
+            text=get_from_storage(StorageKeys.width_mm, optional=True),
+            x=margin_x,
+            y=row_y,
+            width=200,
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_screen_width)
+        self.text_entry_screen_height = TextEntry(
+            text=get_from_storage(StorageKeys.height_mm, optional=True),
+            x=self.text_entry_screen_width.x2 + padding_x,
+            y=row_y,
+            width=200,
+            batch=self.batch,
+        )
+        self.frame.add_widget(self.text_entry_screen_height)
+        self.label_width = Label(
+            text="Screen width (mm)",
+            x=margin_x,
+            y=self.text_entry_screen_width.y2 + margin_label,
+            batch=self.batch,
+        )
+        self.label_height = Label(
+            text="Screen height (mm)",
+            x=self.text_entry_screen_height.x,
+            y=self.text_entry_screen_height.y2 + margin_label,
+            batch=self.batch,
+        )
+
+        def button_callback_grid(button_value: bool) -> bool:
+            if button_value:
+                try:
+                    width_mm = int(self.text_entry_screen_width.value)
+                    height_mm = int(self.text_entry_screen_height.value)
+                except ValueError:
+                    print("Invalid input for screen size")
+                    return False
+                else:
+                    self.image_window.add_grid(
+                        width_mm=width_mm,
+                        height_mm=height_mm,
+                    )
+                    set_in_storage(StorageKeys.width_mm, width_mm)
+                    set_in_storage(StorageKeys.height_mm, height_mm)
+                    return True
+            else:
+                self.image_window.remove_grid()
+                return False
+
+        self.button_grid = ToggleButton(
+            x=self.text_entry_screen_height.x2 + padding_x,
+            y=row_y - int((50 - self.text_entry_screen_width.height) / 2),
+            batch=self.batch,
+            callback=button_callback_grid,
+        )
+        self.frame.add_widget(self.button_grid)
+        self.label_grid = Label(
+            text="Toggle grid overlay",
+            x=self.button_grid.x + self.button_grid.width / 2,
+            y=self.button_grid.y2 + margin_label,
             align="center",
             anchor_x="center",
             batch=self.batch,

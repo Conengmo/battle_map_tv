@@ -4,7 +4,22 @@ import pyglet
 from pyglet.graphics import Batch
 
 
-class TextEntry(pyglet.gui.TextEntry):
+class CoordinatesMixin:
+    x: int
+    y: int
+    width: int
+    height: int
+
+    @property
+    def x2(self) -> int:
+        return self.x + self.width
+
+    @property
+    def y2(self) -> int:
+        return self.y + self.height
+
+
+class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
     def __init__(
         self,
         text: Union[str, int, None],
@@ -17,7 +32,7 @@ class TextEntry(pyglet.gui.TextEntry):
         text_str = str(text) if text is not None else ""
         super().__init__(text=text_str, x=x, y=y, width=width, batch=batch)
         self._layout.x = x + 10
-        self._layout.y = y - 10
+        self._layout.y = y - 5
         self.height = 30
         self.callback = callback
 
@@ -27,7 +42,7 @@ class TextEntry(pyglet.gui.TextEntry):
             self.callback(text)
 
 
-class ToggleButton(pyglet.gui.ToggleButton):
+class ToggleButton(CoordinatesMixin, pyglet.gui.ToggleButton):
     pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
     depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
 
@@ -40,7 +55,7 @@ class ToggleButton(pyglet.gui.ToggleButton):
         self.value = self.callback(self.value)
 
 
-class Slider(pyglet.gui.Slider):
+class Slider(CoordinatesMixin, pyglet.gui.Slider):
     base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
     knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
 
