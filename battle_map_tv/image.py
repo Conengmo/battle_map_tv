@@ -61,6 +61,13 @@ class Image:
         self.dy += dy
         self._recalculate_sprite_size()
 
+    def rotate(self):
+        self.sprite.rotation += 90 if self.sprite.rotation < 270 else -270
+        self.dx = 0
+        self.dy = 0
+        self._recalculate_sprite_size()
+        self.store_coordinates()
+
     def store_coordinates(self):
         set_image_in_storage(self.image_filename, ImageKeys.offsets, (self.dx, self.dy))
 

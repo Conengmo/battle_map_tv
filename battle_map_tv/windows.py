@@ -230,5 +230,18 @@ class GMGui:
         )
         self.frame.add_widget(self.button_remove_image)
 
+        def callback_button_rotate_image():
+            if image_window.image is not None:
+                image_window.image.rotate()
+
+        self.button_rotate_image = PushButton(
+            x=self.button_remove_image.label.content_width + padding_x,
+            y=row_y,
+            batch=self.batch,
+            callback=callback_button_rotate_image,
+            label="Rotate image",
+        )
+        self.frame.add_widget(self.button_rotate_image)
+
     def draw(self):
         self.batch.draw()
