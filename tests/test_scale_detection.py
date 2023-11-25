@@ -24,6 +24,7 @@ def test_merge_close_together_lines():
         ("58fed75f78a991251930918a5793051d.jpg", 70),
         ("7b1071f5cddcfa565d89dbdce45b9e39.jpg", 50),
         ("e586d099df4e4c0eb82726f6373d964f.jpg", 72),
+        ("pux2idlwle65yipahqnmukisnss54cyv.jpg", 73),
     ],
 )
 def test_addition(image_filename, expected_px_per_inch):
