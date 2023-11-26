@@ -1,5 +1,8 @@
 import os.path
+from io import BytesIO
 
+import cv2
+import numpy as np
 import pyglet
 from pyglet.sprite import Sprite
 
@@ -12,14 +15,26 @@ class Image:
         image_path: str,
         screen_width_px: int,
         screen_height_px: int,
+        rotation: int = 0,
     ):
         self.screen_width_px = screen_width_px
         self.screen_height_px = screen_height_px
+        self.rotation = rotation
         self.dragging: bool = False
 
         self.filepath: str = image_path
         self.image_filename = os.path.basename(image_path)
-        image = pyglet.image.load(image_path)
+
+        if rotation == 0:
+            image = pyglet.image.load(image_path)
+        else:
+            image_cv = cv2.imread(image_path)
+            image_cv = np.rot90(image_cv, k=rotation // 90)
+            image_bytes = cv2.imencode(".png", image_cv)[1].tobytes()
+            image = pyglet.image.load(filename=".png", file=BytesIO(image_bytes))
+
+        image.anchor_x = image.width // 2
+        image.anchor_y = image.height // 2
         self.sprite = Sprite(image)
         self.sprite.scale = get_image_from_storage(
             self.image_filename, ImageKeys.scale, default=1.0
@@ -60,13 +75,6 @@ class Image:
         self.dx += dx
         self.dy += dy
         self._recalculate_sprite_size()
-
-    def rotate(self):
-        self.sprite.rotation += 90 if self.sprite.rotation < 270 else -270
-        self.dx = 0
-        self.dy = 0
-        self._recalculate_sprite_size()
-        self.store_coordinates()
 
     def store_coordinates(self):
         set_image_in_storage(self.image_filename, ImageKeys.offsets, (self.dx, self.dy))

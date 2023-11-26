@@ -31,13 +31,14 @@ class ImageWindow(Window):
         if self.grid is not None:
             self.grid.update_window_px(width_px=width, height_px=height)
 
-    def add_image(self, image_path: str):
+    def add_image(self, image_path: str, rotation: int = 0):
         if self.image is not None:
             self.remove_image()
         self.image = Image(
             image_path=image_path,
             screen_width_px=self.width,
             screen_height_px=self.height,
+            rotation=rotation,
         )
 
     def remove_image(self):
@@ -232,7 +233,10 @@ class GMGui:
 
         def callback_button_rotate_image():
             if image_window.image is not None:
-                image_window.image.rotate()
+                current_rotation = image_window.image.rotation
+                current_image_filepath = image_window.image.filepath
+                new_rotation = (current_rotation + 90) % 360
+                image_window.add_image(image_path=current_image_filepath, rotation=new_rotation)
 
         self.button_rotate_image = PushButton(
             x=self.button_remove_image.label.content_width + padding_x,
