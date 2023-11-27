@@ -8,13 +8,19 @@ from .grid import Grid, mm_to_inch
 from .gui_elements import ToggleButton, TextEntry, Slider, PushButton
 from .image import Image
 from .scale_detection import find_image_scale
-from .storage import get_from_storage, StorageKeys, set_in_storage
+from .storage import get_from_storage, StorageKeys, set_in_storage, remove_from_storage
 
 
 class ImageWindow(Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
+        try:
+            previous_image = get_from_storage(StorageKeys.previous_image)
+        except KeyError:
+            pass
+        else:
+            self.add_image(image_path=previous_image)
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
@@ -45,6 +51,7 @@ class ImageWindow(Window):
         if self.image is not None:
             self.image.delete()
             self.image = None
+        remove_from_storage(StorageKeys.previous_image)
 
     def add_grid(self, width_mm: int, height_mm: int):
         if self.grid is not None:

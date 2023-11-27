@@ -31,6 +31,7 @@ def _dump(data: Dict[str, Any]):
 class StorageKeys(Enum):
     width_mm = "width_mm"
     height_mm = "height_mm"
+    previous_image = "previous_image"
 
 
 def get_from_storage(key: StorageKeys, optional: bool = False):
@@ -47,6 +48,12 @@ def get_from_storage(key: StorageKeys, optional: bool = False):
 def set_in_storage(key: StorageKeys, value: Any):
     data = _load()
     data[key.value] = value
+    _dump(data)
+
+
+def remove_from_storage(key: StorageKeys):
+    data = _load()
+    data.pop(key.value, None)
     _dump(data)
 
 

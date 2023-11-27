@@ -6,7 +6,8 @@ import numpy as np
 import pyglet
 from pyglet.sprite import Sprite
 
-from battle_map_tv.storage import set_image_in_storage, ImageKeys, get_image_from_storage
+from battle_map_tv.storage import set_image_in_storage, ImageKeys, get_image_from_storage, \
+    set_in_storage, StorageKeys
 
 
 class Image:
@@ -47,6 +48,8 @@ class Image:
         )
 
         self._recalculate_sprite_size()
+
+        set_in_storage(key=StorageKeys.previous_image, value=image_path)
 
     def draw(self):
         self.sprite.draw()
