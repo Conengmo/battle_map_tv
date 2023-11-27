@@ -8,19 +8,13 @@ from .grid import Grid, mm_to_inch
 from .gui_elements import ToggleButton, TextEntry, Slider, PushButton
 from .image import Image
 from .scale_detection import find_image_scale
-from .storage import get_from_storage, StorageKeys, set_in_storage, remove_from_storage
+from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
 class ImageWindow(Window):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
-        try:
-            previous_image = get_from_storage(StorageKeys.previous_image)
-        except KeyError:
-            pass
-        else:
-            self.add_image(image_path=previous_image)
         self.grid: Optional[Grid] = None
 
     def on_draw(self):
@@ -38,8 +32,7 @@ class ImageWindow(Window):
             self.grid.update_window_px(width_px=width, height_px=height)
 
     def add_image(self, image_path: str, rotation: int = 0):
-        if self.image is not None:
-            self.remove_image()
+        self.remove_image()
         self.image = Image(
             image_path=image_path,
             window_width_px=self.width,
@@ -51,7 +44,14 @@ class ImageWindow(Window):
         if self.image is not None:
             self.image.delete()
             self.image = None
-        remove_from_storage(StorageKeys.previous_image)
+
+    def restore_image(self):
+        try:
+            previous_image = get_from_storage(StorageKeys.previous_image)
+        except KeyError:
+            pass
+        else:
+            self.add_image(image_path=previous_image)
 
     def add_grid(self, width_mm: int, height_mm: int):
         if self.grid is not None:
@@ -234,9 +234,18 @@ class GMGui:
             y=row_y,
             batch=self.batch,
             callback=lambda: image_window.remove_image(),
-            label="Remove image",
+            label="Remove",
         )
         self.frame.add_widget(self.button_remove_image)
+
+        self.button_restore_image = PushButton(
+            x=self.button_remove_image.x2 + padding_x,
+            y=row_y,
+            batch=self.batch,
+            callback=lambda: image_window.restore_image(),
+            label="Restore",
+        )
+        self.frame.add_widget(self.button_restore_image)
 
         def callback_button_rotate_image():
             if image_window.image is not None:
@@ -246,11 +255,11 @@ class GMGui:
                 image_window.add_image(image_path=current_image_filepath, rotation=new_rotation)
 
         self.button_rotate_image = PushButton(
-            x=self.button_remove_image.label.content_width + padding_x,
+            x=self.button_restore_image.x2 + padding_x,
             y=row_y,
             batch=self.batch,
             callback=callback_button_rotate_image,
-            label="Rotate image",
+            label="Rotate",
         )
         self.frame.add_widget(self.button_rotate_image)
 
