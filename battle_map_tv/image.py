@@ -13,12 +13,12 @@ class Image:
     def __init__(
         self,
         image_path: str,
-        screen_width_px: int,
-        screen_height_px: int,
+        window_width_px: int,
+        window_height_px: int,
         rotation: int = 0,
     ):
-        self.screen_width_px = screen_width_px
-        self.screen_height_px = screen_height_px
+        self.window_width_px = window_width_px
+        self.window_height_px = window_height_px
         self.rotation = rotation
         self.dragging: bool = False
 
@@ -51,19 +51,19 @@ class Image:
     def draw(self):
         self.sprite.draw()
 
-    def update_screen_px(self, width_px: int, height_px: int):
-        self.screen_width_px = width_px
-        self.screen_height_px = height_px
+    def update_window_px(self, width_px: int, height_px: int):
+        self.window_width_px = width_px
+        self.window_height_px = height_px
         self._recalculate_sprite_size()
 
     def _recalculate_sprite_size(self):
-        self.sprite.x = (self.screen_width_px - self.sprite.width) / 2 + self.dx
-        self.sprite.y = (self.screen_height_px - self.sprite.height) / 2 + self.dy
+        self.sprite.x = self.window_width_px / 2 + self.dx
+        self.sprite.y = self.window_height_px / 2 + self.dy
 
     def are_coordinates_within_image(self, x: int, y: int) -> bool:
         return (
-            self.sprite.x <= x <= self.sprite.x + self.sprite.width
-            and self.sprite.y <= y <= self.sprite.y + self.sprite.height
+            self.sprite.x - self.sprite.width / 2 <= x <= self.sprite.x + self.sprite.width / 2
+            and self.sprite.y - self.sprite.height / 2 <= y <= self.sprite.y + self.sprite.height / 2
         )
 
     def scale(self, value: float):

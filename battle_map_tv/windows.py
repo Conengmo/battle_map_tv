@@ -27,7 +27,7 @@ class ImageWindow(Window):
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
         if self.image is not None:
-            self.image.update_screen_px(width_px=width, height_px=height)
+            self.image.update_window_px(width_px=width, height_px=height)
         if self.grid is not None:
             self.grid.update_window_px(width_px=width, height_px=height)
 
@@ -36,8 +36,8 @@ class ImageWindow(Window):
             self.remove_image()
         self.image = Image(
             image_path=image_path,
-            screen_width_px=self.width,
-            screen_height_px=self.height,
+            window_width_px=self.width,
+            window_height_px=self.height,
             rotation=rotation,
         )
 
