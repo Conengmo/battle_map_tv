@@ -1,3 +1,4 @@
+import os.path
 from typing import Callable, Union, Optional
 
 import pyglet
@@ -5,6 +6,9 @@ from pyglet.graphics import Batch
 from pyglet.text import Label
 
 margin_y_label = 10
+
+pyglet.resource.path = [os.path.join(pyglet.resource.get_script_home(), "resources")]
+pyglet.resource.reindex()
 
 
 class CoordinatesMixin:
