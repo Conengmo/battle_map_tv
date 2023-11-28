@@ -34,7 +34,16 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         callback: Optional[Callable] = None,
     ):
         text_str = str(text) if text is not None else ""
-        super().__init__(text=text_str, x=x, y=y, width=width, batch=batch)
+        super().__init__(
+            text=text_str,
+            x=x,
+            y=y,
+            width=width,
+            batch=batch,
+            color=(76, 76, 76, 255),
+            text_color=(254, 254, 254, 255),
+            caret_color=(254, 254, 254, 255),
+        )
         self._layout.x = x + 10
         self._layout.y = y - 5
         self.height = 30
