@@ -69,11 +69,11 @@ class Image:
         self.window_height_px = height_px
 
     def are_coordinates_within_image(self, x: int, y: int) -> bool:
+        width_half = self.sprite.width / 2
+        height_half = self.sprite.height / 2
         return (
-            self.sprite.x - self.sprite.width / 2 <= x <= self.sprite.x + self.sprite.width / 2
-            and self.sprite.y - self.sprite.height / 2
-            <= y
-            <= self.sprite.y + self.sprite.height / 2
+            self.sprite.x - width_half <= x <= self.sprite.x + width_half
+            and self.sprite.y - height_half <= y <= self.sprite.y + height_half
         )
 
     def scale(self, value: float):
