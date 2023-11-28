@@ -55,7 +55,7 @@ def optimization(edges, wanted_theta: float, image_length: int) -> Tuple[float, 
     hough_lines_threshold = 1500
     i = 0
     n_hits = 0
-    results = []
+    results: List[Tuple[Optional[float], float, List[float]]] = []
 
     def do_step(_i, _threshold):
         _i += 1
@@ -91,7 +91,7 @@ def optimization(edges, wanted_theta: float, image_length: int) -> Tuple[float, 
 
         last_confidences = [result[1] for result in results[-5:]]
         last_confidences_equal = np.all(
-            np.abs(np.median(last_confidences) - last_confidences) < 0.01
+            np.abs(np.median(last_confidences) - last_confidences) < 0.01  # type: ignore
         )
         if len(results) > 5 and confidence > 0 and last_confidences_equal:
             break
@@ -105,7 +105,7 @@ def optimization(edges, wanted_theta: float, image_length: int) -> Tuple[float, 
     best_result = max(results, key=lambda x: x[1])
     px_per_inch, confidence, rhos = best_result
     print(f"px per inch {px_per_inch}, {len(rhos)} lines, confidence {confidence}")
-    return px_per_inch, confidence, rhos
+    return px_per_inch or 10.0, confidence, rhos
 
 
 def px_per_inch_detection(

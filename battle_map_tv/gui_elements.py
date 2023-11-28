@@ -76,7 +76,7 @@ class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
 class ToggleButton(pyglet.gui.ToggleButton, PushButton):
     def on_mouse_press(self, *args, **kwargs):
         super().on_mouse_press(*args, **kwargs)
-        self.value = self.callback(self.value)
+        self.value: bool = self.callback(self.value)
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
