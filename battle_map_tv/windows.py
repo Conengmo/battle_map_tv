@@ -74,13 +74,13 @@ class ImageWindow(Window):
             and mouse.LEFT
             and self.image.are_coordinates_within_image(x, y)
         ):
-            self.image.pan(dx=dx, dy=dy)
+            self.image.pan(dx=dx, dy=dy, store=False)
             self.image.dragging = True
 
     def on_mouse_release(self, x, y, button, modifiers):
         if self.image is not None and self.image.dragging:
             self.image.dragging = False
-            self.image.store_coordinates()
+            self.image.store_offsets()
 
 
 class GMWindow(Window):
