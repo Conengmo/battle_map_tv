@@ -46,6 +46,14 @@ class Image:
         self.sprite.scale = get_image_from_storage(
             self.image_filename, ImageKeys.scale, default=1.0
         )
+        if self.sprite.scale == 1.0:
+            new_scale = min(
+                window_width_px / self.sprite.width,
+                window_height_px / self.sprite.height,
+            )
+            if new_scale < 1.0:
+                self.scale(new_scale)
+
         self.center(store=False)
         dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
         self.pan(dx=dx, dy=dy, store=False)
