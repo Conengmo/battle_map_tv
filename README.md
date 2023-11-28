@@ -14,6 +14,22 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
 
+## Screenshot
+
+![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/2f498b0b-b9f7-450f-ba83-c1293e0aed11)
+
+
+## Quickstart
+
+```
+pip install git+https://github.com/conengmo/battle-map-tv
+python -m battle_map_tv
+```
+
+Then drag an image from a local folder into the GM window to display it.
+
+Add the dimensions of your secondary screen in milimeters to display the grid overlay and autoscale the image.
+
 
 ## To-do
 
