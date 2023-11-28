@@ -282,5 +282,15 @@ class GMGui:
         )
         self.frame.add_widget(self.button_center_image)
 
+        self.button_fullscreen = PushButton(
+            x=self.button_grid.x,
+            y=row_y,
+            batch=self.batch,
+            callback=lambda: image_window.set_fullscreen(),
+            label="Fullscreen",
+            icon="fullscreen",
+        )
+        self.frame.add_widget(self.button_fullscreen)
+
     def draw(self):
         self.batch.draw()
