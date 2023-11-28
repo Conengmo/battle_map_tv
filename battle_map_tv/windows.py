@@ -153,6 +153,7 @@ class GMGui:
             batch=self.batch,
             callback=button_callback_autoscale,
             label="Autoscale image",
+            icon="autoscale",
         )
         self.frame.add_widget(self.button_autoscale)
 
@@ -203,6 +204,7 @@ class GMGui:
             batch=self.batch,
             callback=button_callback_grid,
             label="Grid overlay",
+            icon="grid",
         )
         self.frame.add_widget(self.button_grid)
 
@@ -235,6 +237,7 @@ class GMGui:
             batch=self.batch,
             callback=lambda: image_window.remove_image(),
             label="Remove",
+            icon="remove",
         )
         self.frame.add_widget(self.button_remove_image)
 
@@ -244,6 +247,7 @@ class GMGui:
             batch=self.batch,
             callback=lambda: image_window.restore_image(),
             label="Restore",
+            icon="restore",
         )
         self.frame.add_widget(self.button_restore_image)
 
@@ -260,6 +264,7 @@ class GMGui:
             batch=self.batch,
             callback=callback_button_rotate_image,
             label="Rotate",
+            icon="rotate",
         )
         self.frame.add_widget(self.button_rotate_image)
 
@@ -273,6 +278,7 @@ class GMGui:
             batch=self.batch,
             callback=callback_button_center_image,
             label="Center",
+            icon="center",
         )
         self.frame.add_widget(self.button_center_image)
 

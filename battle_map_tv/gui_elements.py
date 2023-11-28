@@ -53,11 +53,10 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
 
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
-    pressed = pyglet.resource.image(r"resources/button_on.png").get_texture()
-    depressed = pyglet.resource.image(r"resources/button_off.png").get_texture()
-
-    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str):
-        super().__init__(x=x, y=y, pressed=self.pressed, depressed=self.depressed, batch=batch)
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str, icon: str):
+        pressed = pyglet.resource.image(f"resources/button_{icon}_hover.png").get_texture()
+        depressed = pyglet.resource.image(f"resources/button_{icon}.png").get_texture()
+        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
         self.callback = callback
         self.label = Label(
             text=label,

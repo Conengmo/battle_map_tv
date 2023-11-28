@@ -9,7 +9,7 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 - Doesn't use a browser.
 - Works offline, no subscription or anything, fully open source.
 - Import images to display on the tv.
-- Scale and pan the image.
+- Scale, pan and rotate the image.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
@@ -17,8 +17,6 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 
 ## To-do
 
-- when opening an image scale it to fit the screen
-- put the sliders for panning back
 - Release on Pypi
 - Investigate running it as executable
 
@@ -28,3 +26,4 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 - Uses [Pyglet](https://github.com/pyglet/pyglet) for the graphical user interface.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
 - Uses [Platformdirs](https://github.com/platformdirs/platformdirs) to store settings in a local folder.
+- Icons by Prinbles https://prinbles.itch.io/analogue-buttons-pack-i
