@@ -263,5 +263,18 @@ class GMGui:
         )
         self.frame.add_widget(self.button_rotate_image)
 
+        def callback_button_center_image():
+            if image_window.image is not None:
+                image_window.image.center()
+
+        self.button_center_image = PushButton(
+            x=self.button_rotate_image.x2 + padding_x,
+            y=row_y,
+            batch=self.batch,
+            callback=callback_button_center_image,
+            label="Center",
+        )
+        self.frame.add_widget(self.button_center_image)
+
     def draw(self):
         self.batch.draw()

@@ -6,8 +6,13 @@ import numpy as np
 import pyglet
 from pyglet.sprite import Sprite
 
-from battle_map_tv.storage import set_image_in_storage, ImageKeys, get_image_from_storage, \
-    set_in_storage, StorageKeys
+from battle_map_tv.storage import (
+    set_image_in_storage,
+    ImageKeys,
+    get_image_from_storage,
+    set_in_storage,
+    StorageKeys,
+)
 
 
 class Image:
@@ -55,9 +60,14 @@ class Image:
         self.sprite.draw()
 
     def update_window_px(self, width_px: int, height_px: int):
+        diff_x = width_px - self.window_width_px
+        diff_y = height_px - self.window_height_px
+        self.dx += int(diff_x / 2)
+        self.dy += int(diff_y / 2)
         self.window_width_px = width_px
         self.window_height_px = height_px
         self._recalculate_sprite_size()
+        self.store_coordinates()
 
     def _recalculate_sprite_size(self):
         self.sprite.x = self.window_width_px / 2 + self.dx
@@ -66,12 +76,13 @@ class Image:
     def are_coordinates_within_image(self, x: int, y: int) -> bool:
         return (
             self.sprite.x - self.sprite.width / 2 <= x <= self.sprite.x + self.sprite.width / 2
-            and self.sprite.y - self.sprite.height / 2 <= y <= self.sprite.y + self.sprite.height / 2
+            and self.sprite.y - self.sprite.height / 2
+            <= y
+            <= self.sprite.y + self.sprite.height / 2
         )
 
     def scale(self, value: float):
         self.sprite.scale = value
-        self._recalculate_sprite_size()
         set_image_in_storage(self.image_filename, ImageKeys.scale, value)
 
     def pan(self, dx: int, dy: int):
@@ -84,3 +95,9 @@ class Image:
 
     def delete(self):
         self.sprite.delete()
+
+    def center(self):
+        self.dx = 0
+        self.dy = 0
+        self._recalculate_sprite_size()
+        self.store_coordinates()
