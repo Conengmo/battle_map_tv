@@ -28,6 +28,7 @@ class Image:
         self.rotation = rotation
         self.dragging: bool = False
 
+        image_path = os.path.abspath(image_path)
         self.filepath: str = image_path
         self.image_filename = os.path.basename(image_path)
         set_in_storage(key=StorageKeys.previous_image, value=image_path)
