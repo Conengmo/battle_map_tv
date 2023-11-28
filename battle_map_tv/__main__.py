@@ -5,6 +5,8 @@ from .windows import ImageWindow, GMWindow
 
 
 def main():
+    print("script home", pyglet.resource.get_script_home())
+
     display = pyglet.canvas.get_display()
     screens = display.get_screens()
 
