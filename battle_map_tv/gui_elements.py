@@ -63,8 +63,8 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
     def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str, icon: str):
-        pressed = pyglet.resource.image(f"resources/button_{icon}_hover.png").get_texture()
-        depressed = pyglet.resource.image(f"resources/button_{icon}.png").get_texture()
+        pressed = pyglet.resource.image(f"button_{icon}_hover.png").get_texture()
+        depressed = pyglet.resource.image(f"button_{icon}.png").get_texture()
         super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
         self.callback = callback
         self.label = Label(
@@ -88,8 +88,8 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
-    base = pyglet.resource.image(r"resources/slider_base.png").get_texture()
-    knob = pyglet.resource.image(r"resources/slider_knob.png").get_texture()
+    base = pyglet.resource.image("slider_base.png").get_texture()
+    knob = pyglet.resource.image("slider_knob.png").get_texture()
 
     def __init__(
         self,
