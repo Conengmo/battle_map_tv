@@ -12,8 +12,6 @@ def main():
         caption="TV window",
         resizable=True,
         screen=screens[-1],
-        width=screens[-1].width,
-        height=screens[-1].height,
     )
 
     gm_window = GMWindow(
