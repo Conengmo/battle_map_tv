@@ -1,4 +1,4 @@
-# battle-map-tv
+# Battle Map TV
 
 Python application to display battle maps for TTRPGs on a secondary tv.
 
@@ -41,5 +41,5 @@ Add the dimensions of your secondary screen in milimeters to display the grid ov
 
 - Uses [Pyglet](https://github.com/pyglet/pyglet) for the graphical user interface.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
-- Uses [Platformdirs](https://github.com/platformdirs/platformdirs) to store settings in a local folder.
+- Uses [Hatch](https://hatch.pypa.io/latest/) to build and release the package.
 - Icons by Prinbles https://prinbles.itch.io/analogue-buttons-pack-i

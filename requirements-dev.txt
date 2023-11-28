@@ -1,4 +1,5 @@
 black
+hatch
 pre-commit
 mypy
 pytest

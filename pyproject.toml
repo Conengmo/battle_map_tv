@@ -4,3 +4,46 @@ check_untyped_defs = true
 
 [tool.black]
 line-length = 100
+
+[tool.hatch]
+
+[tool.hatch.build]
+include = [
+  "battle_map_tv/resources/*",
+  "battle_map_tv/*.py",
+]
+exclude = [
+  "tests/*",
+]
+
+[tool.hatch.version]
+path = "battle_map_tv/__about__.py"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "battle_map_tv"
+authors = [
+  { name="Frank", email="33519926+Conengmo@users.noreply.github.com" },
+]
+description = "Display battle maps for TTRPGs on a secondary tv"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+dependencies = [
+    "pyglet",
+    "opencv-python",
+    "numpy",
+    "scipy",
+]
+
+[project.urls]
+Homepage = "https://github.com/Conengmo/battle-map-tv"
+Issues = "https://github.com/Conengmo/battle-map-tv/issues"
