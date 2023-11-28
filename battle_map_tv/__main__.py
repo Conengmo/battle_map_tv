@@ -17,8 +17,8 @@ def main():
     )
 
     gm_window = GMWindow(
-        width=850,
-        height=500,
+        width=730,
+        height=460,
         caption="GM window",
     )
     gm_window.switch_to()

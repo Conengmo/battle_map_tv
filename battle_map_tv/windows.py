@@ -229,7 +229,7 @@ class GMGui:
         )
         self.frame.add_widget(self.text_entry_screen_height)
 
-        row_y += 100
+        row_y += 80
 
         self.button_remove_image = PushButton(
             x=margin_x,
