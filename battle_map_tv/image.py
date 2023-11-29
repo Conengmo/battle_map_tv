@@ -77,6 +77,9 @@ class Image:
             and self.sprite.y - height_half <= y <= self.sprite.y + height_half
         )
 
+    def get_scale(self) -> float:
+        return self.sprite.scale
+
     def scale(self, value: float):
         self.sprite.scale = value
         set_image_in_storage(self.image_filename, ImageKeys.scale, value)

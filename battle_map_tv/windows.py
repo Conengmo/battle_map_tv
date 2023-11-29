@@ -82,6 +82,10 @@ class ImageWindow(Window):
             self.image.dragging = False
             self.image.store_offsets()
 
+    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        if self.image is not None and self.image.are_coordinates_within_image(x, y):
+            self.image.scale(self.image.get_scale() * (1 + scroll_y / 10))
+
 
 class GMWindow(Window):
     def __init__(self, *args, **kwargs):
