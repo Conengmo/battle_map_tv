@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pyglet.window import Window, mouse
+from pyglet.window import Window, mouse, FPSDisplay
 
 from battle_map_tv.fire import Fire
 from battle_map_tv.grid import Grid
@@ -9,11 +9,12 @@ from battle_map_tv.storage import get_from_storage, StorageKeys
 
 
 class ImageWindow(Window):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, show_fps: bool, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
         self.fire: Optional[Fire] = None
+        self.fps_display = FPSDisplay(self) if show_fps else None
 
     def on_draw(self):
         self.clear()
@@ -23,6 +24,8 @@ class ImageWindow(Window):
             self.grid.draw()
         if self.fire is not None:
             self.fire.draw()
+        if self.fps_display is not None:
+            self.fps_display.draw()
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
