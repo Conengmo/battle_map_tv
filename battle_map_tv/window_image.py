@@ -1,7 +1,12 @@
 from typing import Optional
+import os.path
 
+import pyglet
+from pyglet.graphics import Batch
+from pyglet.image import Animation
 from pyglet.window import Window, mouse
 
+from battle_map_tv.fire import Fire
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.storage import get_from_storage, StorageKeys
@@ -12,9 +17,11 @@ class ImageWindow(Window):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
+        self.fire = Fire(window=self, intensity=1000)
 
     def on_draw(self):
         self.clear()
+        self.fire.draw()
         if self.image is not None:
             self.image.draw()
         if self.grid is not None:
