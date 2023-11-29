@@ -19,7 +19,7 @@ class GuiWindow(Window):
 
         self.image_window = image_window
         self.batch = Batch()
-        self.frame = Frame(window=self)
+        self.frame = Frame(window=self, cell_size=30)
 
         margin_x = 40
         margin_y = 60

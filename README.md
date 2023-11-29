@@ -21,6 +21,8 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 
 ## Quickstart
 
+This assumes you have Python installed. Probably you also want to create a virtual environment.
+
 ```
 pip install git+https://github.com/conengmo/battle-map-tv
 python -m battle_map_tv
@@ -34,11 +36,6 @@ This is needed to display a grid overlay and autoscale the image to 1 inch.
 You can drag the image to pan and zoom with your mouse scroll wheel or with the slider in the GM window.
 
 Close the application by closing both windows.
-
-
-## Known issues
-
-- On Windows sometimes some buttons have linked behavior.
 
 
 ## Technical
