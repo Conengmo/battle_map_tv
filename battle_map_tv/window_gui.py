@@ -4,7 +4,7 @@ from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.window import Window
 
-from battle_map_tv.broker import event_broker, EventKeys
+from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.grid import mm_to_inch
 from battle_map_tv.gui_elements import Slider, ToggleButton, TextEntry, PushButton
 from battle_map_tv.scale_detection import find_image_scale
@@ -50,7 +50,7 @@ class GuiWindow(Window):
             self.switch_to()
             self.slider_scale.set_value(value)
 
-        event_broker.register(EventKeys.change_scale, update_slider_scale_callback)
+        global_event_dispatcher.add_handler(EventKeys.change_scale, update_slider_scale_callback)
 
         def button_callback_autoscale(button_value: bool) -> bool:
             if button_value and image_window.image is not None:
