@@ -66,11 +66,18 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
 
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
-    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str, icon: str):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        batch: Batch,
+        callback: Optional[Callable],
+        label: str,
+        icon: str,
+    ):
         pressed = pyglet.resource.image(f"button_{icon}_hover.png").get_texture()
         depressed = pyglet.resource.image(f"button_{icon}.png").get_texture()
         super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
-        self.callback = callback
         self.label = Label(
             text=label,
             x=x + self.width / 2,
@@ -79,16 +86,14 @@ class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
             anchor_x="center",
             batch=batch,
         )
-
-    def on_mouse_release(self, *args, **kwargs):
-        super().on_mouse_release(*args, **kwargs)
-        self.callback()
+        if callback is not None:
+            self.set_handler("on_release", callback)
 
 
 class ToggleButton(pyglet.gui.ToggleButton, PushButton):
-    def on_mouse_press(self, *args, **kwargs):
-        super().on_mouse_press(*args, **kwargs)
-        self.value: bool = self.callback(self.value)
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, label: str, icon: str):
+        super().__init__(x=x, y=y, batch=batch, callback=None, label=label, icon=icon)
+        self.set_handler("on_toggle", callback)
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
