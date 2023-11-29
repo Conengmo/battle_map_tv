@@ -1,9 +1,5 @@
 from typing import Optional
-import os.path
 
-import pyglet
-from pyglet.graphics import Batch
-from pyglet.image import Animation
 from pyglet.window import Window, mouse
 
 from battle_map_tv.fire import Fire
@@ -17,15 +13,16 @@ class ImageWindow(Window):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
-        self.fire = Fire(window_width=self.width, window_height=self.height)
+        self.fire: Optional[Fire] = None
 
     def on_draw(self):
         self.clear()
-        self.fire.draw()
         if self.image is not None:
             self.image.draw()
         if self.grid is not None:
             self.grid.draw()
+        if self.fire is not None:
+            self.fire.draw()
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width=width, height=height)
@@ -75,6 +72,17 @@ class ImageWindow(Window):
         if self.grid is not None:
             self.grid.delete()
             self.grid = None
+
+    def add_fire(self):
+        self.switch_to()
+        self.remove_fire()
+        self.fire = Fire(window_width=self.width, window_height=self.height)
+
+    def remove_fire(self):
+        self.switch_to()
+        if self.fire is not None:
+            self.fire.delete()
+            self.fire = None
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         if (

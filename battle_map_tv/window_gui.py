@@ -203,6 +203,22 @@ class GuiWindow(Window):
         )
         self.frame.add_widget(self.button_center_image)
 
+        def callback_button_fire(value):
+            if value:
+                image_window.add_fire()
+            else:
+                image_window.remove_fire()
+
+        self.button_fire = ToggleButton(
+            x=self.button_center_image.x2 + padding_x,
+            y=row_y,
+            batch=self.batch,
+            callback=callback_button_fire,
+            label="Fire",
+            icon="fire",
+        )
+        self.frame.add_widget(self.button_fire)
+
         self.button_fullscreen = PushButton(
             x=self.button_grid.x,
             y=row_y,
