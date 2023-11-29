@@ -8,7 +8,7 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 - Works natively on Linux, macOS and Windows.
 - Doesn't use a browser.
 - Works offline, no subscription or anything, fully open source.
-- Import images to display on the tv.
+- Import local images to display on the tv.
 - Scale, pan and rotate the image.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
@@ -28,13 +28,16 @@ python -m battle_map_tv
 
 Then drag an image from a local folder into the GM window to display it.
 
-Add the dimensions of your secondary screen in milimeters to display the grid overlay and autoscale the image.
+There are two text boxes to enter the dimensions of your secondary screen in milimeters.
+This is needed to display a grid overlay and autoscale the image to 1 inch.
+
+Close the application by closing both windows.
 
 
-## To-do
+## Known issues
 
-- Release on Pypi
-- Investigate running it as executable
+On Windows the application will sometimes break unexpectedly. I'll have to get in touch with someone
+knowledgeable about Pyglet to look into this.
 
 
 ## Technical
