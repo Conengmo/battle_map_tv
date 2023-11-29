@@ -46,7 +46,6 @@ class FireParticle:
     texture.anchor_y = texture.height // 2
     alpha_min: int = 10
     alpha_max: int = 150
-    alpha_range: Tuple[int, int] = (20, 50)
     d_alpha_range: Tuple[int, int] = (5, 10)
     d_rotation_range: Tuple[float, float] = (-0.1, 0.1)
     alpha: float
@@ -72,19 +71,15 @@ class FireParticle:
             getattr(self.sprite, self.distance_attribute) - getattr(self, self.distance_attribute)
         )
         factor_distance = distance / self.distance_limit
-        assert factor_distance >= 0
         factor_visibility = self.alpha / self.alpha_max
-        assert factor_visibility >= 0
         factor_combined = math.sqrt(factor_distance) + factor_visibility
         self.alpha += self.d_alpha * (1 - factor_combined)
         if self.alpha <= self.alpha_min:
             self.reset()
             return
-        assert self.alpha >= 0, (self.alpha, self.d_alpha)
-        assert self.alpha <= 255, (self.alpha, self.d_alpha)
+        self.sprite.opacity = int(self.alpha)
         self.sprite.x += self.dx
         self.sprite.y += self.dy
-        self.sprite.opacity = int(self.alpha)
         self.sprite.rotation += self.d_rotation
         if (
             self.sprite.rotation < self.rotation_range[0]
@@ -93,29 +88,30 @@ class FireParticle:
             self.d_rotation *= -1
 
     def reset(self):
-        self.distance_limit = int(0.05 * (self.window_height + self.window_width))
+        self.distance_limit = int(0.025 * (self.window_height + self.window_width))
 
         side = choices(range(4), weights=2 * (self.window_width, self.window_height))[0]
+        offset = 20
         if side == 0:  # bottom
             self.x = randint(0, self.window_width)
-            self.y = 0
+            self.y = 0 - offset
             rise = ((-20, 20), (5, 20))
             self.rotation_range = (-45, 45)
             self.distance_attribute = "y"
         elif side == 1:  # left
-            self.x = 0
+            self.x = 0 - offset
             self.y = randint(0, self.window_height)
             rise = ((5, 20), (-20, 20))
             self.rotation_range = (45, 135)
             self.distance_attribute = "x"
         elif side == 2:  # top
             self.x = randint(0, self.window_width)
-            self.y = self.window_height
+            self.y = self.window_height + offset
             rise = ((-20, 20), (-20, -5))
             self.rotation_range = (135, 225)
             self.distance_attribute = "y"
         elif side == 3:  # right
-            self.x = self.window_width
+            self.x = self.window_width + offset
             self.y = randint(0, self.window_height)
             rise = ((-20, -5), (-20, 20))
             self.rotation_range = (225, 315)
@@ -126,10 +122,10 @@ class FireParticle:
         self.sprite.x = self.x
         self.sprite.y = self.y
 
-        self.dx = randint(rise[0][0], rise[0][1]) / 50
-        self.dy = randint(rise[1][0], rise[1][1]) / 50
+        self.dx = randint(rise[0][0], rise[0][1]) / 30
+        self.dy = randint(rise[1][0], rise[1][1]) / 30
 
-        self.alpha = uniform(*self.alpha_range)
+        self.alpha = self.alpha_min
         self.sprite.opacity = int(self.alpha)
         self.d_alpha = uniform(*self.d_alpha_range)
 
