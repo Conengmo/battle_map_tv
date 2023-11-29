@@ -44,3 +44,4 @@ Close the application by closing both windows.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
 - Uses [Hatch](https://hatch.pypa.io/latest/) to build and release the package.
 - Icons by Prinbles https://prinbles.itch.io/analogue-buttons-pack-i
+- Fire resource by DemontCode https://demontcode.itch.io/fireball
