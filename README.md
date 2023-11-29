@@ -31,6 +31,8 @@ Then drag an image from a local folder into the GM window to display it.
 There are two text boxes to enter the dimensions of your secondary screen in milimeters.
 This is needed to display a grid overlay and autoscale the image to 1 inch.
 
+You can drag the image to pan and zoom with your mouse scroll wheel or with the slider in the GM window.
+
 Close the application by closing both windows.
 
 
