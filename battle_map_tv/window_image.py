@@ -17,7 +17,7 @@ class ImageWindow(Window):
         super().__init__(*args, **kwargs)
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
-        self.fire = Fire(window=self, intensity=1000)
+        self.fire = Fire(window_width=self.width, window_height=self.height)
 
     def on_draw(self):
         self.clear()
@@ -33,6 +33,8 @@ class ImageWindow(Window):
             self.image.update_window_px(width_px=width, height_px=height)
         if self.grid is not None:
             self.grid.update_window_px(width_px=width, height_px=height)
+        if self.fire is not None:
+            self.fire.update_window_px(width=width, height=height)
 
     def add_image(self, image_path: str, rotation: int = 0):
         self.switch_to()
