@@ -1,7 +1,8 @@
 import pyglet
 import pyglet.gui
 
-from .windows import ImageWindow, GMWindow
+from battle_map_tv.window_gui import GuiWindow
+from battle_map_tv.window_image import ImageWindow
 
 
 def main():
@@ -14,13 +15,12 @@ def main():
         screen=screens[-1],
     )
 
-    gm_window = GMWindow(
+    gm_window = GuiWindow(
+        image_window=image_window,
         width=730,
         height=460,
         caption="GM window",
     )
-    gm_window.switch_to()
-    gm_window.add_gui(image_window=image_window)
 
     pyglet.app.run()
 
