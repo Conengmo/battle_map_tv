@@ -221,3 +221,9 @@ class GuiWindow(Window):
         self.image_window.add_image(image_path=paths[0])
         self.switch_to()
         self.slider_scale.reset()
+
+    def on_mouse_press(self, x: int, y: int, button, modifiers):
+        # make sure the text entries can loose focus
+        for text_entry in [self.text_entry_screen_height, self.text_entry_screen_width]:
+            if not text_entry._check_hit(x, y):
+                text_entry.on_mouse_press(x, y, button, modifiers)
