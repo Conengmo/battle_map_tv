@@ -33,6 +33,7 @@ class ImageWindow(Window):
             self.grid.update_window_px(width_px=width, height_px=height)
 
     def add_image(self, image_path: str, rotation: int = 0):
+        self.switch_to()
         self.remove_image()
         self.image = Image(
             image_path=image_path,
@@ -42,6 +43,7 @@ class ImageWindow(Window):
         )
 
     def remove_image(self):
+        self.switch_to()
         if self.image is not None:
             self.image.delete()
             self.image = None
@@ -55,6 +57,7 @@ class ImageWindow(Window):
             self.add_image(image_path=previous_image)
 
     def add_grid(self, width_mm: int, height_mm: int):
+        self.switch_to()
         if self.grid is not None:
             self.remove_grid()
         self.grid = Grid(
@@ -64,6 +67,7 @@ class ImageWindow(Window):
         )
 
     def remove_grid(self):
+        self.switch_to()
         if self.grid is not None:
             self.grid.delete()
             self.grid = None
@@ -102,6 +106,7 @@ class GMWindow(Window):
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
         self.gui.image_window.add_image(image_path=paths[0])
+        self.switch_to()
         self.gui.slider_scale.reset()
 
 
@@ -151,7 +156,9 @@ class GMGui:
                 px_per_inch = find_image_scale(image_window.image.filepath)
                 px_per_mm = px_per_inch * mm_to_inch
                 scale = screen_px_per_mm / px_per_mm
+                image_window.switch_to()
                 image_window.image.scale(scale)
+                parent_window.switch_to()
                 self.slider_scale.value = scale
                 return True
             return False

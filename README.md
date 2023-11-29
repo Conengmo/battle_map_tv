@@ -38,8 +38,7 @@ Close the application by closing both windows.
 
 ## Known issues
 
-On Windows the application will sometimes break unexpectedly. I'll have to get in touch with someone
-knowledgeable about Pyglet to look into this.
+- On Windows sometimes some buttons have linked behavior.
 
 
 ## Technical
