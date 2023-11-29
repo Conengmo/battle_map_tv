@@ -4,9 +4,6 @@ from typing import Dict, Callable, List
 
 class EventKeys(Enum):
     change_scale = "change_scale"
-    change_pan_x = "change_pan_x"
-    change_pan_y = "change_pan_y"
-    change_image = "change_image"
 
 
 class EventBroker:

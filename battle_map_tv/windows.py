@@ -1,5 +1,6 @@
 from typing import Optional, List, Union
 
+from battle_map_tv.broker import event_broker, EventKeys
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.window import Window, mouse
@@ -121,7 +122,6 @@ class GMGui:
             value = float(value)
             if image_window.image is not None:
                 image_window.image.scale(value)
-            self.slider_scale.value = value
 
         self.slider_scale = Slider(
             x=margin_x,
@@ -135,6 +135,11 @@ class GMGui:
             label_formatter=lambda x: f"{x:.2f}",
         )
         self.frame.add_widget(self.slider_scale)
+
+        def update_slider_scale_callback(value: float):
+            self.slider_scale.value = value
+
+        event_broker.register(EventKeys.change_scale, update_slider_scale_callback)
 
         def button_callback_autoscale(button_value: bool) -> bool:
             if button_value and image_window.image is not None:

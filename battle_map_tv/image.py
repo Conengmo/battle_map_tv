@@ -4,6 +4,7 @@ from io import BytesIO
 import cv2
 import numpy as np
 import pyglet
+from battle_map_tv.broker import event_broker, EventKeys
 from pyglet.sprite import Sprite
 
 from battle_map_tv.storage import (
@@ -82,6 +83,7 @@ class Image:
 
     def scale(self, value: float):
         self.sprite.scale = value
+        event_broker.trigger(EventKeys.change_scale, value)
         set_image_in_storage(self.image_filename, ImageKeys.scale, value)
 
     def pan(self, dx: int, dy: int, store: bool = True):
