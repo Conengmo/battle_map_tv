@@ -45,16 +45,21 @@ class Image:
         image.anchor_x = image.width // 2
         image.anchor_y = image.height // 2
         self.sprite = Sprite(image)
-        self.sprite.scale = get_image_from_storage(
-            self.image_filename, ImageKeys.scale, default=1.0
-        )
-        if self.sprite.scale == 1.0:
+        try:
+            self.sprite.scale = get_image_from_storage(
+                self.image_filename,
+                ImageKeys.scale,
+                do_raise=True,
+            )
+        except KeyError:
             new_scale = min(
                 window_width_px / self.sprite.width,
                 window_height_px / self.sprite.height,
             )
             if new_scale < 1.0:
                 self.scale(new_scale)
+        else:
+            event_broker.trigger(EventKeys.change_scale, self.sprite.scale)
 
         self.center(store=False)
         dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))

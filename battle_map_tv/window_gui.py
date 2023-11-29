@@ -47,7 +47,8 @@ class GuiWindow(Window):
         self.frame.add_widget(self.slider_scale)
 
         def update_slider_scale_callback(value: float):
-            self.slider_scale.value = value
+            self.switch_to()
+            self.slider_scale.set_value(value)
 
         event_broker.register(EventKeys.change_scale, update_slider_scale_callback)
 
@@ -83,7 +84,6 @@ class GuiWindow(Window):
         def slider_grid_opacity_callback(value: float):
             if image_window.grid is not None:
                 image_window.grid.update_opacity(int(value))
-            self.slider_grid_opacity.value = value
             return value
 
         self.slider_grid_opacity = Slider(

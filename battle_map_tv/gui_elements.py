@@ -121,9 +121,10 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         )
         self.value_min = value_min
         self.value_max = value_max
-        self.default = default
-        self.value = default
+        self.default = self._external_to_internal(default)
+        self.value = self.default
         self.callback = callback
+
         self.label = Label(
             text=label,
             x=self.x,
@@ -147,29 +148,23 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
     def _range(self) -> float:
         return self.value_max - self.value_min
 
-    def _value_to_internal(self, value):
+    def _external_to_internal(self, value: float) -> float:
         return (value - self.value_min) * 100 / self._range
 
-    @property
-    def value(self):
-        return (self._range * self._value / 100) + self.value_min
+    def _internal_to_external(self, value: float) -> float:
+        return (self._range * value / 100) + self.value_min
 
-    @value.setter
-    def value(self, value: float):
-        value_internal = self._value_to_internal(value)
-        self._value = value_internal
-        x = (
-            (self._max_knob_x - self._min_knob_x) * value_internal / 100
-            + self._min_knob_x
-            + self._half_knob_width
-        )
-        self._knob_spr.x = max(self._min_knob_x, min(x - self._half_knob_width, self._max_knob_x))
-        if hasattr(self, "label_value"):
-            self.label_value.text = self.label_formatter(value)
+    def on_change(self, value: float):
+        value = self._internal_to_external(value)
+        self.update_label_text(value)
+        self.callback(value)
 
-    def on_mouse_drag(self, *args, **kwargs):
-        super().on_mouse_drag(*args, **kwargs)
-        self.callback(self.value)
+    def set_value(self, value: float):
+        self.value = self._external_to_internal(value)
+        self.update_label_text(value)
+
+    def update_label_text(self, value: float):
+        self.label_value.text = self.label_formatter(value)
 
     def reset(self):
         self.value = self.default
