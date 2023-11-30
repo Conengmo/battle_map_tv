@@ -1,12 +1,14 @@
 from typing import Union, List
 
+import pyglet
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
+from pyglet.shapes import Rectangle
 from pyglet.window import Window
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.grid import mm_to_inch
-from battle_map_tv.gui_elements import Slider, ToggleButton, TextEntry, PushButton
+from battle_map_tv.gui_elements import Slider, ToggleButton, TextEntry, PushButton, TabButton
 from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
 from battle_map_tv.window_image import ImageWindow
@@ -19,11 +21,13 @@ class GuiWindow(Window):
 
         self.image_window = image_window
         self.batch = Batch()
+        self.group_background = pyglet.graphics.Group(order=0)
         self.frame = Frame(window=self, cell_size=30)
 
         margin_x = 40
         margin_y = 60
         padding_x = 30
+        padding_y = 30
         margin_label = 10
 
         row_y = margin_y
@@ -81,77 +85,6 @@ class GuiWindow(Window):
 
         row_y += 100
 
-        def slider_grid_opacity_callback(value: float):
-            if image_window.grid is not None:
-                image_window.grid.update_opacity(int(value))
-            return value
-
-        self.slider_grid_opacity = Slider(
-            x=margin_x,
-            y=row_y,
-            value_min=0,
-            value_max=255,
-            default=200,
-            batch=self.batch,
-            callback=slider_grid_opacity_callback,
-            label="Grid opacity",
-            label_formatter=lambda value: str(int(value)),
-        )
-        self.frame.add_widget(self.slider_grid_opacity)
-
-        def button_callback_grid(button_value: bool) -> bool:
-            if button_value:
-                try:
-                    width_mm = int(self.text_entry_screen_width.value)
-                    height_mm = int(self.text_entry_screen_height.value)
-                except ValueError:
-                    print("Invalid input for screen size")
-                    return False
-                else:
-                    image_window.add_grid(
-                        width_mm=width_mm,
-                        height_mm=height_mm,
-                    )
-                    set_in_storage(StorageKeys.width_mm, width_mm)
-                    set_in_storage(StorageKeys.height_mm, height_mm)
-                    return True
-            else:
-                image_window.remove_grid()
-                return False
-
-        self.button_grid = ToggleButton(
-            x=self.slider_grid_opacity.x2 + padding_x,
-            y=row_y - int((50 - self.slider_grid_opacity.height) / 2),
-            batch=self.batch,
-            callback=button_callback_grid,
-            label="Grid overlay",
-            icon="grid",
-        )
-        self.frame.add_widget(self.button_grid)
-
-        row_y += 100
-
-        self.text_entry_screen_width = TextEntry(
-            text=get_from_storage(StorageKeys.width_mm, optional=True),
-            x=margin_x,
-            y=row_y,
-            width=200,
-            label="Screen width (mm)",
-            batch=self.batch,
-        )
-        self.frame.add_widget(self.text_entry_screen_width)
-        self.text_entry_screen_height = TextEntry(
-            text=get_from_storage(StorageKeys.height_mm, optional=True),
-            x=self.text_entry_screen_width.x2 + padding_x,
-            y=row_y,
-            width=200,
-            label="Screen height (mm)",
-            batch=self.batch,
-        )
-        self.frame.add_widget(self.text_entry_screen_height)
-
-        row_y += 80
-
         self.button_remove_image = PushButton(
             x=margin_x,
             y=row_y,
@@ -203,6 +136,36 @@ class GuiWindow(Window):
         )
         self.frame.add_widget(self.button_center_image)
 
+        def button_callback_grid(button_value: bool) -> bool:
+            if button_value:
+                try:
+                    width_mm = int(self.text_entry_screen_width.value)
+                    height_mm = int(self.text_entry_screen_height.value)
+                except ValueError:
+                    print("Invalid input for screen size")
+                    return False
+                else:
+                    image_window.add_grid(
+                        width_mm=width_mm,
+                        height_mm=height_mm,
+                    )
+                    set_in_storage(StorageKeys.width_mm, width_mm)
+                    set_in_storage(StorageKeys.height_mm, height_mm)
+                    return True
+            else:
+                image_window.remove_grid()
+                return False
+
+        self.button_grid = ToggleButton(
+            x=self.button_center_image.x2 + padding_x,
+            y=row_y,
+            batch=self.batch,
+            callback=button_callback_grid,
+            label="Grid overlay",
+            icon="grid",
+        )
+        self.frame.add_widget(self.button_grid)
+
         def callback_button_fire(value):
             if value:
                 image_window.add_fire()
@@ -210,7 +173,7 @@ class GuiWindow(Window):
                 image_window.remove_fire()
 
         self.button_fire = ToggleButton(
-            x=self.button_center_image.x2 + padding_x,
+            x=self.button_grid.x2 + padding_x,
             y=row_y,
             batch=self.batch,
             callback=callback_button_fire,
@@ -220,7 +183,7 @@ class GuiWindow(Window):
         self.frame.add_widget(self.button_fire)
 
         self.button_fullscreen = PushButton(
-            x=self.button_grid.x,
+            x=self.button_autoscale.x,
             y=row_y,
             batch=self.batch,
             callback=lambda: image_window.set_fullscreen(),
@@ -228,6 +191,83 @@ class GuiWindow(Window):
             icon="fullscreen",
         )
         self.frame.add_widget(self.button_fullscreen)
+
+        row_y += 100
+
+        tab_height = 200
+
+        def hide_tab_content():
+            self.text_entry_screen_width.hide()
+            self.text_entry_screen_height.hide()
+            self.slider_grid_opacity.hide()
+
+        self.text_entry_screen_width = TextEntry(
+            text=get_from_storage(StorageKeys.width_mm, optional=True),
+            x=margin_x + padding_x,
+            y=row_y + padding_y,
+            width=200,
+            label="Screen width (mm)",
+            batch=self.batch,
+        )
+        self.push_handlers(self.text_entry_screen_width)
+        self.text_entry_screen_height = TextEntry(
+            text=get_from_storage(StorageKeys.height_mm, optional=True),
+            x=self.text_entry_screen_width.x2 + padding_x,
+            y=row_y + padding_y,
+            width=200,
+            label="Screen height (mm)",
+            batch=self.batch,
+        )
+        self.push_handlers(self.text_entry_screen_height)
+
+        def callback_tab_screen_size():
+            self.switch_to()
+            hide_tab_content()
+            self.text_entry_screen_width.show()
+            self.text_entry_screen_height.show()
+
+        self.tab_screen_size = TabButton(
+            x=margin_x,
+            y=row_y + tab_height,
+            batch=self.batch,
+            callback=callback_tab_screen_size,
+            label="Screen size",
+        )
+        self.frame.add_widget(self.tab_screen_size)
+
+        def slider_grid_opacity_callback(value: float):
+            if image_window.grid is not None:
+                image_window.grid.update_opacity(int(value))
+            return value
+
+        self.slider_grid_opacity = Slider(
+            x=2 * margin_x,
+            y=row_y + padding_y,
+            value_min=0,
+            value_max=255,
+            default=200,
+            batch=self.batch,
+            callback=slider_grid_opacity_callback,
+            label="Grid opacity",
+            label_formatter=lambda value: str(int(value)),
+        )
+        self.push_handlers(self.slider_grid_opacity)
+
+        def callback_tab_grid_opacity():
+            self.switch_to()
+            hide_tab_content()
+            self.slider_grid_opacity.show()
+
+        self.tab_grid_opacity = TabButton(
+            x=self.tab_screen_size.x2,
+            y=row_y + tab_height,
+            batch=self.batch,
+            callback=callback_tab_grid_opacity,
+            label="Grid opacity",
+        )
+        self.frame.add_widget(self.tab_grid_opacity)
+
+        callback_tab_screen_size()
 
     def on_draw(self):
         self.clear()
@@ -237,9 +277,3 @@ class GuiWindow(Window):
         self.image_window.add_image(image_path=paths[0])
         self.switch_to()
         self.slider_scale.reset()
-
-    def on_mouse_press(self, x: int, y: int, button, modifiers):
-        # make sure the text entries can loose focus
-        for text_entry in [self.text_entry_screen_height, self.text_entry_screen_width]:
-            if not text_entry._check_hit(x, y):
-                text_entry.on_mouse_press(x, y, button, modifiers)

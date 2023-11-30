@@ -21,7 +21,7 @@ def main(show_fps: bool = False):
     gm_window = GuiWindow(
         image_window=image_window,
         width=730,
-        height=460,
+        height=560,
         caption="GM window",
     )
 
