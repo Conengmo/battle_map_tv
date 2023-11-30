@@ -58,14 +58,12 @@ class GuiWindow(Window):
                     width_mm = get_from_storage(StorageKeys.width_mm)
                 except KeyError:
                     return False
-                screen_px_per_mm = image_window.width / width_mm
+                screen_px_per_mm = image_window.screen.width / width_mm
                 px_per_inch = find_image_scale(image_window.image.filepath)
                 px_per_mm = px_per_inch * mm_to_inch
                 scale = screen_px_per_mm / px_per_mm
                 image_window.switch_to()
                 image_window.image.scale(scale)
-                self.switch_to()
-                self.slider_scale.value = scale
                 return True
             return False
 
