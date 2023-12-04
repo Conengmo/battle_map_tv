@@ -19,9 +19,6 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
 
-    - name: Get tags
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
     - name: Install build tools
       run: |
         python -m pip install --upgrade pip hatch hatch-vcs
