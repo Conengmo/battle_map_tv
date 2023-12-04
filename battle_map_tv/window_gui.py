@@ -13,6 +13,15 @@ from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
 from battle_map_tv.window_image import ImageWindow
 
+margin_x = 40
+margin_y = 60
+padding_x = 30
+padding_y = 30
+margin_label = 10
+margin_x_tab_button = 5
+tab_button_width = 100
+tab_height = 200
+
 
 class GuiWindow(Window):
     def __init__(self, image_window: ImageWindow, *args, **kwargs):
@@ -21,13 +30,6 @@ class GuiWindow(Window):
         self.batch = Batch()
         self.batch_background = Batch()
         self.frame = Frame(window=self)
-
-        margin_x = 40
-        margin_y = 60
-        padding_x = 30
-        padding_y = 30
-        margin_label = 10
-        margin_x_tab_button = 5
 
         row_y = margin_y
 
@@ -191,8 +193,6 @@ class GuiWindow(Window):
 
         row_y += 100
 
-        tab_height = 200
-
         self.rectangle = Rectangle(
             x=margin_x,
             y=row_y,
@@ -202,11 +202,35 @@ class GuiWindow(Window):
             batch=self.batch_background,
         )
 
-        def hide_tab_content():
-            self.text_entry_screen_width.hide()
-            self.text_entry_screen_height.hide()
-            self.slider_grid_opacity.hide()
+        self.tab_buttons: List[TabButton] = []
 
+        self.text_entry_screen_width: TextEntry
+        self.text_entry_screen_height: TextEntry
+        self._add_tab_screen_size(tab_index=0, row_y=row_y)
+
+        self.slider_grid_opacity: Slider
+        self._add_tab_grid_opacity(tab_index=1, row_y=row_y)
+
+        self._hide_tab_content()
+        self.text_entry_screen_width.show()
+        self.text_entry_screen_height.show()
+
+    def on_draw(self):
+        self.clear()
+        self.batch_background.draw()
+        self.batch.draw()
+
+    def on_file_drop(self, x: int, y: int, paths: List[str]):
+        self.image_window.add_image(image_path=paths[0])
+        self.switch_to()
+        self.slider_scale.reset()
+
+    def _hide_tab_content(self):
+        self.text_entry_screen_width.hide()
+        self.text_entry_screen_height.hide()
+        self.slider_grid_opacity.hide()
+
+    def _add_tab_screen_size(self, tab_index: int, row_y: int):
         self.text_entry_screen_width = TextEntry(
             text=get_from_storage(StorageKeys.width_mm, optional=True),
             x=margin_x + padding_x,
@@ -228,23 +252,25 @@ class GuiWindow(Window):
 
         def callback_tab_screen_size():
             self.switch_to()
-            hide_tab_content()
+            self._hide_tab_content()
             self.text_entry_screen_width.show()
             self.text_entry_screen_height.show()
 
-        self.tab_screen_size = TabButton(
-            x=margin_x,
+        button = TabButton(
+            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
             y=row_y + tab_height,
             batch=self.batch,
             callback=callback_tab_screen_size,
             label="Screen size",
         )
-        self.frame.add_widget(self.tab_screen_size)
+        self.frame.add_widget(button)
+        self.tab_buttons.append(button)
 
+    def _add_tab_grid_opacity(self, tab_index: int, row_y: int):
         def slider_grid_opacity_callback(value: float):
             self.image_window.switch_to()
-            if image_window.grid is not None:
-                image_window.grid.update_opacity(int(value))
+            if self.image_window.grid is not None:
+                self.image_window.grid.update_opacity(int(value))
             return value
 
         self.slider_grid_opacity = Slider(
@@ -262,26 +288,15 @@ class GuiWindow(Window):
 
         def callback_tab_grid_opacity():
             self.switch_to()
-            hide_tab_content()
+            self._hide_tab_content()
             self.slider_grid_opacity.show()
 
-        self.tab_grid_opacity = TabButton(
-            x=self.tab_screen_size.x2 + margin_x_tab_button,
+        button = TabButton(
+            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
             y=row_y + tab_height,
             batch=self.batch,
             callback=callback_tab_grid_opacity,
             label="Grid opacity",
         )
-        self.frame.add_widget(self.tab_grid_opacity)
-
-        callback_tab_screen_size()
-
-    def on_draw(self):
-        self.clear()
-        self.batch_background.draw()
-        self.batch.draw()
-
-    def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.image_window.add_image(image_path=paths[0])
-        self.switch_to()
-        self.slider_scale.reset()
+        self.frame.add_widget(button)
+        self.tab_buttons.append(button)
