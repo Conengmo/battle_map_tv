@@ -26,6 +26,7 @@ in the right size and with a 1-inch grid.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
+- Overlay a fire effect on your map.
 
 
 ## Quickstart
@@ -33,7 +34,7 @@ in the right size and with a 1-inch grid.
 This assumes you have Python installed. Probably you also want to create a virtual environment.
 
 ```
-pip install battle-map-tv
+python -m pip install battle-map-tv
 python -m battle_map_tv
 ```
 
