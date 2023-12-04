@@ -320,6 +320,22 @@ class GuiWindow(Window):
         self.frame.add_widget(button_fire)
         self.effect_buttons.append(button_fire)
 
+        def callback_button_embers(value):
+            if value:
+                self.image_window.add_embers()
+            else:
+                self.image_window.remove_embers()
+
+        button_embers = EffectToggleButton(
+            x=button_fire.x + button_fire.width + padding_x,
+            y=row_y + (tab_height - EffectToggleButton.total_height) // 2,
+            batch=self.batch,
+            callback=callback_button_embers,
+            effect="fire",
+        )
+        self.frame.add_widget(button_embers)
+        self.effect_buttons.append(button_embers)
+
         def callback_tab_effects():
             self.switch_to()
             self._hide_tab_content()
