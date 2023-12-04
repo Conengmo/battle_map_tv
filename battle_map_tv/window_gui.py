@@ -27,7 +27,7 @@ padding_y = 30
 margin_label = 10
 margin_x_tab_button = 5
 tab_button_width = 100
-tab_height = 200
+tab_height = 150
 
 
 class GuiWindow(Window):
@@ -182,7 +182,7 @@ class GuiWindow(Window):
         )
         self.frame.add_widget(self.button_fullscreen)
 
-        row_y += 100
+        row_y += 110
 
         self.tab_background = Rectangle(
             x=margin_x,
