@@ -234,7 +234,7 @@ class GuiWindow(Window):
         self.text_entry_screen_width = TextEntry(
             text=get_from_storage(StorageKeys.width_mm, optional=True),
             x=margin_x + padding_x,
-            y=row_y + padding_y,
+            y=row_y + (tab_height - TextEntry.total_height) // 2,
             width=200,
             label="Screen width (mm)",
             batch=self.batch,
@@ -243,7 +243,7 @@ class GuiWindow(Window):
         self.text_entry_screen_height = TextEntry(
             text=get_from_storage(StorageKeys.height_mm, optional=True),
             x=self.text_entry_screen_width.x2 + padding_x,
-            y=row_y + padding_y,
+            y=row_y + (tab_height - TextEntry.total_height) // 2,
             width=200,
             label="Screen height (mm)",
             batch=self.batch,
@@ -275,7 +275,7 @@ class GuiWindow(Window):
 
         self.slider_grid_opacity = Slider(
             x=2 * margin_x,
-            y=row_y + padding_y,
+            y=row_y + (tab_height - Slider.total_height) // 2,
             value_min=0,
             value_max=255,
             default=200,

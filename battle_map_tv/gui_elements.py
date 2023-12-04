@@ -27,6 +27,8 @@ class CoordinatesMixin:
 
 
 class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
+    total_height = 60
+
     def __init__(
         self,
         text: Union[str, int, None],
@@ -124,6 +126,7 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
     base = pyglet.resource.image("slider_base.png").get_texture()
     knob = pyglet.resource.image("slider_knob.png").get_texture()
+    total_height = 70
 
     def __init__(
         self,
