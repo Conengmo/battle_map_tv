@@ -29,7 +29,7 @@ in the right size and with a 1-inch grid.
 This assumes you have Python installed. Probably you also want to create a virtual environment.
 
 ```
-pip install git+https://github.com/conengmo/battle-map-tv
+pip install battle-map-tv
 python -m battle_map_tv
 ```
 
