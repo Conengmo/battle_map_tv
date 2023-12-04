@@ -1,5 +1,6 @@
 black
 hatch
+hatch-vcs
 pre-commit
 mypy
 pytest

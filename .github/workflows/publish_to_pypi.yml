@@ -1,0 +1,42 @@
+name: Publish to PyPI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment: release
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+
+    - name: Get tags
+      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+    - name: Install build tools
+      run: |
+        python -m pip install --upgrade pip hatch hatch-vcs
+
+    - name: Build binary wheel and sdist
+      run: hatch build
+
+    - name: Show files
+      run: |
+        ls dist
+
+    - name: Publish package distributions to PyPI
+      if: success() && github.event_name == 'release'
+      uses: pypa/gh-action-pypi-publish@release/v1

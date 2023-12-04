@@ -1,6 +1,16 @@
+
 # Battle Map TV
 
-Python application to display battle maps for TTRPGs on a secondary tv.
+Display battle maps for TTRPGs on a secondary tv.
+
+For GM's with little time or who improvise their sessions.
+
+This Python application aims to do one thing: quickly show an image on your secondary screen,
+in the right size and with a 1-inch grid.
+
+[![Tests](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml)
+[![Mypy](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml)
+[![Black](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml)
 
 
 ## Features
@@ -8,8 +18,9 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 - Works natively on Linux, macOS and Windows.
 - Doesn't use a browser.
 - Works offline, no subscription or anything, fully open source.
-- Import local images to display on the tv.
+- Import local image files to display on the tv.
 - Scale, pan and rotate the image.
+- Store the physical size of your screen to enable grid and autoscaling.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
@@ -24,7 +35,7 @@ Python application to display battle maps for TTRPGs on a secondary tv.
 This assumes you have Python installed. Probably you also want to create a virtual environment.
 
 ```
-pip install git+https://github.com/conengmo/battle-map-tv
+pip install battle-map-tv
 python -m battle_map_tv
 ```
 
