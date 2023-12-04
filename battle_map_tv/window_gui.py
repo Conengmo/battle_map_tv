@@ -17,18 +17,17 @@ from battle_map_tv.window_image import ImageWindow
 class GuiWindow(Window):
     def __init__(self, image_window: ImageWindow, *args, **kwargs):
         super().__init__(file_drops=True, *args, **kwargs)
-        self.draw(dt=0)
-
         self.image_window = image_window
         self.batch = Batch()
-        self.group_background = pyglet.graphics.Group(order=0)
-        self.frame = Frame(window=self, cell_size=30)
+        self.batch_background = Batch()
+        self.frame = Frame(window=self)
 
         margin_x = 40
         margin_y = 60
         padding_x = 30
         padding_y = 30
         margin_label = 10
+        margin_x_tab_button = 5
 
         row_y = margin_y
 
@@ -194,6 +193,15 @@ class GuiWindow(Window):
 
         tab_height = 200
 
+        self.rectangle = Rectangle(
+            x=margin_x,
+            y=row_y,
+            width=self.width - 2 * margin_x,
+            height=tab_height,
+            color=(42, 42, 42, 255),
+            batch=self.batch_background,
+        )
+
         def hide_tab_content():
             self.text_entry_screen_width.hide()
             self.text_entry_screen_height.hide()
@@ -234,6 +242,7 @@ class GuiWindow(Window):
         self.frame.add_widget(self.tab_screen_size)
 
         def slider_grid_opacity_callback(value: float):
+            self.image_window.switch_to()
             if image_window.grid is not None:
                 image_window.grid.update_opacity(int(value))
             return value
@@ -257,7 +266,7 @@ class GuiWindow(Window):
             self.slider_grid_opacity.show()
 
         self.tab_grid_opacity = TabButton(
-            x=self.tab_screen_size.x2,
+            x=self.tab_screen_size.x2 + margin_x_tab_button,
             y=row_y + tab_height,
             batch=self.batch,
             callback=callback_tab_grid_opacity,
@@ -269,6 +278,7 @@ class GuiWindow(Window):
 
     def on_draw(self):
         self.clear()
+        self.batch_background.draw()
         self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
