@@ -1,10 +1,16 @@
+
 # Battle Map TV
 
-Python application to display battle maps for TTRPGs on a secondary tv.
+Display battle maps for TTRPGs on a secondary tv.
 
-For GM's with little time or who improvise their sessions. 
-This application aims to do one thing only: quickly show an image on your secondary screen,
+For GM's with little time or who improvise their sessions.
+
+This Python application aims to do one thing: quickly show an image on your secondary screen,
 in the right size and with a 1-inch grid.
+
+[![Tests](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml)
+[![Mypy](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml)
+[![Black](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml)
 
 
 ## Features
