@@ -12,6 +12,8 @@ in the right size and with a 1-inch grid.
 [![Mypy](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml)
 [![Black](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml)
 
+![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/03d086c0-b86b-44e3-a412-ba010771f7e6)
+
 
 ## Features
 
@@ -24,10 +26,6 @@ in the right size and with a 1-inch grid.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
-
-## Screenshot
-
-![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/2f498b0b-b9f7-450f-ba83-c1293e0aed11)
 
 
 ## Quickstart
