@@ -1,4 +1,4 @@
-name: Run Black
+name: Black
 
 on:
   pull_request:
