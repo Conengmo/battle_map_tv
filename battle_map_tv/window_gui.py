@@ -8,7 +8,14 @@ from pyglet.window import Window
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.grid import mm_to_inch
-from battle_map_tv.gui_elements import Slider, ToggleButton, TextEntry, PushButton, TabButton
+from battle_map_tv.gui_elements import (
+    Slider,
+    ToggleButton,
+    TextEntry,
+    PushButton,
+    TabButton,
+    EffectToggleButton,
+)
 from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
 from battle_map_tv.window_image import ImageWindow
@@ -165,22 +172,6 @@ class GuiWindow(Window):
         )
         self.frame.add_widget(self.button_grid)
 
-        def callback_button_fire(value):
-            if value:
-                image_window.add_fire()
-            else:
-                image_window.remove_fire()
-
-        self.button_fire = ToggleButton(
-            x=self.button_grid.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=callback_button_fire,
-            label="Fire",
-            icon="fire",
-        )
-        self.frame.add_widget(self.button_fire)
-
         self.button_fullscreen = PushButton(
             x=self.button_autoscale.x,
             y=row_y,
@@ -211,6 +202,9 @@ class GuiWindow(Window):
         self.slider_grid_opacity: Slider
         self._add_tab_grid_opacity(tab_index=1, row_y=row_y)
 
+        self.effect_buttons: List[EffectToggleButton] = []
+        self._add_tab_effects(tab_index=2, row_y=row_y)
+
         # Start with showing the first tab
         self._hide_tab_content()
         self.text_entry_screen_width.show()
@@ -230,6 +224,8 @@ class GuiWindow(Window):
         self.text_entry_screen_width.hide()
         self.text_entry_screen_height.hide()
         self.slider_grid_opacity.hide()
+        for effect_button in self.effect_buttons:
+            effect_button.hide()
 
     def _create_tab_button(self, tab_index: int, row_y: int, callback: Callable, label: str):
         button = TabButton(
@@ -305,4 +301,34 @@ class GuiWindow(Window):
             row_y=row_y,
             callback=callback_tab_grid_opacity,
             label="Grid opacity",
+        )
+
+    def _add_tab_effects(self, tab_index: int, row_y: int):
+        def callback_button_fire(value):
+            if value:
+                self.image_window.add_fire()
+            else:
+                self.image_window.remove_fire()
+
+        button_fire = EffectToggleButton(
+            x=2 * margin_x,
+            y=row_y + (tab_height - EffectToggleButton.total_height) // 2,
+            batch=self.batch,
+            callback=callback_button_fire,
+            effect="fire",
+        )
+        self.frame.add_widget(button_fire)
+        self.effect_buttons.append(button_fire)
+
+        def callback_tab_effects():
+            self.switch_to()
+            self._hide_tab_content()
+            for effect_button in self.effect_buttons:
+                effect_button.show()
+
+        self._create_tab_button(
+            tab_index=tab_index,
+            row_y=row_y,
+            callback=callback_tab_effects,
+            label="Effects",
         )

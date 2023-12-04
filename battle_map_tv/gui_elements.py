@@ -95,6 +95,23 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
         self.set_handler("on_toggle", callback)
 
 
+class EffectToggleButton(pyglet.gui.ToggleButton):
+    total_height = 100
+
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, effect: str):
+        self.y_original = y
+        pressed = pyglet.resource.image(f"effect_{effect}_hover.png").get_texture()
+        depressed = pyglet.resource.image(f"effect_{effect}.png").get_texture()
+        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
+        self.set_handler("on_toggle", callback)
+
+    def hide(self):
+        self.y = -100
+
+    def show(self):
+        self.y = self.y_original
+
+
 class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
     pressed = pyglet.resource.image("tab_depressed.png").get_texture()
     depressed = pyglet.resource.image("tab_hover.png").get_texture()
