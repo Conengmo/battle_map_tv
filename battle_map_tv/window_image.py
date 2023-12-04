@@ -2,7 +2,7 @@ from typing import Optional
 
 from pyglet.window import Window, mouse, FPSDisplay
 
-from battle_map_tv.fire import Fire
+from battle_map_tv.effects.fire import Fire
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.storage import get_from_storage, StorageKeys
