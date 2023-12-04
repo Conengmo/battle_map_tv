@@ -21,7 +21,7 @@ in the right size and with a 1-inch grid.
 
 ## Screenshot
 
-![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/2f498b0b-b9f7-450f-ba83-c1293e0aed11)
+![Capture](https://github.com/Conengmo/battle_map_tv/assets/33519926/2f498b0b-b9f7-450f-ba83-c1293e0aed11)
 
 
 ## Quickstart
@@ -29,7 +29,7 @@ in the right size and with a 1-inch grid.
 This assumes you have Python installed. Probably you also want to create a virtual environment.
 
 ```
-pip install git+https://github.com/conengmo/battle-map-tv
+pip install git+https://github.com/conengmo/battle_map_tv
 python -m battle_map_tv
 ```
 
