@@ -10,14 +10,21 @@ on:
       - published
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+
+    environment: release
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
+
+    - name: Get tags
+      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
     - name: Install build tools
       run: |
@@ -30,7 +37,6 @@ jobs:
       run: |
         ls dist
 
-    - name: Publish a Python distribution to PyPI on release
+    - name: Publish package distributions to PyPI
       if: success() && github.event_name == 'release'
-      run: |
-        hatch publish
+      uses: pypa/gh-action-pypi-publish@release/v1
