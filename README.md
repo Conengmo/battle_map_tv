@@ -20,6 +20,9 @@ in the right size and with a 1-inch grid.
 - Works natively on Linux, macOS and Windows.
 - Doesn't use a browser.
 - Works offline, no subscription or anything, fully open source.
+- Two windows:
+  - one on the TV with your map and grid on it
+  - one on your GM laptop with controls
 - Import local image files to display on the tv.
 - Scale, pan and rotate the image.
 - Store the physical size of your screen to enable grid and autoscaling.
@@ -38,12 +41,14 @@ python -m pip install battle-map-tv
 python -m battle_map_tv
 ```
 
-Then drag an image from a local folder into the GM window to display it.
+Drag the TV window to your TV and make it fullscreen.
+
+Then drag an image from a local folder and drop it in the GM window.
 
 There are two text boxes to enter the dimensions of your secondary screen in milimeters.
 This is needed to display a grid overlay and autoscale the image to 1 inch.
 
-You can drag the image to pan and zoom with your mouse scroll wheel or with the slider in the GM window.
+You can drag the image to pan and zoom with your mouse scroll wheel, or use the slider in the GM window.
 
 Close the application by closing both windows.
 
