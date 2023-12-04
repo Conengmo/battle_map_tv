@@ -27,6 +27,8 @@ class CoordinatesMixin:
 
 
 class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
+    total_height = 60
+
     def __init__(
         self,
         text: Union[str, int, None],
@@ -47,15 +49,19 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
             text_color=(254, 254, 254, 255),
             caret_color=(254, 254, 254, 255),
         )
-        self._layout.x = x + 10
-        self._layout.y = y - 5
+        self.y_original = y
         self.height = 30
-        self.label = Label(
-            text=label,
-            x=self.x,
-            y=self.y2 + margin_y_label,
-            batch=batch,
-        )
+        self.label = Label(text=label, x=self.x, batch=batch)
+
+    def hide(self):
+        self.y = -100
+        self.label.y = -100
+
+    def show(self):
+        self.y = self.y_original
+        self._layout.x = self.x + 10
+        self._layout.y = self.y - 5
+        self.label.y = self.y2 + margin_y_label
 
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -89,9 +95,55 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
         self.set_handler("on_toggle", callback)
 
 
+class EffectToggleButton(pyglet.gui.ToggleButton):
+    total_height = 100
+
+    def __init__(self, x: int, y: int, batch: Batch, callback: Callable, effect: str):
+        self.y_original = y
+        pressed = pyglet.resource.image(f"effect_{effect}_hover.png").get_texture()
+        depressed = pyglet.resource.image(f"effect_{effect}.png").get_texture()
+        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
+        self.set_handler("on_toggle", callback)
+
+    def hide(self):
+        self.y = -100
+
+    def show(self):
+        self.y = self.y_original
+
+
+class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
+    pressed = pyglet.resource.image("tab_depressed.png").get_texture()
+    depressed = pyglet.resource.image("tab_hover.png").get_texture()
+    hover = pyglet.resource.image("tab_depressed.png").get_texture()
+
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        batch: Batch,
+        callback: Callable,
+        label: str,
+    ):
+        super().__init__(
+            x=x, y=y, pressed=self.pressed, depressed=self.depressed, hover=self.hover, batch=batch
+        )
+        self.label = Label(
+            text=label,
+            x=x + self.width / 2,
+            y=self.y + self.height / 2,
+            align="center",
+            anchor_x="center",
+            anchor_y="center",
+            batch=batch,
+        )
+        self.set_handler("on_release", callback)
+
+
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
     base = pyglet.resource.image("slider_base.png").get_texture()
     knob = pyglet.resource.image("slider_knob.png").get_texture()
+    total_height = 70
 
     def __init__(
         self,
@@ -112,6 +164,7 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
             knob=self.knob,
             batch=batch,
         )
+        self.y_original = y
         self.value_min = value_min
         self.value_max = value_max
         self.default = self._external_to_internal(default)
@@ -121,17 +174,16 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.label = Label(
             text=label,
             x=self.x,
-            y=self.y2 + margin_y_label,
             batch=batch,
         )
         self.label_value = Label(
             text=label_formatter(default),
             x=super().x2 + 20,
-            y=self.y + self.height / 2,
             anchor_y="center",
             batch=batch,
         )
         self.label_formatter = label_formatter
+        self.show()
 
     @property
     def x2(self) -> int:
@@ -161,3 +213,14 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
 
     def reset(self):
         self.value = self.default
+
+    def hide(self):
+        self.y = -100
+        self.label.y = -100
+        self.label_value.y = -100
+
+    def show(self):
+        self.y = self.y_original
+        self.label.y = self.y2 + margin_y_label
+        self.label_value.y = self.y + self.height / 2
+        self.value = self.value
