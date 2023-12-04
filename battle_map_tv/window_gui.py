@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Callable
 
 import pyglet
 from pyglet.graphics import Batch
@@ -193,7 +193,7 @@ class GuiWindow(Window):
 
         row_y += 100
 
-        self.rectangle = Rectangle(
+        self.tab_background = Rectangle(
             x=margin_x,
             y=row_y,
             width=self.width - 2 * margin_x,
@@ -211,6 +211,7 @@ class GuiWindow(Window):
         self.slider_grid_opacity: Slider
         self._add_tab_grid_opacity(tab_index=1, row_y=row_y)
 
+        # Start with showing the first tab
         self._hide_tab_content()
         self.text_entry_screen_width.show()
         self.text_entry_screen_height.show()
@@ -229,6 +230,17 @@ class GuiWindow(Window):
         self.text_entry_screen_width.hide()
         self.text_entry_screen_height.hide()
         self.slider_grid_opacity.hide()
+
+    def _create_tab_button(self, tab_index: int, row_y: int, callback: Callable, label: str):
+        button = TabButton(
+            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
+            y=row_y + tab_height,
+            batch=self.batch,
+            callback=callback,
+            label=label,
+        )
+        self.frame.add_widget(button)
+        self.tab_buttons.append(button)
 
     def _add_tab_screen_size(self, tab_index: int, row_y: int):
         self.text_entry_screen_width = TextEntry(
@@ -256,15 +268,12 @@ class GuiWindow(Window):
             self.text_entry_screen_width.show()
             self.text_entry_screen_height.show()
 
-        button = TabButton(
-            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
-            y=row_y + tab_height,
-            batch=self.batch,
+        self._create_tab_button(
+            tab_index=tab_index,
+            row_y=row_y,
             callback=callback_tab_screen_size,
             label="Screen size",
         )
-        self.frame.add_widget(button)
-        self.tab_buttons.append(button)
 
     def _add_tab_grid_opacity(self, tab_index: int, row_y: int):
         def slider_grid_opacity_callback(value: float):
@@ -291,12 +300,9 @@ class GuiWindow(Window):
             self._hide_tab_content()
             self.slider_grid_opacity.show()
 
-        button = TabButton(
-            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
-            y=row_y + tab_height,
-            batch=self.batch,
+        self._create_tab_button(
+            tab_index=tab_index,
+            row_y=row_y,
             callback=callback_tab_grid_opacity,
             label="Grid opacity",
         )
-        self.frame.add_widget(button)
-        self.tab_buttons.append(button)
