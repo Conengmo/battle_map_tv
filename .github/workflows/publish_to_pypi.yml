@@ -30,6 +30,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip hatch hatch-vcs
 
+    - name: Ignore _version.py changes
+      run: |
+        git update-index --assume-unchanged _version.py
+
     - name: Build binary wheel and sdist
       run: hatch build
 
