@@ -94,8 +94,8 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
 
 
 class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
-    pressed = pyglet.resource.image("tab_pressed.png").get_texture()
-    depressed = pyglet.resource.image("tab_pressed.png").get_texture()
+    pressed = pyglet.resource.image("tab_depressed.png").get_texture()
+    depressed = pyglet.resource.image("tab_hover.png").get_texture()
     hover = pyglet.resource.image("tab_depressed.png").get_texture()
 
     def __init__(
