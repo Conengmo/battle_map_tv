@@ -1,3 +1,7 @@
+![PyPI - Version](https://img.shields.io/pypi/v/battle-map-tv)
+[![Tests](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml)
+[![Mypy](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml)
+[![Black](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml)
 
 # Battle Map TV
 
@@ -8,12 +12,7 @@ For GM's with little time or who improvise their sessions.
 This Python application aims to do one thing: quickly show an image on your secondary screen,
 in the right size and with a 1-inch grid.
 
-![PyPI - Version](https://img.shields.io/pypi/v/battle-map-tv)
-[![Tests](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml/badge.svg?branch=main)](https://github.com/Conengmo/battle-map-tv/actions/workflows/pytest.yml)
-[![Mypy](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/mypy.yml)
-[![Black](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml/badge.svg)](https://github.com/Conengmo/battle-map-tv/actions/workflows/black.yml)
-
-![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/03d086c0-b86b-44e3-a412-ba010771f7e6)
+![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/393cd1a1-fc98-4c62-834e-4d6b9b266872)
 
 
 ## Features
