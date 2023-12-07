@@ -15,6 +15,7 @@ from battle_map_tv.gui_elements import (
     PushButton,
     TabButton,
     EffectToggleButton,
+    ThumbnailButton,
 )
 from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
@@ -195,20 +196,23 @@ class GuiWindow(Window):
 
         self.tab_buttons: List[TabButton] = []
 
+        self.thumbnails: List[Thumbnail] = []
+        self._add_tab_images(tab_index=0, row_y=row_y)
+
         self.text_entry_screen_width: TextEntry
         self.text_entry_screen_height: TextEntry
-        self._add_tab_screen_size(tab_index=0, row_y=row_y)
+        self._add_tab_screen_size(tab_index=1, row_y=row_y)
 
         self.slider_grid_opacity: Slider
-        self._add_tab_grid_opacity(tab_index=1, row_y=row_y)
+        self._add_tab_grid_opacity(tab_index=2, row_y=row_y)
 
         self.effect_buttons: List[EffectToggleButton] = []
-        self._add_tab_effects(tab_index=2, row_y=row_y)
+        self._add_tab_effects(tab_index=3, row_y=row_y)
 
         # Start with showing the first tab
         self._hide_tab_content()
-        self.text_entry_screen_width.show()
-        self.text_entry_screen_height.show()
+        for thumbnail in self.thumbnails:
+            thumbnail.show()
 
     def on_draw(self):
         self.clear()
@@ -221,6 +225,8 @@ class GuiWindow(Window):
         self.slider_scale.reset()
 
     def _hide_tab_content(self):
+        for thumbnail in self.thumbnails:
+            thumbnail.hide()
         self.text_entry_screen_width.hide()
         self.text_entry_screen_height.hide()
         self.slider_grid_opacity.hide()
@@ -331,4 +337,29 @@ class GuiWindow(Window):
             row_y=row_y,
             callback=callback_tab_effects,
             label="Effects",
+        )
+
+    def _add_tab_images(self, tab_index: int, row_y: int):
+        thumbnail_y = row_y + (tab_height - ThumbnailButton.height) // 2
+        for i in range(1):
+            thumbnail_button = ThumbnailButton(
+                x=(2 + i) * margin_x + i * ThumbnailButton.width,
+                y=thumbnail_y,
+                batch=self.batch,
+                image_window=self.image_window,
+            )
+            self.thumbnails.append(thumbnail_button)
+            self.frame.add_widget(thumbnail_button)
+
+        def callback_tab_images():
+            self.switch_to()
+            self._hide_tab_content()
+            for thumbnail in self.thumbnails:
+                thumbnail.show()
+
+        self._create_tab_button(
+            tab_index=tab_index,
+            row_y=row_y,
+            callback=callback_tab_images,
+            label="Images",
         )

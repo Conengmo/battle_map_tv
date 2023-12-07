@@ -1,9 +1,16 @@
 import os.path
+import typing
 from typing import Callable, Union, Optional
 
+import cv2
 import pyglet
 from pyglet.graphics import Batch
 from pyglet.text import Label
+
+from battle_map_tv.opencv_utils import opencv_to_pyglet_texture, change_brightness
+
+if typing.TYPE_CHECKING:
+    from battle_map_tv.window_image import ImageWindow
 
 margin_y_label = 10
 
@@ -138,6 +145,40 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
             batch=batch,
         )
         self.set_handler("on_release", callback)
+
+
+class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
+    width: int = 100
+    height: int = 100
+
+    def __init__(self, x: int, y: int, batch: Batch, image_window: "ImageWindow"):
+        self.image_path: Optional[
+            str
+        ] = "/Users/frank/Documents/battle maps/arabian city court.webp"
+        self.image_window = image_window
+        self.y_original = y
+
+        image_cv = cv2.imread(self.image_path)
+        image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        depressed = opencv_to_pyglet_texture(image_cv)
+        image_cv_pressed = change_brightness(image_cv, -50)
+        pressed = opencv_to_pyglet_texture(image_cv_pressed)
+        image_cv_hover = change_brightness(image_cv, 50)
+        hover = opencv_to_pyglet_texture(image_cv_hover)
+        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, hover=hover, batch=batch)
+        self.set_handler("on_toggle", self._custom_on_toggle)
+
+    def hide(self):
+        self.y = -100
+
+    def show(self):
+        self.y = self.y_original
+
+    def _custom_on_toggle(self, value):
+        if value:
+            self.image_window.add_image(self.image_path)
+        else:
+            self.image_window.remove_image()
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
