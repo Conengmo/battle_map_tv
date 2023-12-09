@@ -1,6 +1,5 @@
 from typing import Union, List, Callable
 
-import pyglet
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.shapes import Rectangle
