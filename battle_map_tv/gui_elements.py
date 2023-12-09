@@ -175,9 +175,9 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
         self.y = self.y_original
 
     def _custom_on_toggle(self, value):
-        if value:
+        if value and self.image_path is not None:
             self.image_window.add_image(self.image_path)
-        else:
+        elif not value:
             self.image_window.remove_image()
 
 

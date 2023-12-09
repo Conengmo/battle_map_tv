@@ -195,7 +195,7 @@ class GuiWindow(Window):
 
         self.tab_buttons: List[TabButton] = []
 
-        self.thumbnails: List[Thumbnail] = []
+        self.thumbnails: List[ThumbnailButton] = []
         self._add_tab_images(tab_index=0, row_y=row_y)
 
         self.text_entry_screen_width: TextEntry
