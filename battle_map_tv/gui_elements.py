@@ -5,6 +5,7 @@ from typing import Callable, Union, Optional
 import cv2
 import pyglet
 from pyglet.graphics import Batch
+from pyglet.sprite import Sprite
 from pyglet.text import Label
 
 from battle_map_tv.opencv_utils import opencv_to_pyglet_texture, change_brightness
@@ -33,6 +34,19 @@ class CoordinatesMixin:
         return self.y + self.height
 
 
+class HideButtonMixin:
+    enabled: bool
+    _sprite: Sprite
+
+    def hide(self):
+        self.enabled = False
+        self._sprite.visible = False
+
+    def show(self):
+        self._sprite.visible = True
+        self.enabled = True
+
+
 class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
     total_height = 60
 
@@ -58,17 +72,17 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         )
         self.y_original = y
         self.height = 30
-        self.label = Label(text=label, x=self.x, batch=batch)
+        self.label = Label(text=label, x=self.x, y=self.y2 + margin_y_label, batch=batch)
 
     def hide(self):
         self.y = -100
-        self.label.y = -100
+        self.label.visible = False
 
     def show(self):
         self.y = self.y_original
         self._layout.x = self.x + 10
         self._layout.y = self.y - 5
-        self.label.y = self.y2 + margin_y_label
+        self.label.visible = True
 
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -102,7 +116,7 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
         self.set_handler("on_toggle", callback)
 
 
-class EffectToggleButton(pyglet.gui.ToggleButton):
+class EffectToggleButton(HideButtonMixin, pyglet.gui.ToggleButton):
     total_height = 100
 
     def __init__(self, x: int, y: int, batch: Batch, callback: Callable, effect: str):
@@ -111,12 +125,6 @@ class EffectToggleButton(pyglet.gui.ToggleButton):
         depressed = pyglet.resource.image(f"effect_{effect}.png").get_texture()
         super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
         self.set_handler("on_toggle", callback)
-
-    def hide(self):
-        self.y = -100
-
-    def show(self):
-        self.y = self.y_original
 
 
 class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -147,17 +155,16 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
         self.set_handler("on_release", callback)
 
 
-class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
+class ThumbnailButton(CoordinatesMixin, HideButtonMixin, pyglet.gui.ToggleButton):
     width: int = 100
     height: int = 100
 
     def __init__(self, x: int, y: int, batch: Batch, image_window: "ImageWindow"):
-        self.image_path: Optional[
-            str
-        ] = "/Users/frank/Documents/battle maps/arabian city court.webp"
+        self.image_path: Optional[str] = "tests/images/19d33097089ed961c4660b3a0bf671e1.png"
         self.image_window = image_window
         self.y_original = y
 
+        assert os.path.exists(self.image_path)
         image_cv = cv2.imread(self.image_path)
         image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
         depressed = opencv_to_pyglet_texture(image_cv)
@@ -167,12 +174,6 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
         hover = opencv_to_pyglet_texture(image_cv_hover)
         super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, hover=hover, batch=batch)
         self.set_handler("on_toggle", self._custom_on_toggle)
-
-    def hide(self):
-        self.y = -100
-
-    def show(self):
-        self.y = self.y_original
 
     def _custom_on_toggle(self, value):
         if value and self.image_path is not None:
@@ -215,16 +216,17 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.label = Label(
             text=label,
             x=self.x,
+            y=self.y2 + margin_y_label,
             batch=batch,
         )
         self.label_value = Label(
             text=label_formatter(default),
             x=super().x2 + 20,
+            y=self.y + self.height / 2,
             anchor_y="center",
             batch=batch,
         )
         self.label_formatter = label_formatter
-        self.show()
 
     @property
     def x2(self) -> int:
@@ -256,12 +258,15 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.value = self.default
 
     def hide(self):
-        self.y = -100
-        self.label.y = -100
-        self.label_value.y = -100
+        self.enabled = False
+        self._base_spr.visible = False
+        self._knob_spr.visible = False
+        self.label.visible = False
+        self.label_value.visible = False
 
     def show(self):
-        self.y = self.y_original
-        self.label.y = self.y2 + margin_y_label
-        self.label_value.y = self.y + self.height / 2
-        self.value = self.value
+        self.enabled = True
+        self._base_spr.visible = True
+        self._knob_spr.visible = True
+        self.label.visible = True
+        self.label_value.visible = True
