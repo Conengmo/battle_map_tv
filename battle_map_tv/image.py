@@ -4,6 +4,7 @@ from io import BytesIO
 import cv2
 import numpy as np
 import pyglet
+from pyglet.graphics import Batch
 from pyglet.sprite import Sprite
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
@@ -44,7 +45,8 @@ class Image:
 
         image.anchor_x = image.width // 2
         image.anchor_y = image.height // 2
-        self.sprite = Sprite(image)
+        self.batch = Batch()
+        self.sprite = Sprite(image, batch=self.batch)
         try:
             self.sprite.scale = get_image_from_storage(
                 self.image_filename,
@@ -66,7 +68,7 @@ class Image:
         self.pan(dx=dx, dy=dy, store=False)
 
     def draw(self):
-        self.sprite.draw()
+        self.batch.draw()
 
     def update_window_px(self, width_px: int, height_px: int):
         diff_x = width_px - self.window_width_px
