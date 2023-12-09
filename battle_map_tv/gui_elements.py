@@ -72,7 +72,18 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         self.label.visible = True
 
 
-class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
+class BasePushButton(CoordinatesMixin, pyglet.gui.PushButton):
+    def __init__(self, x, y, pressed, depressed, batch):
+        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
+
+    def on_mouse_motion(self, *args, **kwargs):
+        pass
+
+    def on_mouse_drag(self, *args, **kwargs):
+        pass
+
+
+class PushButton(BasePushButton):
     def __init__(
         self,
         x: int,
@@ -103,7 +114,7 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
         self.set_handler("on_toggle", callback)
 
 
-class EffectToggleButton(pyglet.gui.ToggleButton):
+class EffectToggleButton(pyglet.gui.ToggleButton, BasePushButton):
     total_height = 100
 
     def __init__(self, x: int, y: int, batch: Batch, callback: Callable, effect: str):
@@ -122,10 +133,9 @@ class EffectToggleButton(pyglet.gui.ToggleButton):
         self.enabled = True
 
 
-class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
+class TabButton(BasePushButton):
     pressed = pyglet.resource.image("tab_depressed.png").get_texture()
     depressed = pyglet.resource.image("tab_hover.png").get_texture()
-    hover = pyglet.resource.image("tab_depressed.png").get_texture()
 
     def __init__(
         self,
@@ -135,9 +145,7 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
         callback: Callable,
         label: str,
     ):
-        super().__init__(
-            x=x, y=y, pressed=self.pressed, depressed=self.depressed, hover=self.hover, batch=batch
-        )
+        super().__init__(x=x, y=y, pressed=self.pressed, depressed=self.depressed, batch=batch)
         self.label = Label(
             text=label,
             x=x + self.width / 2,
@@ -160,11 +168,13 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
         x: int,
         y: int,
         batch: Batch,
+        gui_window,
         image_window: "ImageWindow",
         all_thumbnail_buttons: list["ThumbnailButton"],
     ):
         self.index = index
         self.image_path: Optional[str] = None
+        self.gui_window = gui_window
         self.image_window = image_window
         self.all_thumbnail_buttons = all_thumbnail_buttons
         button_img = pyglet.resource.image("button_file_drop.png")
@@ -180,7 +190,9 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
     def _custom_on_toggle(self, value):
         if self.image_path is None:
             return
+        self.gui_window.invalid = True
         if value:
+            self.gui_window.switch_to()
             for thumbnail_button in self.all_thumbnail_buttons:
                 if thumbnail_button is not self and thumbnail_button.value:
                     thumbnail_button.value = False
