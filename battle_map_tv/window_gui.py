@@ -195,7 +195,7 @@ class GuiWindow(Window):
 
         self.tab_buttons: List[TabButton] = []
 
-        self.thumbnails: List[ThumbnailButton] = []
+        self.thumbnail_buttons: List[ThumbnailButton] = []
         self._add_tab_images(tab_index=0, row_y=row_y)
 
         self.text_entry_screen_width: TextEntry
@@ -210,7 +210,7 @@ class GuiWindow(Window):
 
         # Start with showing the first tab
         self._hide_tab_content()
-        for thumbnail in self.thumbnails:
+        for thumbnail in self.thumbnail_buttons:
             thumbnail.show()
 
     def on_draw(self):
@@ -219,12 +219,18 @@ class GuiWindow(Window):
         self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.image_window.add_image(image_path=paths[0])
+        self.switch_to()
+        for thumbnail in self.thumbnail_buttons:
+            is_hit = thumbnail.on_file_drop(x=x, y=y, image_path=paths[0])
+            if is_hit:
+                break
+        else:
+            self.image_window.add_image(image_path=paths[0])
         self.switch_to()
         self.slider_scale.reset()
 
     def _hide_tab_content(self):
-        for thumbnail in self.thumbnails:
+        for thumbnail in self.thumbnail_buttons:
             thumbnail.hide()
         self.text_entry_screen_width.hide()
         self.text_entry_screen_height.hide()
@@ -347,13 +353,13 @@ class GuiWindow(Window):
                 batch=self.batch,
                 image_window=self.image_window,
             )
-            self.thumbnails.append(thumbnail_button)
+            self.thumbnail_buttons.append(thumbnail_button)
             self.frame.add_widget(thumbnail_button)
 
         def callback_tab_images():
             self.switch_to()
             self._hide_tab_content()
-            for thumbnail in self.thumbnails:
+            for thumbnail in self.thumbnail_buttons:
                 thumbnail.show()
 
         self._create_tab_button(

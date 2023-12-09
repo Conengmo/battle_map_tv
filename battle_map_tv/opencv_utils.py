@@ -2,6 +2,7 @@ from io import BytesIO
 
 import cv2
 import pyglet
+from pyglet.image import AbstractImage
 
 
 def change_brightness(img, value: int):
@@ -22,7 +23,7 @@ def change_brightness(img, value: int):
     return img
 
 
-def opencv_to_pyglet_texture(opencv_image) -> pyglet.image.Texture:
+def opencv_to_pyglet_image(opencv_image) -> AbstractImage:
     as_bytes = cv2.imencode(".png", opencv_image)[1].tobytes()
     image = pyglet.image.load(filename=".png", file=BytesIO(as_bytes))
-    return image.get_texture()
+    return image

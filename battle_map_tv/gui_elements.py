@@ -5,10 +5,9 @@ from typing import Callable, Union, Optional
 import cv2
 import pyglet
 from pyglet.graphics import Batch
-from pyglet.sprite import Sprite
 from pyglet.text import Label
 
-from battle_map_tv.opencv_utils import opencv_to_pyglet_texture, change_brightness
+from battle_map_tv.opencv_utils import opencv_to_pyglet_image, change_brightness
 
 if typing.TYPE_CHECKING:
     from battle_map_tv.window_image import ImageWindow
@@ -32,19 +31,6 @@ class CoordinatesMixin:
     @property
     def y2(self) -> int:
         return self.y + self.height
-
-
-class HideButtonMixin:
-    enabled: bool
-    _sprite: Sprite
-
-    def hide(self):
-        self.enabled = False
-        self._sprite.visible = False
-
-    def show(self):
-        self._sprite.visible = True
-        self.enabled = True
 
 
 class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
@@ -116,7 +102,7 @@ class ToggleButton(pyglet.gui.ToggleButton, PushButton):
         self.set_handler("on_toggle", callback)
 
 
-class EffectToggleButton(HideButtonMixin, pyglet.gui.ToggleButton):
+class EffectToggleButton(pyglet.gui.ToggleButton):
     total_height = 100
 
     def __init__(self, x: int, y: int, batch: Batch, callback: Callable, effect: str):
@@ -125,6 +111,14 @@ class EffectToggleButton(HideButtonMixin, pyglet.gui.ToggleButton):
         depressed = pyglet.resource.image(f"effect_{effect}.png").get_texture()
         super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, batch=batch)
         self.set_handler("on_toggle", callback)
+
+    def hide(self):
+        self.enabled = False
+        self._sprite.visible = False
+
+    def show(self):
+        self._sprite.visible = True
+        self.enabled = True
 
 
 class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -155,31 +149,56 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
         self.set_handler("on_release", callback)
 
 
-class ThumbnailButton(CoordinatesMixin, HideButtonMixin, pyglet.gui.ToggleButton):
+class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
     width: int = 100
     height: int = 100
 
     def __init__(self, x: int, y: int, batch: Batch, image_window: "ImageWindow"):
-        self.image_path: Optional[str] = "tests/images/19d33097089ed961c4660b3a0bf671e1.png"
+        self.image_path: Optional[str] = None
         self.image_window = image_window
         self.y_original = y
-
-        assert os.path.exists(self.image_path)
-        image_cv = cv2.imread(self.image_path)
-        image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
-        depressed = opencv_to_pyglet_texture(image_cv)
-        image_cv_pressed = change_brightness(image_cv, -50)
-        pressed = opencv_to_pyglet_texture(image_cv_pressed)
-        image_cv_hover = change_brightness(image_cv, 50)
-        hover = opencv_to_pyglet_texture(image_cv_hover)
-        super().__init__(x=x, y=y, pressed=pressed, depressed=depressed, hover=hover, batch=batch)
+        button_img = pyglet.resource.image("button_file_drop.png")
+        super().__init__(x=x, y=y, pressed=button_img, depressed=button_img, batch=batch)
         self.set_handler("on_toggle", self._custom_on_toggle)
 
     def _custom_on_toggle(self, value):
-        if value and self.image_path is not None:
+        if self.image_path is None:
+            return
+        if value:
             self.image_window.add_image(self.image_path)
-        elif not value:
+        else:
             self.image_window.remove_image()
+
+    def hide(self):
+        self.enabled = False
+        self._sprite.visible = False
+
+    def show(self):
+        self._sprite.visible = True
+        self.enabled = True
+
+    def on_file_drop(self, x: int, y: int, image_path: str) -> bool:
+        if not self.enabled or not self._check_hit(x, y):
+            return False
+        self.image_path = image_path
+        self.add_thumbnail_image()
+        if self.value:
+            self.image_window.add_image(self.image_path)
+        return True
+
+    def add_thumbnail_image(self):
+        assert self.image_path is not None
+        assert os.path.exists(self.image_path)
+        assert self.enabled
+        assert self._sprite.visible
+        image_cv = cv2.imread(self.image_path)
+        image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        self._depressed_img = opencv_to_pyglet_image(image_cv)
+        image_cv_pressed = change_brightness(image_cv, -50)
+        self._pressed_img = opencv_to_pyglet_image(image_cv_pressed)
+        image_cv_hover = change_brightness(image_cv, 50)
+        self._hover_img = opencv_to_pyglet_image(image_cv_hover)
+        self._sprite.image = self._depressed_img
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
