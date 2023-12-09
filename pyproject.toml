@@ -2,7 +2,7 @@
 ignore_missing_imports = true
 check_untyped_defs = true
 
-[tool.black]
+[tool.ruff]
 line-length = 100
 
 [tool.hatch]

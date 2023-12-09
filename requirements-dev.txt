@@ -1,6 +1,6 @@
-black
 hatch
 hatch-vcs
-pre-commit
 mypy
+pre-commit
 pytest
+ruff
