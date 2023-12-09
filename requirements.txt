@@ -1,4 +1,4 @@
-pyglet
-opencv-python
 numpy
+opencv-python
+pyglet
 scipy
