@@ -29,6 +29,7 @@ in the right size and with a 1-inch grid.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
+- Prepare up to four images in slots in the UI.
 - Overlay a fire effect on your map.
 
 
