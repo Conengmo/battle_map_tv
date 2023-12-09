@@ -4,6 +4,7 @@ from typing import Callable, Union, Optional
 
 import cv2
 import pyglet
+from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage, remove_from_storage
 from pyglet.graphics import Batch
 from pyglet.text import Label
 
@@ -155,17 +156,25 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
 
     def __init__(
         self,
+        index: int,
         x: int,
         y: int,
         batch: Batch,
         image_window: "ImageWindow",
         all_thumbnail_buttons: list["ThumbnailButton"],
     ):
+        self.index = index
         self.image_path: Optional[str] = None
         self.image_window = image_window
         self.all_thumbnail_buttons = all_thumbnail_buttons
         button_img = pyglet.resource.image("button_file_drop.png")
         super().__init__(x=x, y=y, pressed=button_img, depressed=button_img, batch=batch)
+        image_path = get_from_storage(self._storage_key, optional=True)
+        if image_path is not None:
+            if os.path.exists(image_path):
+                self.add_thumbnail_image(image_path)
+            else:
+                remove_from_storage(self._storage_key)
         self.set_handler("on_toggle", self._custom_on_toggle)
 
     def _custom_on_toggle(self, value):
@@ -173,11 +182,15 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
             return
         if value:
             for thumbnail_button in self.all_thumbnail_buttons:
-                if thumbnail_button is not self:
+                if thumbnail_button is not self and thumbnail_button.value:
                     thumbnail_button.value = False
             self.image_window.add_image(self.image_path)
         else:
             self.image_window.remove_image()
+
+    @property
+    def _storage_key(self) -> StorageKeys:
+        return StorageKeys[f"thumbnail_{self.index}"]
 
     def hide(self):
         self.enabled = False
@@ -190,18 +203,17 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
     def on_file_drop(self, x: int, y: int, image_path: str) -> bool:
         if not self.enabled or not self._check_hit(x, y):
             return False
-        self.image_path = image_path
-        self.add_thumbnail_image()
+        self.add_thumbnail_image(image_path)
         if self.value:
-            self.image_window.add_image(self.image_path)
+            self.image_window.add_image(image_path)
+        set_in_storage(self._storage_key, image_path)
         return True
 
-    def add_thumbnail_image(self):
-        assert self.image_path is not None
-        assert os.path.exists(self.image_path)
+    def add_thumbnail_image(self, image_path: str):
+        self.image_path = image_path
         assert self.enabled
         assert self._sprite.visible
-        image_cv = cv2.imread(self.image_path)
+        image_cv = cv2.imread(image_path)
         image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
         self._depressed_img = opencv_to_pyglet_image(image_cv)
         image_cv_pressed = change_brightness(image_cv, -50)

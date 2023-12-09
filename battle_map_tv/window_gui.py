@@ -355,6 +355,7 @@ class GuiWindow(Window):
         thumbnail_y = row_y + (tab_height - ThumbnailButton.height) // 2
         for i in range(4):
             thumbnail_button = ThumbnailButton(
+                index=i,
                 x=(2 + i) * margin_x + i * ThumbnailButton.width,
                 y=thumbnail_y,
                 batch=self.batch,

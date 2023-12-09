@@ -31,6 +31,10 @@ class StorageKeys(Enum):
     width_mm = "width_mm"
     height_mm = "height_mm"
     previous_image = "previous_image"
+    thumbnail_0 = "thumbnail_0"
+    thumbnail_1 = "thumbnail_1"
+    thumbnail_2 = "thumbnail_2"
+    thumbnail_3 = "thumbnail_3"
 
 
 def get_from_storage(key: StorageKeys, optional: bool = False):
