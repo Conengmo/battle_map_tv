@@ -1,9 +1,17 @@
 import os.path
+import typing
 from typing import Callable, Union, Optional
 
+import cv2
 import pyglet
+from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage, remove_from_storage
 from pyglet.graphics import Batch
 from pyglet.text import Label
+
+from battle_map_tv.opencv_utils import opencv_to_pyglet_image, change_brightness
+
+if typing.TYPE_CHECKING:
+    from battle_map_tv.window_image import ImageWindow
 
 margin_y_label = 10
 
@@ -51,17 +59,17 @@ class TextEntry(CoordinatesMixin, pyglet.gui.TextEntry):
         )
         self.y_original = y
         self.height = 30
-        self.label = Label(text=label, x=self.x, batch=batch)
+        self.label = Label(text=label, x=self.x, y=self.y2 + margin_y_label, batch=batch)
 
     def hide(self):
         self.y = -100
-        self.label.y = -100
+        self.label.visible = False
 
     def show(self):
         self.y = self.y_original
         self._layout.x = self.x + 10
         self._layout.y = self.y - 5
-        self.label.y = self.y2 + margin_y_label
+        self.label.visible = True
 
 
 class PushButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -106,10 +114,12 @@ class EffectToggleButton(pyglet.gui.ToggleButton):
         self.set_handler("on_toggle", callback)
 
     def hide(self):
-        self.y = -100
+        self.enabled = False
+        self._sprite.visible = False
 
     def show(self):
-        self.y = self.y_original
+        self._sprite.visible = True
+        self.enabled = True
 
 
 class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
@@ -138,6 +148,79 @@ class TabButton(CoordinatesMixin, pyglet.gui.PushButton):
             batch=batch,
         )
         self.set_handler("on_release", callback)
+
+
+class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
+    width: int = 100
+    height: int = 100
+
+    def __init__(
+        self,
+        index: int,
+        x: int,
+        y: int,
+        batch: Batch,
+        image_window: "ImageWindow",
+        all_thumbnail_buttons: list["ThumbnailButton"],
+    ):
+        self.index = index
+        self.image_path: Optional[str] = None
+        self.image_window = image_window
+        self.all_thumbnail_buttons = all_thumbnail_buttons
+        button_img = pyglet.resource.image("button_file_drop.png")
+        super().__init__(x=x, y=y, pressed=button_img, depressed=button_img, batch=batch)
+        image_path = get_from_storage(self._storage_key, optional=True)
+        if image_path is not None:
+            if os.path.exists(image_path):
+                self.add_thumbnail_image(image_path)
+            else:
+                remove_from_storage(self._storage_key)
+        self.set_handler("on_toggle", self._custom_on_toggle)
+
+    def _custom_on_toggle(self, value):
+        if self.image_path is None:
+            return
+        if value:
+            for thumbnail_button in self.all_thumbnail_buttons:
+                if thumbnail_button is not self and thumbnail_button.value:
+                    thumbnail_button.value = False
+            self.image_window.add_image(self.image_path)
+        else:
+            self.image_window.remove_image()
+
+    @property
+    def _storage_key(self) -> StorageKeys:
+        return StorageKeys[f"thumbnail_{self.index}"]
+
+    def hide(self):
+        self.enabled = False
+        self._sprite.visible = False
+
+    def show(self):
+        self._sprite.visible = True
+        self.enabled = True
+
+    def on_file_drop(self, x: int, y: int, image_path: str) -> bool:
+        if not self.enabled or not self._check_hit(x, y):
+            return False
+        self.add_thumbnail_image(image_path)
+        if self.value:
+            self.image_window.add_image(image_path)
+        set_in_storage(self._storage_key, image_path)
+        return True
+
+    def add_thumbnail_image(self, image_path: str):
+        self.image_path = image_path
+        assert self.enabled
+        assert self._sprite.visible
+        image_cv = cv2.imread(image_path)
+        image_cv = cv2.resize(image_cv, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        self._depressed_img = opencv_to_pyglet_image(image_cv)
+        image_cv_pressed = change_brightness(image_cv, -50)
+        self._pressed_img = opencv_to_pyglet_image(image_cv_pressed)
+        image_cv_hover = change_brightness(image_cv, 50)
+        self._hover_img = opencv_to_pyglet_image(image_cv_hover)
+        self._sprite.image = self._depressed_img
 
 
 class Slider(CoordinatesMixin, pyglet.gui.Slider):
@@ -174,16 +257,17 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.label = Label(
             text=label,
             x=self.x,
+            y=self.y2 + margin_y_label,
             batch=batch,
         )
         self.label_value = Label(
             text=label_formatter(default),
             x=super().x2 + 20,
+            y=self.y + self.height / 2,
             anchor_y="center",
             batch=batch,
         )
         self.label_formatter = label_formatter
-        self.show()
 
     @property
     def x2(self) -> int:
@@ -215,12 +299,15 @@ class Slider(CoordinatesMixin, pyglet.gui.Slider):
         self.value = self.default
 
     def hide(self):
-        self.y = -100
-        self.label.y = -100
-        self.label_value.y = -100
+        self.enabled = False
+        self._base_spr.visible = False
+        self._knob_spr.visible = False
+        self.label.visible = False
+        self.label_value.visible = False
 
     def show(self):
-        self.y = self.y_original
-        self.label.y = self.y2 + margin_y_label
-        self.label_value.y = self.y + self.height / 2
-        self.value = self.value
+        self.enabled = True
+        self._base_spr.visible = True
+        self._knob_spr.visible = True
+        self.label.visible = True
+        self.label_value.visible = True
