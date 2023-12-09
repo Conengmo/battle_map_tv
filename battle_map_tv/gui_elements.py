@@ -153,10 +153,17 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
     width: int = 100
     height: int = 100
 
-    def __init__(self, x: int, y: int, batch: Batch, image_window: "ImageWindow"):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        batch: Batch,
+        image_window: "ImageWindow",
+        all_thumbnail_buttons: list["ThumbnailButton"],
+    ):
         self.image_path: Optional[str] = None
         self.image_window = image_window
-        self.y_original = y
+        self.all_thumbnail_buttons = all_thumbnail_buttons
         button_img = pyglet.resource.image("button_file_drop.png")
         super().__init__(x=x, y=y, pressed=button_img, depressed=button_img, batch=batch)
         self.set_handler("on_toggle", self._custom_on_toggle)
@@ -165,6 +172,9 @@ class ThumbnailButton(CoordinatesMixin, pyglet.gui.ToggleButton):
         if self.image_path is None:
             return
         if value:
+            for thumbnail_button in self.all_thumbnail_buttons:
+                if thumbnail_button is not self:
+                    thumbnail_button.value = False
             self.image_window.add_image(self.image_path)
         else:
             self.image_window.remove_image()

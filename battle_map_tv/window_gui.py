@@ -38,6 +38,8 @@ class GuiWindow(Window):
         self.batch_background = Batch()
         self.frame = Frame(window=self)
 
+        self.thumbnail_buttons: List[ThumbnailButton] = []
+
         row_y = margin_y
 
         def slider_scale_callback(value: Union[float, str]):
@@ -91,11 +93,17 @@ class GuiWindow(Window):
 
         row_y += 100
 
+        def button_callback_remove():
+            for thumbnail_button in self.thumbnail_buttons:
+                if thumbnail_button.value:
+                    thumbnail_button.value = False
+            image_window.remove_image()
+
         self.button_remove_image = PushButton(
             x=margin_x,
             y=row_y,
             batch=self.batch,
-            callback=lambda: image_window.remove_image(),
+            callback=button_callback_remove,
             label="Remove",
             icon="remove",
         )
@@ -195,7 +203,6 @@ class GuiWindow(Window):
 
         self.tab_buttons: List[TabButton] = []
 
-        self.thumbnail_buttons: List[ThumbnailButton] = []
         self._add_tab_images(tab_index=0, row_y=row_y)
 
         self.text_entry_screen_width: TextEntry
@@ -346,12 +353,13 @@ class GuiWindow(Window):
 
     def _add_tab_images(self, tab_index: int, row_y: int):
         thumbnail_y = row_y + (tab_height - ThumbnailButton.height) // 2
-        for i in range(1):
+        for i in range(4):
             thumbnail_button = ThumbnailButton(
                 x=(2 + i) * margin_x + i * ThumbnailButton.width,
                 y=thumbnail_y,
                 batch=self.batch,
                 image_window=self.image_window,
+                all_thumbnail_buttons=self.thumbnail_buttons,
             )
             self.thumbnail_buttons.append(thumbnail_button)
             self.frame.add_widget(thumbnail_button)
