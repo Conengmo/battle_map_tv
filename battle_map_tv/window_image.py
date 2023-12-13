@@ -17,6 +17,7 @@ class ImageWindow(Window):
         self.fire: Optional[Fire] = None
         self.embers: Optional[Embers] = None
         self.fps_display = FPSDisplay(self) if show_fps else None
+        self.add_embers()
 
     def on_draw(self):
         self.clear()

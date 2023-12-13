@@ -18,12 +18,12 @@ def main(show_fps: bool = False):
         show_fps=show_fps,
     )
 
-    GuiWindow(
-        image_window=image_window,
-        width=730,
-        height=510,
-        caption="GM window",
-    )
+    # GuiWindow(
+    #     image_window=image_window,
+    #     width=730,
+    #     height=510,
+    #     caption="GM window",
+    # )
 
     pyglet.app.run()
 
