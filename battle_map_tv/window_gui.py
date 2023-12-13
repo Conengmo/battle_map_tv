@@ -46,8 +46,6 @@ class GuiWindow(Window):
             value = float(value)
             if image_window.image is not None:
                 image_window.image.scale(value)
-                image_window.invalid = True
-            self.invalid = True
 
         self.slider_scale = Slider(
             x=margin_x,
@@ -65,12 +63,10 @@ class GuiWindow(Window):
         def update_slider_scale_callback(value: float):
             self.switch_to()
             self.slider_scale.set_value(value)
-            self.invalid = True
 
         global_event_dispatcher.add_handler(EventKeys.change_scale, update_slider_scale_callback)
 
         def button_callback_autoscale(button_value: bool) -> bool:
-            self.invalid = True
             if button_value and image_window.image is not None:
                 try:
                     width_mm = get_from_storage(StorageKeys.width_mm)
@@ -82,7 +78,6 @@ class GuiWindow(Window):
                 scale = screen_px_per_mm / px_per_mm
                 image_window.switch_to()
                 image_window.image.scale(scale)
-                image_window.invalid = True
                 return True
             return False
 
@@ -103,7 +98,6 @@ class GuiWindow(Window):
                 if thumbnail_button.value:
                     thumbnail_button.value = False
             image_window.remove_image()
-            self.invalid = True
 
         self.button_remove_image = PushButton(
             x=margin_x,
@@ -157,7 +151,6 @@ class GuiWindow(Window):
         self.frame.add_widget(self.button_center_image)
 
         def button_callback_grid(button_value: bool) -> bool:
-            self.invalid = True
             if button_value:
                 try:
                     width_mm = int(self.text_entry_screen_width.value)
@@ -228,12 +221,9 @@ class GuiWindow(Window):
             thumbnail.show()
 
     def on_draw(self):
-        if self.invalid:
-            self.switch_to()
-            self.clear()
-            self.batch_background.draw()
-            self.batch.draw()
-            self.invalid = False
+        self.clear()
+        self.batch_background.draw()
+        self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
         self.switch_to()
@@ -245,8 +235,6 @@ class GuiWindow(Window):
             self.image_window.add_image(image_path=paths[0])
         self.switch_to()
         self.slider_scale.reset()
-        self.invalid = True
-        self.image_window.invalid = True
 
     def _hide_tab_content(self):
         for thumbnail in self.thumbnail_buttons:
@@ -293,7 +281,6 @@ class GuiWindow(Window):
             self._hide_tab_content()
             self.text_entry_screen_width.show()
             self.text_entry_screen_height.show()
-            self.invalid = True
 
         self._create_tab_button(
             tab_index=tab_index,
@@ -307,8 +294,6 @@ class GuiWindow(Window):
             self.image_window.switch_to()
             if self.image_window.grid is not None:
                 self.image_window.grid.update_opacity(int(value))
-                self.image_window.invalid = True
-            self.invalid = True
             return value
 
         self.slider_grid_opacity = Slider(
@@ -328,7 +313,6 @@ class GuiWindow(Window):
             self.switch_to()
             self._hide_tab_content()
             self.slider_grid_opacity.show()
-            self.invalid = True
 
         self._create_tab_button(
             tab_index=tab_index,
@@ -339,7 +323,6 @@ class GuiWindow(Window):
 
     def _add_tab_effects(self, tab_index: int, row_y: int):
         def callback_button_fire(value):
-            self.invalid = True
             if value:
                 self.image_window.add_fire()
             else:
@@ -360,7 +343,6 @@ class GuiWindow(Window):
             self._hide_tab_content()
             for effect_button in self.effect_buttons:
                 effect_button.show()
-            self.invalid = True
 
         self._create_tab_button(
             tab_index=tab_index,
@@ -377,7 +359,6 @@ class GuiWindow(Window):
                 x=(2 + i) * margin_x + i * ThumbnailButton.width,
                 y=thumbnail_y,
                 batch=self.batch,
-                gui_window=self,
                 image_window=self.image_window,
                 all_thumbnail_buttons=self.thumbnail_buttons,
             )
@@ -389,7 +370,6 @@ class GuiWindow(Window):
             self._hide_tab_content()
             for thumbnail in self.thumbnail_buttons:
                 thumbnail.show()
-            self.invalid = True
 
         self._create_tab_button(
             tab_index=tab_index,
