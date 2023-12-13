@@ -103,6 +103,7 @@ class ImageWindow(Window):
             self.embers = None
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+        self.switch_to()
         if (
             self.image is not None
             and buttons
@@ -118,5 +119,6 @@ class ImageWindow(Window):
             self.image.store_offsets()
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        self.switch_to()
         if self.image is not None and self.image.are_coordinates_within_image(x, y):
             self.image.scale(self.image.get_scale() * (1 + scroll_y / 10))

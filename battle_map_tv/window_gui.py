@@ -1,6 +1,5 @@
 from typing import Union, List, Callable
 
-import pyglet
 from pyglet.graphics import Batch
 from pyglet.gui import Frame
 from pyglet.shapes import Rectangle
@@ -15,6 +14,7 @@ from battle_map_tv.gui_elements import (
     PushButton,
     TabButton,
     EffectToggleButton,
+    ThumbnailButton,
 )
 from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
@@ -37,6 +37,8 @@ class GuiWindow(Window):
         self.batch = Batch()
         self.batch_background = Batch()
         self.frame = Frame(window=self)
+
+        self.thumbnail_buttons: List[ThumbnailButton] = []
 
         row_y = margin_y
 
@@ -91,11 +93,17 @@ class GuiWindow(Window):
 
         row_y += 100
 
+        def button_callback_remove():
+            for thumbnail_button in self.thumbnail_buttons:
+                if thumbnail_button.value:
+                    thumbnail_button.value = False
+            image_window.remove_image()
+
         self.button_remove_image = PushButton(
             x=margin_x,
             y=row_y,
             batch=self.batch,
-            callback=lambda: image_window.remove_image(),
+            callback=button_callback_remove,
             label="Remove",
             icon="remove",
         )
@@ -195,20 +203,22 @@ class GuiWindow(Window):
 
         self.tab_buttons: List[TabButton] = []
 
+        self._add_tab_images(tab_index=0, row_y=row_y)
+
         self.text_entry_screen_width: TextEntry
         self.text_entry_screen_height: TextEntry
-        self._add_tab_screen_size(tab_index=0, row_y=row_y)
+        self._add_tab_screen_size(tab_index=1, row_y=row_y)
 
         self.slider_grid_opacity: Slider
-        self._add_tab_grid_opacity(tab_index=1, row_y=row_y)
+        self._add_tab_grid_opacity(tab_index=2, row_y=row_y)
 
         self.effect_buttons: List[EffectToggleButton] = []
-        self._add_tab_effects(tab_index=2, row_y=row_y)
+        self._add_tab_effects(tab_index=3, row_y=row_y)
 
         # Start with showing the first tab
         self._hide_tab_content()
-        self.text_entry_screen_width.show()
-        self.text_entry_screen_height.show()
+        for thumbnail in self.thumbnail_buttons:
+            thumbnail.show()
 
     def on_draw(self):
         self.clear()
@@ -216,11 +226,19 @@ class GuiWindow(Window):
         self.batch.draw()
 
     def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.image_window.add_image(image_path=paths[0])
+        self.switch_to()
+        for thumbnail in self.thumbnail_buttons:
+            is_hit = thumbnail.on_file_drop(x=x, y=y, image_path=paths[0])
+            if is_hit:
+                break
+        else:
+            self.image_window.add_image(image_path=paths[0])
         self.switch_to()
         self.slider_scale.reset()
 
     def _hide_tab_content(self):
+        for thumbnail in self.thumbnail_buttons:
+            thumbnail.hide()
         self.text_entry_screen_width.hide()
         self.text_entry_screen_height.hide()
         self.slider_grid_opacity.hide()
@@ -347,4 +365,31 @@ class GuiWindow(Window):
             row_y=row_y,
             callback=callback_tab_effects,
             label="Effects",
+        )
+
+    def _add_tab_images(self, tab_index: int, row_y: int):
+        thumbnail_y = row_y + (tab_height - ThumbnailButton.height) // 2
+        for i in range(4):
+            thumbnail_button = ThumbnailButton(
+                index=i,
+                x=(2 + i) * margin_x + i * ThumbnailButton.width,
+                y=thumbnail_y,
+                batch=self.batch,
+                image_window=self.image_window,
+                all_thumbnail_buttons=self.thumbnail_buttons,
+            )
+            self.thumbnail_buttons.append(thumbnail_button)
+            self.frame.add_widget(thumbnail_button)
+
+        def callback_tab_images():
+            self.switch_to()
+            self._hide_tab_content()
+            for thumbnail in self.thumbnail_buttons:
+                thumbnail.show()
+
+        self._create_tab_button(
+            tab_index=tab_index,
+            row_y=row_y,
+            callback=callback_tab_images,
+            label="Images",
         )
