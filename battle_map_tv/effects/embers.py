@@ -12,16 +12,16 @@ class Embers:
         self.window_width = window_width
         self.window_height = window_height
         self.batch = Batch()
-        self.intensity = 1
         self.wind = Wind()
         self.particles = {}
+        self.margin = 0.0
 
     def draw(self):
         self.batch.draw()
 
     def update(self, dt: float):
         self.wind.update(dt)
-        for _ in range(randint(0, self.intensity)):
+        if 100 - len(self.particles) > 0 and self.margin < 0:
             particle = EmberParticle(
                 self.window_width,
                 self.window_height,
@@ -29,6 +29,8 @@ class Embers:
                 wind=self.wind,
             )
             self.particles[particle.id] = particle
+            self.margin = 1
+        self.margin -= dt
         for key, particle in list(self.particles.items()):
             particle.update(dt)
             if not particle.alive:
@@ -61,7 +63,7 @@ class EmberParticle:
         self.id = uuid4()
         self.window_width = window_width
         self.window_height = window_height
-        self.wind = wind
+        self.wind = Wind()
         self.alive = True
 
         color = choices(self.color_options)[0]
@@ -87,11 +89,12 @@ class EmberParticle:
         self.d_alpha = uniform(0.05, 0.1)
 
     def update(self, dt: float):
-        factor_visibility = self.circle.opacity / self.alpha_max
-        self.alpha += self.d_alpha * (1 - factor_visibility)
-        if self.alpha <= self.alpha_min:
-            self.alive = False
-            return
+        self.wind.update(dt)
+        # factor_visibility = self.circle.opacity / self.alpha_max
+        # self.alpha += self.d_alpha * (1 - factor_visibility)
+        # if self.alpha <= self.alpha_min:
+        #     self.alive = False
+        #     return
         if (
             self.circle.x < 0 - 50
             or self.circle.x > self.window_width + 50
@@ -126,7 +129,20 @@ class Wind:
 
     def __init__(self):
         self.force = np.array((0.5, 0.5))
+        self.t = 0
+        self.period = 20
 
     def update(self, dt: float):
+        self.t += dt
+
         self.force += np.random.uniform(-0.05, 0.05, size=(2, ))
-        self.force += 0.001 * (np.array((0.5, 0.5)) - self.force)
+
+        t_period = self.t % self.period
+        gust_x = np.sin(t_period * 2 * np.pi / self.period) - 0.5
+        gust_y = np.cos(t_period * 2 * np.pi / self.period) - 0.5
+        gust_x *= uniform(0.01, 0.02)
+        gust_y *= uniform(0.01, 0.02)
+        self.force += (gust_x, gust_y)
+
+        diff = np.array((0.5, 0.5)) - self.force
+        self.force += 0.0001 * diff * np.exp(np.abs(diff))
