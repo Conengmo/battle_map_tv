@@ -1,5 +1,6 @@
 from typing import Optional
 
+import pyglet
 from pyglet.window import Window, mouse, FPSDisplay
 
 from battle_map_tv.effects.embers import Embers
@@ -96,10 +97,12 @@ class ImageWindow(Window):
         self.switch_to()
         self.remove_embers()
         self.embers = Embers(window_width=self.width, window_height=self.height)
+        pyglet.clock.schedule_interval(self.embers.update, 1 / 60.0)
 
     def remove_embers(self):
         self.switch_to()
         if self.embers is not None:
+            pyglet.clock.unschedule(self.embers.update)
             self.embers.delete()
             self.embers = None
 
