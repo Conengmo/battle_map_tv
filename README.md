@@ -14,12 +14,12 @@ For GM's with little time or who improvise their sessions: much easier to use in
 
 ![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/393cd1a1-fc98-4c62-834e-4d6b9b266872)
 
-
+  
 ## Features
-
 - Works natively on Linux, macOS and Windows.
 - Doesn't use a browser.
-- Works offline, no subscription or anything, free and open source.
+- Free and open source
+- Works offline
 - Two windows:
   - one on the TV with your map and grid on it
   - one on your GM laptop with controls
