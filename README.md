@@ -5,12 +5,12 @@
 
 # Battle Map TV
 
-Display battle maps for TTRPGs on a tv that lies flat on your table.
-
-For GM's with little time or who improvise their sessions.
+Display battle maps for TTRPGs on a tv that lies flat horizontal on your table.
 
 This Python application aims to do one thing: quickly show an image on your secondary screen,
 in the right size and with a 1-inch grid.
+
+For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
 ![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/393cd1a1-fc98-4c62-834e-4d6b9b266872)
 
@@ -19,7 +19,7 @@ in the right size and with a 1-inch grid.
 
 - Works natively on Linux, macOS and Windows.
 - Doesn't use a browser.
-- Works offline, no subscription or anything, fully open source.
+- Works offline, no subscription or anything, free and open source.
 - Two windows:
   - one on the TV with your map and grid on it
   - one on your GM laptop with controls
