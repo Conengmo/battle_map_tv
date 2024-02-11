@@ -5,7 +5,7 @@
 
 # Battle Map TV
 
-Display battle maps for TTRPGs on a secondary tv.
+Display battle maps for TTRPGs on a tv that lies flat on your table.
 
 For GM's with little time or who improvise their sessions.
 
