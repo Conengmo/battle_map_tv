@@ -1,11 +1,8 @@
 import os.path
-from io import BytesIO
 
-import cv2
-import numpy as np
-import pyglet
-from pyglet.graphics import Batch
-from pyglet.sprite import Sprite
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap, QTransform
+from PySide6.QtWidgets import QLabel, QLayout
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import (
@@ -21,13 +18,14 @@ class Image:
     def __init__(
         self,
         image_path: str,
+        layout: QLayout,
         window_width_px: int,
         window_height_px: int,
-        rotation: int = 0,
     ):
+        self.layout = layout
         self.window_width_px = window_width_px
         self.window_height_px = window_height_px
-        self.rotation = rotation
+        self.rotation = 0
         self.dragging: bool = False
 
         image_path = os.path.abspath(image_path)
@@ -35,82 +33,61 @@ class Image:
         self.image_filename = os.path.basename(image_path)
         set_in_storage(key=StorageKeys.previous_image, value=image_path)
 
-        if rotation == 0:
-            image = pyglet.image.load(image_path)
-        else:
-            image_cv = cv2.imread(image_path)
-            image_cv = np.rot90(image_cv, k=rotation // 90)
-            image_bytes = cv2.imencode(".png", image_cv)[1].tobytes()
-            image = pyglet.image.load(filename=".png", file=BytesIO(image_bytes))
+        self.label = QLabel()
+        self.label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.label)
 
-        image.anchor_x = image.width // 2
-        image.anchor_y = image.height // 2
-        self.batch = Batch()
-        self.sprite = Sprite(image, batch=self.batch)
+        self.pixmap = QPixmap(image_path)
+        self.pixmap_original = self.pixmap.copy()
+        self.label.setPixmap(self.pixmap)
+
         try:
-            self.sprite.scale = get_image_from_storage(
+            self.rotation = get_image_from_storage(
                 self.image_filename,
-                ImageKeys.scale,
+                ImageKeys.rotation,
                 do_raise=True,
             )
         except KeyError:
+            pass
+        else:
+            self.pixmap = self.pixmap.transformed(QTransform().rotate(self.rotation))
+            self.label.setPixmap(self.pixmap)
+
+        self._scale: float = 1.0
+        try:
+            self.scale(
+                get_image_from_storage(
+                    self.image_filename,
+                    ImageKeys.scale,
+                    do_raise=True,
+                )
+            )
+        except KeyError:
             new_scale = min(
-                window_width_px / self.sprite.width,
-                window_height_px / self.sprite.height,
+                window_width_px / self.pixmap.size().width(),
+                window_height_px / self.pixmap.size().height(),
             )
             if new_scale < 1.0:
                 self.scale(new_scale)
         else:
-            global_event_dispatcher.dispatch_event(EventKeys.change_scale, self.sprite.scale)
+            global_event_dispatcher.dispatch_event(EventKeys.change_scale, self._scale)
 
-        self.center(store=False)
-        dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
-        self.pan(dx=dx, dy=dy, store=False)
-
-    def draw(self):
-        self.batch.draw()
-
-    def update_window_px(self, width_px: int, height_px: int):
-        diff_x = width_px - self.window_width_px
-        diff_y = height_px - self.window_height_px
-        self.pan(dx=int(diff_x / 2), dy=int(diff_y / 2))
-        self.window_width_px = width_px
-        self.window_height_px = height_px
-
-    def are_coordinates_within_image(self, x: int, y: int) -> bool:
-        width_half = self.sprite.width / 2
-        height_half = self.sprite.height / 2
-        return (
-            self.sprite.x - width_half <= x <= self.sprite.x + width_half
-            and self.sprite.y - height_half <= y <= self.sprite.y + height_half
-        )
-
-    def get_scale(self) -> float:
-        return self.sprite.scale
-
-    def scale(self, value: float):
-        self.sprite.scale = value
-        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
-        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
-
-    def pan(self, dx: int, dy: int, store: bool = True):
-        self.sprite.x += dx
-        self.sprite.y += dy
-        if store:
-            self.store_offsets()
-
-    def center(self, store: bool = True):
-        self.pan(*self._get_offsets(), store=store)
-
-    def _get_offsets(self) -> tuple[int, int]:
-        return (
-            int(self.window_width_px / 2 - self.sprite.x),
-            int(self.window_height_px / 2 - self.sprite.y),
-        )
-
-    def store_offsets(self):
-        dx, dy = self._get_offsets()
-        set_image_in_storage(self.image_filename, ImageKeys.offsets, (-dx, -dy))
+        # self.center(store=False)
+        # dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
+        # self.pan(dx=dx, dy=dy, store=False)
 
     def delete(self):
-        self.sprite.delete()
+        self.label.deleteLater()
+
+    def rotate(self):
+        self.rotation = (self.rotation + 90) % 360
+        self.pixmap = self.pixmap.transformed(QTransform().rotate(90))
+        self.label.setPixmap(self.pixmap)
+        set_image_in_storage(self.image_filename, ImageKeys.rotation, self.rotation)
+
+    def scale(self, value: float):
+        self.pixmap = self.pixmap_original.scaled(self.pixmap_original.size() * value)
+        self.label.setPixmap(self.pixmap)
+        self._scale = value
+        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
+        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
