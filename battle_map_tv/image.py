@@ -2,7 +2,7 @@ import os.path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QTransform
-from PySide6.QtWidgets import QLabel, QLayout
+from PySide6.QtWidgets import QLabel, QLayout, QGraphicsView, QGraphicsScene
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import (
@@ -33,13 +33,20 @@ class Image:
         self.image_filename = os.path.basename(image_path)
         set_in_storage(key=StorageKeys.previous_image, value=image_path)
 
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.label)
+        self.view = QGraphicsView()
+        self.view.setAlignment(Qt.AlignCenter)
+        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setStyleSheet("border: 0px")
+
+        self.scene = QGraphicsScene()
+        self.view.setScene(self.scene)
+        layout.addWidget(self.view)
 
         self.pixmap = QPixmap(image_path)
         self.pixmap_original = self.pixmap.copy()
-        self.label.setPixmap(self.pixmap)
+        self.scene.addPixmap(self.pixmap)
 
         try:
             self.rotation = get_image_from_storage(
@@ -50,8 +57,7 @@ class Image:
         except KeyError:
             pass
         else:
-            self.pixmap = self.pixmap.transformed(QTransform().rotate(self.rotation))
-            self.label.setPixmap(self.pixmap)
+            self.view.rotate(self.rotation)
 
         self._scale: float = 1.0
         try:
@@ -72,22 +78,21 @@ class Image:
         else:
             global_event_dispatcher.dispatch_event(EventKeys.change_scale, self._scale)
 
-        # self.center(store=False)
         # dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
         # self.pan(dx=dx, dy=dy, store=False)
 
     def delete(self):
-        self.label.deleteLater()
+        self.scene.clear()
+        self.layout.removeWidget(self.view)
 
     def rotate(self):
         self.rotation = (self.rotation + 90) % 360
-        self.pixmap = self.pixmap.transformed(QTransform().rotate(90))
-        self.label.setPixmap(self.pixmap)
+        self.view.rotate(90)
         set_image_in_storage(self.image_filename, ImageKeys.rotation, self.rotation)
 
     def scale(self, value: float):
-        self.pixmap = self.pixmap_original.scaled(self.pixmap_original.size() * value)
-        self.label.setPixmap(self.pixmap)
+        scaling = value / self._scale
+        self.view.scale(scaling, scaling)
         self._scale = value
         global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
         set_image_in_storage(self.image_filename, ImageKeys.scale, value)

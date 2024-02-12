@@ -13,13 +13,13 @@ class ImageWindow(QWidget):
             """
             background-color: #262626;
             color: #FFFFFF;
-            font-family: Titillium;
             font-size: 18px;
         """
         )
 
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.image: Optional[Image] = None
 
     def make_fullscreen(self):
