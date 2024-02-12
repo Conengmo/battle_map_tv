@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
 )
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
-from battle_map_tv.gui_utils import debounce
 from battle_map_tv.window_image import ImageWindow
 
 
@@ -88,7 +87,6 @@ class GuiWindow(QWidget):
         label = QLabel("Scale")
         container.addWidget(label)
 
-        @debounce(0.3)
         def slider_scale_callback(value: int):
             if self.image_window.image is not None:
                 self.image_window.image.scale(normalize_slider_value(value))
