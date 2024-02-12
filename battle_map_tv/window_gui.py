@@ -53,7 +53,7 @@ class GuiWindow(QWidget):
         self.layout.addLayout(container)
 
         button = QPushButton("Fullscreen")
-        button.clicked.connect(self.image_window.make_fullscreen)
+        button.clicked.connect(self.image_window.toggle_fullscreen)
         container.addWidget(button)
 
         button = QPushButton("Exit")
