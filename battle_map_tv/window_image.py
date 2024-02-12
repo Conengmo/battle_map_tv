@@ -22,6 +22,12 @@ class ImageWindow(QWidget):
         self.layout.setAlignment(Qt.AlignCenter)
         self.image: Optional[Image] = None
 
+    def make_fullscreen(self):
+        screen = self.screen()
+        screen_resolution = screen.size()
+        self.setFixedSize(screen_resolution)
+        self.showFullScreen()
+
     def add_image(self, image_path: str):
         self.image = Image(
             image_path=image_path,
