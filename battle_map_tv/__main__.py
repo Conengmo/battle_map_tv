@@ -14,7 +14,7 @@ def main():
     image_window.setFixedSize(800, 600)
     image_window.show()
 
-    gui_window = GuiWindow(image_window=image_window)
+    gui_window = GuiWindow(image_window=image_window, app=app)
     gui_window.resize(800, 600)
     gui_window.show()
 

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QFileDialog,
     QWidget,
-    QPushButton,
+    QPushButton, QApplication,
 )
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
@@ -15,15 +15,15 @@ from battle_map_tv.window_image import ImageWindow
 
 
 class GuiWindow(QWidget):
-    def __init__(self, image_window: ImageWindow):
+    def __init__(self, image_window: ImageWindow, app: QApplication):
         super().__init__()
         self.image_window = image_window
+        self.app = app
 
         self.setStyleSheet(
             """
             background-color: #262626;
             color: #FFFFFF;
-            font-family: Titillium;
             font-size: 18px;
         """
         )
@@ -32,24 +32,34 @@ class GuiWindow(QWidget):
         self.layout.setContentsMargins(80, 80, 80, 80)
         self.layout.setSpacing(50)
 
-        self.add_row_scale_slider()
-
         self.add_row_image_buttons()
+        self.add_row_scale_slider()
+        self.add_row_app_controls()
+
 
     def open_file_dialog(self):
-        """Open the file dialog when this method is called."""
         file_dialog = QFileDialog(
             caption="Select an image file",
             directory=r"C:\Users\frank\Documents\Battle maps\good",
         )
         file_dialog.setFileMode(QFileDialog.ExistingFile)
-
         if file_dialog.exec_():
-            # Get the first selected file
             selected_file = file_dialog.selectedFiles()[0]
             self.image_window.remove_image()
             self.image_window.add_image(image_path=selected_file)
             print(f"Selected file: {selected_file}")
+
+    def add_row_app_controls(self):
+        container = QHBoxLayout()
+        self.layout.addLayout(container)
+
+        button = QPushButton("Fullscreen")
+        button.clicked.connect(self.image_window.make_fullscreen)
+        container.addWidget(button)
+
+        button = QPushButton("Exit")
+        button.clicked.connect(self.app.quit)
+        container.addWidget(button)
 
     def add_row_image_buttons(self):
         container = QHBoxLayout()
