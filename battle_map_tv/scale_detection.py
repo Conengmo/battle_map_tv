@@ -187,7 +187,7 @@ def merge_close_together_lines(lines: List[float], threshold_px: float) -> List[
 def add_lines_to_image(image, rhos, wanted_theta, image_length):
     for rho in sorted(rhos):
         point1, point2 = polar_to_cartesian(rho=rho, theta=wanted_theta, image_length=image_length)
-        cv2.line(image, point1, point2, (0, 0, 255), 2)
+        cv2.line(image, point1, point2, (0, 0, 255), 2)  # type: ignore[arg-type]
 
 
 def polar_to_cartesian(

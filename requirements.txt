@@ -1,4 +1,4 @@
 numpy
 opencv-python
-pyglet
+PySide6
 scipy

@@ -1,53 +1,58 @@
-from typing import Optional
+from typing import Optional, Tuple
 
-from pyglet.window import Window, mouse, FPSDisplay
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget, QStackedLayout, QGraphicsView, QGraphicsScene
 
-from battle_map_tv.effects.fire import Fire
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.storage import get_from_storage, StorageKeys
+from battle_map_tv.ui_elements import get_window_icon
 
 
-class ImageWindow(Window):
-    def __init__(self, show_fps: bool, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class ImageWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Battle Map TV")
+        self.setWindowIcon(get_window_icon())
+        self.setStyleSheet(
+            """
+            background-color: #000000;
+        """
+        )
+
+        layout = QStackedLayout(self)
+        layout.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.view = QGraphicsView()
+        self.view.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        self.view.setStyleSheet("border: 0px")
+        layout.addWidget(self.view)
+
+        self.scene = QGraphicsScene()
+        self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
+        self.view.setScene(self.scene)
+
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
-        self.fire: Optional[Fire] = None
-        self.fps_display = FPSDisplay(self) if show_fps else None
 
-    def on_draw(self):
-        self.clear()
-        if self.image is not None:
-            self.image.draw()
-        if self.grid is not None:
-            self.grid.draw()
-        if self.fire is not None:
-            self.fire.draw()
-        if self.fps_display is not None:
-            self.fps_display.draw()
+    def toggle_fullscreen(self):
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
 
-    def on_resize(self, width: int, height: int):
-        super().on_resize(width=width, height=height)
-        if self.image is not None:
-            self.image.update_window_px(width_px=width, height_px=height)
-        if self.grid is not None:
-            self.grid.update_window_px(width_px=width, height_px=height)
-        if self.fire is not None:
-            self.fire.update_window_px(width=width, height=height)
-
-    def add_image(self, image_path: str, rotation: int = 0):
-        self.switch_to()
-        self.remove_image()
+    def add_image(self, image_path: str):
         self.image = Image(
             image_path=image_path,
-            window_width_px=self.width,
-            window_height_px=self.height,
-            rotation=rotation,
+            scene=self.scene,
+            window_width_px=self.width(),
+            window_height_px=self.height(),
         )
 
     def remove_image(self):
-        self.switch_to()
         if self.image is not None:
             self.image.delete()
             self.image = None
@@ -58,52 +63,32 @@ class ImageWindow(Window):
         except KeyError:
             pass
         else:
+            self.remove_image()
             self.add_image(image_path=previous_image)
 
-    def add_grid(self, width_mm: int, height_mm: int):
-        self.switch_to()
+    def add_grid(self, screen_size_mm: Tuple[int, int], opacity: int):
         if self.grid is not None:
             self.remove_grid()
         self.grid = Grid(
-            screen_size_px=(self.screen.width, self.screen.height),
-            screen_size_mm=(width_mm, height_mm),
-            window_size_px=(self.width, self.height),
+            scene=self.scene,
+            screen_size_px=self.screen().size().toTuple(),  # type: ignore[arg-type]
+            screen_size_mm=screen_size_mm,
+            window_size_px=self.size().toTuple(),  # type: ignore[arg-type]
+            opacity=opacity,
         )
 
     def remove_grid(self):
-        self.switch_to()
         if self.grid is not None:
             self.grid.delete()
             self.grid = None
 
-    def add_fire(self):
-        self.switch_to()
-        self.remove_fire()
-        self.fire = Fire(window_width=self.width, window_height=self.height)
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
+        if self.grid is not None:
+            self.grid.update_window_px(self.size().toTuple())  # type: ignore[arg-type]
 
-    def remove_fire(self):
-        self.switch_to()
-        if self.fire is not None:
-            self.fire.delete()
-            self.fire = None
-
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
-        self.switch_to()
-        if (
-            self.image is not None
-            and buttons
-            and mouse.LEFT
-            and self.image.are_coordinates_within_image(x, y)
-        ):
-            self.image.pan(dx=dx, dy=dy, store=False)
-            self.image.dragging = True
-
-    def on_mouse_release(self, x, y, button, modifiers):
-        if self.image is not None and self.image.dragging:
-            self.image.dragging = False
-            self.image.store_offsets()
-
-    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
-        self.switch_to()
-        if self.image is not None and self.image.are_coordinates_within_image(x, y):
-            self.image.scale(self.image.get_scale() * (1 + scroll_y / 10))
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.isFullScreen():  # type: ignore[attr-defined]
+            self.toggle_fullscreen()
+        super().keyPressEvent(event)

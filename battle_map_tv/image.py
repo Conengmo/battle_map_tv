@@ -1,116 +1,130 @@
 import os.path
-from io import BytesIO
 
-import cv2
-import numpy as np
-import pyglet
-from pyglet.graphics import Batch
-from pyglet.sprite import Sprite
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
+from battle_map_tv.grid import mm_to_inch
+from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import (
     set_image_in_storage,
     ImageKeys,
     get_image_from_storage,
     set_in_storage,
     StorageKeys,
+    get_from_storage,
 )
+
+
+class CustomGraphicsPixmapItem(QGraphicsPixmapItem):
+    def __init__(self, image_path: str):
+        pixmap = QPixmap(image_path)
+        super().__init__(pixmap)
+        self.image_filename = os.path.basename(image_path)
+        self.setFlag(self.GraphicsItemFlag.ItemIsMovable)
+        self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
+        self.setTransformOriginPoint(pixmap.width() / 2, pixmap.height() / 2)
+
+    def wheelEvent(self, event):
+        self.set_scale(self.scale() + event.delta() / 1500)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        position = (
+            self.pos().x() + self.pixmap().width() // 2,
+            self.pos().y() + self.pixmap().height() // 2,
+        )
+        set_image_in_storage(self.image_filename, ImageKeys.position, position)
+
+    def set_scale(self, value: float):
+        self.setScale(value)
+        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
+        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
 
 
 class Image:
     def __init__(
         self,
         image_path: str,
+        scene: QGraphicsScene,
         window_width_px: int,
         window_height_px: int,
-        rotation: int = 0,
     ):
-        self.window_width_px = window_width_px
-        self.window_height_px = window_height_px
-        self.rotation = rotation
-        self.dragging: bool = False
+        self.rotation = 0
 
         image_path = os.path.abspath(image_path)
         self.filepath: str = image_path
         self.image_filename = os.path.basename(image_path)
         set_in_storage(key=StorageKeys.previous_image, value=image_path)
 
-        if rotation == 0:
-            image = pyglet.image.load(image_path)
-        else:
-            image_cv = cv2.imread(image_path)
-            image_cv = np.rot90(image_cv, k=rotation // 90)
-            image_bytes = cv2.imencode(".png", image_cv)[1].tobytes()
-            image = pyglet.image.load(filename=".png", file=BytesIO(image_bytes))
+        self.scene = scene
 
-        image.anchor_x = image.width // 2
-        image.anchor_y = image.height // 2
-        self.batch = Batch()
-        self.sprite = Sprite(image, batch=self.batch)
+        self.pixmap_item = CustomGraphicsPixmapItem(image_path)
+        self.scene.addItem(self.pixmap_item)
+
         try:
-            self.sprite.scale = get_image_from_storage(
+            self.rotation = get_image_from_storage(
                 self.image_filename,
-                ImageKeys.scale,
+                ImageKeys.rotation,
                 do_raise=True,
             )
         except KeyError:
+            pass
+        else:
+            self.pixmap_item.setRotation(self.rotation)
+
+        self._scale: float = 1.0
+        try:
+            self.scale(
+                get_image_from_storage(
+                    self.image_filename,
+                    ImageKeys.scale,
+                    do_raise=True,
+                )
+            )
+        except KeyError:
             new_scale = min(
-                window_width_px / self.sprite.width,
-                window_height_px / self.sprite.height,
+                window_width_px / self.pixmap_item.pixmap().width(),
+                window_height_px / self.pixmap_item.pixmap().height(),
             )
             if new_scale < 1.0:
                 self.scale(new_scale)
         else:
-            global_event_dispatcher.dispatch_event(EventKeys.change_scale, self.sprite.scale)
+            global_event_dispatcher.dispatch_event(EventKeys.change_scale, self._scale)
 
-        self.center(store=False)
-        dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
-        self.pan(dx=dx, dy=dy, store=False)
-
-    def draw(self):
-        self.batch.draw()
-
-    def update_window_px(self, width_px: int, height_px: int):
-        diff_x = width_px - self.window_width_px
-        diff_y = height_px - self.window_height_px
-        self.pan(dx=int(diff_x / 2), dy=int(diff_y / 2))
-        self.window_width_px = width_px
-        self.window_height_px = height_px
-
-    def are_coordinates_within_image(self, x: int, y: int) -> bool:
-        width_half = self.sprite.width / 2
-        height_half = self.sprite.height / 2
-        return (
-            self.sprite.x - width_half <= x <= self.sprite.x + width_half
-            and self.sprite.y - height_half <= y <= self.sprite.y + height_half
-        )
-
-    def get_scale(self) -> float:
-        return self.sprite.scale
-
-    def scale(self, value: float):
-        self.sprite.scale = value
-        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
-        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
-
-    def pan(self, dx: int, dy: int, store: bool = True):
-        self.sprite.x += dx
-        self.sprite.y += dy
-        if store:
-            self.store_offsets()
-
-    def center(self, store: bool = True):
-        self.pan(*self._get_offsets(), store=store)
-
-    def _get_offsets(self) -> tuple[int, int]:
-        return (
-            int(self.window_width_px / 2 - self.sprite.x),
-            int(self.window_height_px / 2 - self.sprite.y),
-        )
-
-    def store_offsets(self):
-        dx, dy = self._get_offsets()
-        set_image_in_storage(self.image_filename, ImageKeys.offsets, (-dx, -dy))
+        try:
+            position = get_image_from_storage(
+                self.image_filename,
+                ImageKeys.position,
+                do_raise=True,
+            )
+        except KeyError:
+            pass
+        else:
+            self.pixmap_item.setPos(
+                position[0] - self.pixmap_item.pixmap().width() // 2,
+                position[1] - self.pixmap_item.pixmap().height() // 2,
+            )
 
     def delete(self):
-        self.sprite.delete()
+        self.scene.removeItem(self.pixmap_item)
+
+    def rotate(self):
+        self.rotation = (self.rotation + 90) % 360
+        self.pixmap_item.setRotation(self.rotation)
+        set_image_in_storage(self.image_filename, ImageKeys.rotation, self.rotation)
+
+    def scale(self, value: float):
+        self.pixmap_item.set_scale(value)
+
+    def autoscale(self):
+        try:
+            screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
+        except KeyError:
+            return
+
+        screen_px_per_mm = self.scene.views()[0].screen().size().width() / screen_size_mm[0]
+        px_per_inch = find_image_scale(self.filepath)
+        px_per_mm = px_per_inch * mm_to_inch
+        scale = screen_px_per_mm / px_per_mm
+        self.scale(scale)

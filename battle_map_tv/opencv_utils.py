@@ -1,8 +1,4 @@
-from io import BytesIO
-
 import cv2
-import pyglet
-from pyglet.image import AbstractImage
 
 
 def change_brightness(img, value: int):
@@ -21,9 +17,3 @@ def change_brightness(img, value: int):
     final_hsv = cv2.merge((h, s, v))
     img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
     return img
-
-
-def opencv_to_pyglet_image(opencv_image) -> AbstractImage:
-    as_bytes = cv2.imencode(".png", opencv_image)[1].tobytes()
-    image = pyglet.image.load(filename=".png", file=BytesIO(as_bytes))
-    return image

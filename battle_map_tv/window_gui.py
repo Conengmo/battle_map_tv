@@ -1,379 +1,202 @@
-from typing import Union, List, Callable
+from typing import Tuple
 
-from pyglet.graphics import Batch
-from pyglet.gui import Frame
-from pyglet.shapes import Rectangle
-from pyglet.window import Window
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QFileDialog,
+    QWidget,
+    QApplication,
+)
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
-from battle_map_tv.grid import mm_to_inch
-from battle_map_tv.gui_elements import (
-    Slider,
-    ToggleButton,
-    TextEntry,
-    PushButton,
-    TabButton,
-    EffectToggleButton,
-    ThumbnailButton,
-)
-from battle_map_tv.scale_detection import find_image_scale
-from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
+from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
+from battle_map_tv.ui_elements import StyledButton, StyledLineEdit, StyledSlider, get_window_icon
 from battle_map_tv.window_image import ImageWindow
 
-margin_x = 40
-margin_y = 60
-padding_x = 30
-padding_y = 30
-margin_label = 10
-margin_x_tab_button = 5
-tab_button_width = 100
-tab_height = 150
 
-
-class GuiWindow(Window):
-    def __init__(self, image_window: ImageWindow, *args, **kwargs):
-        super().__init__(file_drops=True, *args, **kwargs)
+class GuiWindow(QWidget):
+    def __init__(self, image_window: ImageWindow, app: QApplication):
+        super().__init__()
         self.image_window = image_window
-        self.batch = Batch()
-        self.batch_background = Batch()
-        self.frame = Frame(window=self)
+        self.app = app
 
-        self.thumbnail_buttons: List[ThumbnailButton] = []
-
-        row_y = margin_y
-
-        def slider_scale_callback(value: Union[float, str]):
-            value = float(value)
-            if image_window.image is not None:
-                image_window.image.scale(value)
-
-        self.slider_scale = Slider(
-            x=margin_x,
-            y=row_y,
-            value_min=0.1,
-            value_max=4,
-            default=1,
-            batch=self.batch,
-            callback=slider_scale_callback,
-            label="Scale",
-            label_formatter=lambda x: f"{x:.2f}",
+        self.setWindowTitle("Controls")
+        self.setWindowIcon(get_window_icon())
+        self.setStyleSheet(
+            """
+            background-color: #000000;
+            color: #E5E5E5;
+            font-size: 18px;
+        """
         )
-        self.frame.add_widget(self.slider_scale)
+
+        self.screen_size_mm: Tuple[int, int] = (100, 100)
+
+        self._layout = QVBoxLayout(self)
+        self._layout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
+        self._layout.setContentsMargins(80, 80, 80, 80)
+        self._layout.setSpacing(100)
+
+        self.add_row_image_buttons()
+        self.add_row_scale_slider()
+        self.add_row_screen_size()
+        self.add_row_grid()
+        self.add_row_app_controls()
+
+    def _create_container(self):
+        container = QHBoxLayout()
+        container.setSpacing(20)
+        self._layout.addLayout(container)
+        return container
+
+    def add_row_app_controls(self):
+        container = self._create_container()
+
+        button = StyledButton("Fullscreen")
+        button.clicked.connect(self.image_window.toggle_fullscreen)
+        container.addWidget(button)
+
+        button = StyledButton("Exit")
+        button.clicked.connect(self.app.quit)
+        container.addWidget(button)
+
+    def add_row_image_buttons(self):
+        container = self._create_container()
+
+        def open_file_dialog():
+            file_dialog = QFileDialog(
+                caption="Select an image file",
+                directory=r"C:\Users\frank\Documents\Battle maps\good",
+            )
+            file_dialog.setFileMode(QFileDialog.ExistingFile)  # type: ignore[attr-defined]
+            if file_dialog.exec_():
+                selected_file = file_dialog.selectedFiles()[0]
+                self.image_window.remove_image()
+                self.image_window.add_image(image_path=selected_file)
+                print(f"Selected file: {selected_file}")
+
+        button = StyledButton("Add")
+        button.clicked.connect(open_file_dialog)
+        container.addWidget(button)
+
+        button = StyledButton("Remove")
+        button.clicked.connect(self.image_window.remove_image)
+        container.addWidget(button)
+
+        button = StyledButton("Restore")
+        button.clicked.connect(self.image_window.restore_image)
+        container.addWidget(button)
+
+        def callback_button_rotate_image():
+            if self.image_window.image is not None:
+                self.image_window.image.rotate()
+
+        button = StyledButton("Rotate")
+        button.clicked.connect(callback_button_rotate_image)
+        container.addWidget(button)
+
+        def button_autoscale_callback():
+            if self.image_window.image is not None:
+                self.image_window.image.autoscale()
+
+        button = StyledButton("Autoscale")
+        button.clicked.connect(button_autoscale_callback)
+        container.addWidget(button)
+
+    def add_row_scale_slider(self):
+        container = self._create_container()
+
+        label = QLabel("Scale")
+        container.addWidget(label)
+
+        slider_factor = 100
+
+        def slider_scale_callback(value: int):
+            if self.image_window.image is not None:
+                self.image_window.image.scale(normalize_slider_value(value))
+
+        def normalize_slider_value(value: int) -> float:
+            return max(value, 1) / slider_factor
+
+        slider = StyledSlider(lower=0, upper=4 * slider_factor, default=slider_factor)
+        slider.valueChanged.connect(slider_scale_callback)
+        slider.valueChanged.connect(lambda value: label.setText(str(normalize_slider_value(value))))
+        container.addWidget(slider)
 
         def update_slider_scale_callback(value: float):
-            self.switch_to()
-            self.slider_scale.set_value(value)
+            slider.setValue(int(value * slider_factor))
 
         global_event_dispatcher.add_handler(EventKeys.change_scale, update_slider_scale_callback)
 
-        def button_callback_autoscale(button_value: bool) -> bool:
-            if button_value and image_window.image is not None:
-                try:
-                    width_mm = get_from_storage(StorageKeys.width_mm)
-                except KeyError:
-                    return False
-                screen_px_per_mm = image_window.screen.width / width_mm
-                px_per_inch = find_image_scale(image_window.image.filepath)
-                px_per_mm = px_per_inch * mm_to_inch
-                scale = screen_px_per_mm / px_per_mm
-                image_window.switch_to()
-                image_window.image.scale(scale)
-                return True
-            return False
+        label = QLabel(str(slider.value() / slider_factor))
+        label.setMinimumWidth(40)
+        container.addWidget(label)
 
-        self.button_autoscale = ToggleButton(
-            x=self.slider_scale.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=button_callback_autoscale,
-            label="Autoscale image",
-            icon="autoscale",
-        )
-        self.frame.add_widget(self.button_autoscale)
+    def add_row_screen_size(self):
+        container = self._create_container()
 
-        row_y += 100
+        label = QLabel("Screen size (mm)")
+        container.addWidget(label)
 
-        def button_callback_remove():
-            for thumbnail_button in self.thumbnail_buttons:
-                if thumbnail_button.value:
-                    thumbnail_button.value = False
-            image_window.remove_image()
+        screen_width_input = StyledLineEdit(max_length=4, placeholder="width")
+        container.addWidget(screen_width_input)
 
-        self.button_remove_image = PushButton(
-            x=margin_x,
-            y=row_y,
-            batch=self.batch,
-            callback=button_callback_remove,
-            label="Remove",
-            icon="remove",
-        )
-        self.frame.add_widget(self.button_remove_image)
+        screen_height_input = StyledLineEdit(max_length=4, placeholder="height")
+        container.addWidget(screen_height_input)
 
-        self.button_restore_image = PushButton(
-            x=self.button_remove_image.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=lambda: image_window.restore_image(),
-            label="Restore",
-            icon="restore",
-        )
-        self.frame.add_widget(self.button_restore_image)
-
-        def callback_button_rotate_image():
-            if image_window.image is not None:
-                current_rotation = image_window.image.rotation
-                current_image_filepath = image_window.image.filepath
-                new_rotation = (current_rotation + 90) % 360
-                image_window.add_image(image_path=current_image_filepath, rotation=new_rotation)
-
-        self.button_rotate_image = PushButton(
-            x=self.button_restore_image.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=callback_button_rotate_image,
-            label="Rotate",
-            icon="rotate",
-        )
-        self.frame.add_widget(self.button_rotate_image)
-
-        def callback_button_center_image():
-            if image_window.image is not None:
-                image_window.image.center()
-
-        self.button_center_image = PushButton(
-            x=self.button_rotate_image.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=callback_button_center_image,
-            label="Center",
-            icon="center",
-        )
-        self.frame.add_widget(self.button_center_image)
-
-        def button_callback_grid(button_value: bool) -> bool:
-            if button_value:
-                try:
-                    width_mm = int(self.text_entry_screen_width.value)
-                    height_mm = int(self.text_entry_screen_height.value)
-                except ValueError:
-                    print("Invalid input for screen size")
-                    return False
-                else:
-                    image_window.add_grid(
-                        width_mm=width_mm,
-                        height_mm=height_mm,
-                    )
-                    set_in_storage(StorageKeys.width_mm, width_mm)
-                    set_in_storage(StorageKeys.height_mm, height_mm)
-                    return True
-            else:
-                image_window.remove_grid()
-                return False
-
-        self.button_grid = ToggleButton(
-            x=self.button_center_image.x2 + padding_x,
-            y=row_y,
-            batch=self.batch,
-            callback=button_callback_grid,
-            label="Grid overlay",
-            icon="grid",
-        )
-        self.frame.add_widget(self.button_grid)
-
-        self.button_fullscreen = PushButton(
-            x=self.button_autoscale.x,
-            y=row_y,
-            batch=self.batch,
-            callback=lambda: image_window.set_fullscreen(),
-            label="Fullscreen",
-            icon="fullscreen",
-        )
-        self.frame.add_widget(self.button_fullscreen)
-
-        row_y += 110
-
-        self.tab_background = Rectangle(
-            x=margin_x,
-            y=row_y,
-            width=self.width - 2 * margin_x,
-            height=tab_height,
-            color=(42, 42, 42, 255),
-            batch=self.batch_background,
-        )
-
-        self.tab_buttons: List[TabButton] = []
-
-        self._add_tab_images(tab_index=0, row_y=row_y)
-
-        self.text_entry_screen_width: TextEntry
-        self.text_entry_screen_height: TextEntry
-        self._add_tab_screen_size(tab_index=1, row_y=row_y)
-
-        self.slider_grid_opacity: Slider
-        self._add_tab_grid_opacity(tab_index=2, row_y=row_y)
-
-        self.effect_buttons: List[EffectToggleButton] = []
-        self._add_tab_effects(tab_index=3, row_y=row_y)
-
-        # Start with showing the first tab
-        self._hide_tab_content()
-        for thumbnail in self.thumbnail_buttons:
-            thumbnail.show()
-
-    def on_draw(self):
-        self.clear()
-        self.batch_background.draw()
-        self.batch.draw()
-
-    def on_file_drop(self, x: int, y: int, paths: List[str]):
-        self.switch_to()
-        for thumbnail in self.thumbnail_buttons:
-            is_hit = thumbnail.on_file_drop(x=x, y=y, image_path=paths[0])
-            if is_hit:
-                break
+        try:
+            self.screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
+        except KeyError:
+            pass
         else:
-            self.image_window.add_image(image_path=paths[0])
-        self.switch_to()
-        self.slider_scale.reset()
+            screen_width_input.setText(str(self.screen_size_mm[0]))
+            screen_height_input.setText(str(self.screen_size_mm[1]))
 
-    def _hide_tab_content(self):
-        for thumbnail in self.thumbnail_buttons:
-            thumbnail.hide()
-        self.text_entry_screen_width.hide()
-        self.text_entry_screen_height.hide()
-        self.slider_grid_opacity.hide()
-        for effect_button in self.effect_buttons:
-            effect_button.hide()
-
-    def _create_tab_button(self, tab_index: int, row_y: int, callback: Callable, label: str):
-        button = TabButton(
-            x=margin_x + tab_index * (tab_button_width + margin_x_tab_button),
-            y=row_y + tab_height,
-            batch=self.batch,
-            callback=callback,
-            label=label,
-        )
-        self.frame.add_widget(button)
-        self.tab_buttons.append(button)
-
-    def _add_tab_screen_size(self, tab_index: int, row_y: int):
-        self.text_entry_screen_width = TextEntry(
-            text=get_from_storage(StorageKeys.width_mm, optional=True),
-            x=margin_x + padding_x,
-            y=row_y + (tab_height - TextEntry.total_height) // 2,
-            width=200,
-            label="Screen width (mm)",
-            batch=self.batch,
-        )
-        self.push_handlers(self.text_entry_screen_width)
-        self.text_entry_screen_height = TextEntry(
-            text=get_from_storage(StorageKeys.height_mm, optional=True),
-            x=self.text_entry_screen_width.x2 + padding_x,
-            y=row_y + (tab_height - TextEntry.total_height) // 2,
-            width=200,
-            label="Screen height (mm)",
-            batch=self.batch,
-        )
-        self.push_handlers(self.text_entry_screen_height)
-
-        def callback_tab_screen_size():
-            self.switch_to()
-            self._hide_tab_content()
-            self.text_entry_screen_width.show()
-            self.text_entry_screen_height.show()
-
-        self._create_tab_button(
-            tab_index=tab_index,
-            row_y=row_y,
-            callback=callback_tab_screen_size,
-            label="Screen size",
-        )
-
-    def _add_tab_grid_opacity(self, tab_index: int, row_y: int):
-        def slider_grid_opacity_callback(value: float):
-            self.image_window.switch_to()
-            if self.image_window.grid is not None:
-                self.image_window.grid.update_opacity(int(value))
-            return value
-
-        self.slider_grid_opacity = Slider(
-            x=2 * margin_x,
-            y=row_y + (tab_height - Slider.total_height) // 2,
-            value_min=0,
-            value_max=255,
-            default=200,
-            batch=self.batch,
-            callback=slider_grid_opacity_callback,
-            label="Grid opacity",
-            label_formatter=lambda value: str(int(value)),
-        )
-        self.push_handlers(self.slider_grid_opacity)
-
-        def callback_tab_grid_opacity():
-            self.switch_to()
-            self._hide_tab_content()
-            self.slider_grid_opacity.show()
-
-        self._create_tab_button(
-            tab_index=tab_index,
-            row_y=row_y,
-            callback=callback_tab_grid_opacity,
-            label="Grid opacity",
-        )
-
-    def _add_tab_effects(self, tab_index: int, row_y: int):
-        def callback_button_fire(value):
-            if value:
-                self.image_window.add_fire()
+        def set_screen_size_callback():
+            try:
+                width_mm = int(screen_width_input.text())
+                height_mm = int(screen_height_input.text())
+            except ValueError:
+                pass
             else:
-                self.image_window.remove_fire()
+                set_in_storage(StorageKeys.screen_size_mm, (width_mm, height_mm))
+                if self.image_window.grid is not None:
+                    self.image_window.grid.update_screen_mm(width_mm, height_mm)
 
-        button_fire = EffectToggleButton(
-            x=2 * margin_x,
-            y=row_y + (tab_height - EffectToggleButton.total_height) // 2,
-            batch=self.batch,
-            callback=callback_button_fire,
-            effect="fire",
-        )
-        self.frame.add_widget(button_fire)
-        self.effect_buttons.append(button_fire)
+        button = StyledButton("Set")
+        button.clicked.connect(set_screen_size_callback)
+        container.addWidget(button)
 
-        def callback_tab_effects():
-            self.switch_to()
-            self._hide_tab_content()
-            for effect_button in self.effect_buttons:
-                effect_button.show()
+    def add_row_grid(self):
+        container = self._create_container()
 
-        self._create_tab_button(
-            tab_index=tab_index,
-            row_y=row_y,
-            callback=callback_tab_effects,
-            label="Effects",
-        )
+        label = QLabel("Grid opacity")
+        container.addWidget(label)
 
-    def _add_tab_images(self, tab_index: int, row_y: int):
-        thumbnail_y = row_y + (tab_height - ThumbnailButton.height) // 2
-        for i in range(4):
-            thumbnail_button = ThumbnailButton(
-                index=i,
-                x=(2 + i) * margin_x + i * ThumbnailButton.width,
-                y=thumbnail_y,
-                batch=self.batch,
-                image_window=self.image_window,
-                all_thumbnail_buttons=self.thumbnail_buttons,
-            )
-            self.thumbnail_buttons.append(thumbnail_button)
-            self.frame.add_widget(thumbnail_button)
+        slider_factor = 100
 
-        def callback_tab_images():
-            self.switch_to()
-            self._hide_tab_content()
-            for thumbnail in self.thumbnail_buttons:
-                thumbnail.show()
+        def slider_callback(value: int):
+            if self.image_window.grid is not None:
+                self.image_window.grid.update_opacity(normalize_slider_value(value))
 
-        self._create_tab_button(
-            tab_index=tab_index,
-            row_y=row_y,
-            callback=callback_tab_images,
-            label="Images",
-        )
+        def normalize_slider_value(value: int) -> int:
+            return int(255 * value / slider_factor)
+
+        slider = StyledSlider(lower=0, upper=slider_factor, default=int(0.7 * slider_factor))
+        slider.valueChanged.connect(slider_callback)
+        container.addWidget(slider)
+
+        def toggle_grid_callback():
+            if self.image_window.grid is not None:
+                self.image_window.remove_grid()
+            else:
+                self.image_window.add_grid(
+                    screen_size_mm=self.screen_size_mm,
+                    opacity=normalize_slider_value(slider.value()),
+                )
+
+        button = StyledButton("Toggle grid")
+        button.clicked.connect(toggle_grid_callback)
+        container.addWidget(button)
