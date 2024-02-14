@@ -2,19 +2,17 @@ from typing import Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QSlider,
     QLabel,
     QHBoxLayout,
     QVBoxLayout,
     QFileDialog,
     QWidget,
-    QPushButton,
     QApplication,
-    QLineEdit,
 )
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
+from battle_map_tv.ui_elements import StyledButton, StyledLineEdit, StyledSlider
 from battle_map_tv.window_image import ImageWindow
 
 
@@ -26,8 +24,8 @@ class GuiWindow(QWidget):
 
         self.setStyleSheet(
             """
-            background-color: #262626;
-            color: #FFFFFF;
+            background-color: #000000;
+            color: #E5E5E5;
             font-size: 18px;
         """
         )
@@ -54,11 +52,11 @@ class GuiWindow(QWidget):
     def add_row_app_controls(self):
         container = self._create_container()
 
-        button = QPushButton("Fullscreen")
+        button = StyledButton("Fullscreen")
         button.clicked.connect(self.image_window.toggle_fullscreen)
         container.addWidget(button)
 
-        button = QPushButton("Exit")
+        button = StyledButton("Exit")
         button.clicked.connect(self.app.quit)
         container.addWidget(button)
 
@@ -77,15 +75,15 @@ class GuiWindow(QWidget):
                 self.image_window.add_image(image_path=selected_file)
                 print(f"Selected file: {selected_file}")
 
-        button = QPushButton("Add")
+        button = StyledButton("Add")
         button.clicked.connect(open_file_dialog)
         container.addWidget(button)
 
-        button = QPushButton("Remove")
+        button = StyledButton("Remove")
         button.clicked.connect(self.image_window.remove_image)
         container.addWidget(button)
 
-        button = QPushButton("Restore")
+        button = StyledButton("Restore")
         button.clicked.connect(self.image_window.restore_image)
         container.addWidget(button)
 
@@ -93,7 +91,7 @@ class GuiWindow(QWidget):
             if self.image_window.image is not None:
                 self.image_window.image.rotate()
 
-        button = QPushButton("Rotate")
+        button = StyledButton("Rotate")
         button.clicked.connect(callback_button_rotate_image)
         container.addWidget(button)
 
@@ -101,7 +99,7 @@ class GuiWindow(QWidget):
             if self.image_window.image is not None:
                 self.image_window.image.autoscale()
 
-        button = QPushButton("Autoscale")
+        button = StyledButton("Autoscale")
         button.clicked.connect(button_autoscale_callback)
         container.addWidget(button)
 
@@ -120,12 +118,7 @@ class GuiWindow(QWidget):
         def normalize_slider_value(value: int) -> float:
             return max(value, 1) / slider_factor
 
-        slider = QSlider(Qt.Horizontal)
-        slider.setMinimum(0)
-        slider.setMaximum(4 * slider_factor)
-        slider.setValue(1 * slider_factor)
-        slider.setTickPosition(QSlider.TicksBelow)
-        slider.setTickInterval(slider_factor // 2)
+        slider = StyledSlider(lower=0, upper=4 * slider_factor, default=slider_factor)
         slider.valueChanged.connect(slider_scale_callback)
         slider.valueChanged.connect(lambda value: label.setText(str(normalize_slider_value(value))))
         container.addWidget(slider)
@@ -145,14 +138,10 @@ class GuiWindow(QWidget):
         label = QLabel("Screen size (mm)")
         container.addWidget(label)
 
-        screen_width_input = QLineEdit()
-        screen_width_input.setMaxLength(4)
-        screen_width_input.setPlaceholderText("width")
+        screen_width_input = StyledLineEdit(max_length=4, placeholder="width")
         container.addWidget(screen_width_input)
 
-        screen_height_input = QLineEdit()
-        screen_height_input.setMaxLength(4)
-        screen_height_input.setPlaceholderText("height")
+        screen_height_input = StyledLineEdit(max_length=4, placeholder="height")
         container.addWidget(screen_height_input)
 
         try:
@@ -174,7 +163,7 @@ class GuiWindow(QWidget):
                 if self.image_window.grid is not None:
                     self.image_window.grid.update_screen_mm(width_mm, height_mm)
 
-        button = QPushButton("Set")
+        button = StyledButton("Set")
         button.clicked.connect(set_screen_size_callback)
         container.addWidget(button)
 
@@ -193,12 +182,7 @@ class GuiWindow(QWidget):
         def normalize_slider_value(value: int) -> int:
             return int(255 * value / slider_factor)
 
-        slider = QSlider(Qt.Horizontal)
-        slider.setMinimum(0)
-        slider.setMaximum(slider_factor)
-        slider.setValue(0.7 * slider_factor)
-        slider.setTickPosition(QSlider.TicksBelow)
-        slider.setTickInterval(slider_factor // 10)
+        slider = StyledSlider(lower=0, upper=slider_factor, default=int(0.7 * slider_factor))
         slider.valueChanged.connect(slider_callback)
         container.addWidget(slider)
 
@@ -211,7 +195,6 @@ class GuiWindow(QWidget):
                     opacity=normalize_slider_value(slider.value()),
                 )
 
-        button = QPushButton("Toggle grid")
-        button.setStyleSheet("padding:5px 20px")
+        button = StyledButton("Toggle grid")
         button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)

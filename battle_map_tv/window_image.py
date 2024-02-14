@@ -13,9 +13,7 @@ class ImageWindow(QWidget):
         super().__init__()
         self.setStyleSheet(
             """
-            background-color: #262626;
-            color: #FFFFFF;
-            font-size: 18px;
+            background-color: #000000;
         """
         )
 
