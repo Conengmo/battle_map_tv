@@ -97,6 +97,14 @@ class GuiWindow(QWidget):
         button.clicked.connect(callback_button_rotate_image)
         container.addWidget(button)
 
+        def button_autoscale_callback():
+            if self.image_window.image is not None:
+                self.image_window.image.autoscale()
+
+        button = QPushButton("Autoscale")
+        button.clicked.connect(button_autoscale_callback)
+        container.addWidget(button)
+
     def add_row_scale_slider(self):
         container = self._create_container()
 
