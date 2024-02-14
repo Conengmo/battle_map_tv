@@ -1,8 +1,8 @@
 import os.path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap, QTransform
-from PySide6.QtWidgets import QLabel, QLayout, QGraphicsView, QGraphicsScene
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QLayout, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import (
@@ -12,6 +12,23 @@ from battle_map_tv.storage import (
     set_in_storage,
     StorageKeys,
 )
+
+
+class CustomGraphicsPixmapItem(QGraphicsPixmapItem):
+    def __init__(self, image_path: str):
+        pixmap = QPixmap(image_path)
+        super().__init__(pixmap)
+        self.image_filename = os.path.basename(image_path)
+        self.setFlag(self.GraphicsItemFlag.ItemIsMovable)
+        self.setTransformOriginPoint(pixmap.width() / 2, pixmap.height() / 2)
+
+    def wheelEvent(self, event):
+        self.set_scale(self.scale() + event.delta() / 1500)
+
+    def set_scale(self, value: float):
+        self.setScale(value)
+        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
+        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
 
 
 class Image:
@@ -35,7 +52,6 @@ class Image:
 
         self.view = QGraphicsView()
         self.view.setAlignment(Qt.AlignCenter)
-        self.view.setDragMode(QGraphicsView.ScrollHandDrag)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setStyleSheet("border: 0px")
@@ -44,9 +60,8 @@ class Image:
         self.view.setScene(self.scene)
         layout.addWidget(self.view)
 
-        self.pixmap = QPixmap(image_path)
-        self.pixmap_original = self.pixmap.copy()
-        self.scene.addPixmap(self.pixmap)
+        self.pixmap_item = CustomGraphicsPixmapItem(image_path)
+        self.scene.addItem(self.pixmap_item)
 
         try:
             self.rotation = get_image_from_storage(
@@ -70,8 +85,8 @@ class Image:
             )
         except KeyError:
             new_scale = min(
-                window_width_px / self.pixmap.size().width(),
-                window_height_px / self.pixmap.size().height(),
+                window_width_px / self.pixmap_item.pixmap().size().width(),
+                window_height_px / self.pixmap_item.pixmap().size().height(),
             )
             if new_scale < 1.0:
                 self.scale(new_scale)
@@ -91,8 +106,4 @@ class Image:
         set_image_in_storage(self.image_filename, ImageKeys.rotation, self.rotation)
 
     def scale(self, value: float):
-        scaling = value / self._scale
-        self.view.scale(scaling, scaling)
-        self._scale = value
-        global_event_dispatcher.dispatch_event(EventKeys.change_scale, value)
-        set_image_in_storage(self.image_filename, ImageKeys.scale, value)
+        self.pixmap_item.set_scale(value)
