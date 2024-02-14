@@ -112,4 +112,5 @@ class GuiWindow(QWidget):
         global_event_dispatcher.add_handler(EventKeys.change_scale, update_slider_scale_callback)
 
         label = QLabel(str(slider.value() / slider_factor))
+        label.setMinimumWidth(40)
         container.addWidget(label)
