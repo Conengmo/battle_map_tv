@@ -6,7 +6,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QFileDialog,
     QWidget,
-    QPushButton, QApplication,
+    QPushButton,
+    QApplication,
 )
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
@@ -34,7 +35,6 @@ class GuiWindow(QWidget):
         self.add_row_image_buttons()
         self.add_row_scale_slider()
         self.add_row_app_controls()
-
 
     def open_file_dialog(self):
         file_dialog = QFileDialog(
@@ -87,27 +87,29 @@ class GuiWindow(QWidget):
         label = QLabel("Scale")
         container.addWidget(label)
 
+        slider_factor = 100
+
         def slider_scale_callback(value: int):
             if self.image_window.image is not None:
                 self.image_window.image.scale(normalize_slider_value(value))
 
         def normalize_slider_value(value: int) -> float:
-            return max(value, 1) / 10
+            return max(value, 1) / slider_factor
 
         slider = QSlider(Qt.Horizontal)
         slider.setMinimum(0)
-        slider.setMaximum(40)
-        slider.setValue(10)
+        slider.setMaximum(4 * slider_factor)
+        slider.setValue(1 * slider_factor)
         slider.setTickPosition(QSlider.TicksBelow)
-        slider.setTickInterval(10)
+        slider.setTickInterval(slider_factor // 2)
         slider.valueChanged.connect(slider_scale_callback)
         slider.valueChanged.connect(lambda value: label.setText(str(normalize_slider_value(value))))
         container.addWidget(slider)
 
         def update_slider_scale_callback(value: float):
-            slider.setValue(int(value * 10))
+            slider.setValue(int(value * slider_factor))
 
         global_event_dispatcher.add_handler(EventKeys.change_scale, update_slider_scale_callback)
 
-        label = QLabel(str(slider.value() / 10))
+        label = QLabel(str(slider.value() / slider_factor))
         container.addWidget(label)
