@@ -35,7 +35,6 @@ class ImageWindow(QWidget):
             window_width_px=self.width(),
             window_height_px=self.height(),
         )
-        self.layout.update()
 
     def remove_image(self):
         if self.image is not None:

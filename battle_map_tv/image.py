@@ -1,4 +1,5 @@
 import os.path
+from typing import Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
@@ -20,10 +21,21 @@ class CustomGraphicsPixmapItem(QGraphicsPixmapItem):
         super().__init__(pixmap)
         self.image_filename = os.path.basename(image_path)
         self.setFlag(self.GraphicsItemFlag.ItemIsMovable)
+        self.setFlag(self.GraphicsItemFlag.ItemSendsGeometryChanges)
         self.setTransformOriginPoint(pixmap.width() / 2, pixmap.height() / 2)
+        self.position_original = self._pos_as_tuple()
+
+    def _pos_as_tuple(self) -> Tuple[int, int]:
+        return int(self.pos().x()), int(self.pos().y())
 
     def wheelEvent(self, event):
         self.set_scale(self.scale() + event.delta() / 1500)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        position = self._pos_as_tuple()
+        offset = tuple(a - b for a, b in zip(self.position_original, position))
+        set_image_in_storage(self.image_filename, ImageKeys.offsets, offset)
 
     def set_scale(self, value: float):
         self.setScale(value)
@@ -93,8 +105,18 @@ class Image:
         else:
             global_event_dispatcher.dispatch_event(EventKeys.change_scale, self._scale)
 
-        # dx, dy = get_image_from_storage(self.image_filename, ImageKeys.offsets, default=(0, 0))
-        # self.pan(dx=dx, dy=dy, store=False)
+        try:
+            offset = get_image_from_storage(
+                self.image_filename,
+                ImageKeys.offsets,
+                do_raise=True,
+            )
+        except KeyError:
+            pass
+        else:
+            rect = self.scene.sceneRect()
+            self.pixmap_item.moveBy(-1 * offset[0], -1 * offset[1])
+            self.scene.setSceneRect(rect)
 
     def delete(self):
         self.scene.clear()
