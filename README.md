@@ -12,7 +12,7 @@ in the right size and with a 1-inch grid.
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/393cd1a1-fc98-4c62-834e-4d6b9b266872)
+![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/fe79eca8-0dfb-4986-99cd-a747a7603604)
 
   
 ## Features
@@ -20,6 +20,7 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Doesn't use a browser.
 - Free and open source
 - Works offline
+- Simple UI
 - Two windows:
   - one on the TV with your map and grid on it
   - one on your GM laptop with controls
@@ -29,8 +30,6 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to 1 inch.
 - Save settings so images load like you had them last time.
-- Prepare up to four images in slots in the UI.
-- Overlay a fire effect on your map.
 
 
 ## Quickstart
@@ -42,22 +41,20 @@ python -m pip install battle-map-tv
 python -m battle_map_tv
 ```
 
-Drag the TV window to your TV and make it fullscreen.
+Drag the TV window to your TV and make it fullscreen with the 'fullscreen' button.
 
-Then drag an image from a local folder and drop it in the GM window.
+Then use the 'add' button to load an image.
 
 There are two text boxes to enter the dimensions of your secondary screen in milimeters.
 This is needed to display a grid overlay and autoscale the image to 1 inch.
 
 You can drag the image to pan and zoom with your mouse scroll wheel, or use the slider in the GM window.
 
-Close the application by closing both windows.
+Close the application with the 'exit' button.
 
 
 ## Technical
 
-- Uses [Pyglet](https://github.com/pyglet/pyglet) for the graphical user interface.
+- Uses [PySide6]([https://github.com/pyglet/pyglet](https://wiki.qt.io/Qt_for_Python)) for the graphical user interface.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
 - Uses [Hatch](https://hatch.pypa.io/latest/) to build and release the package.
-- Icons by Prinbles https://prinbles.itch.io/analogue-buttons-pack-i
-- Fire resource by DemontCode https://demontcode.itch.io/fireball
