@@ -20,16 +20,16 @@ class ImageWindow(QWidget):
         """
         )
 
-        self.layout = QStackedLayout(self)
-        self.layout.setAlignment(Qt.AlignCenter)
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        layout = QStackedLayout(self)
+        layout.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+        layout.setContentsMargins(0, 0, 0, 0)
 
         self.view = QGraphicsView()
-        self.view.setAlignment(Qt.AlignCenter)
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
         self.view.setStyleSheet("border: 0px")
-        self.layout.addWidget(self.view)
+        layout.addWidget(self.view)
 
         self.scene = QGraphicsScene()
         self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
@@ -71,9 +71,9 @@ class ImageWindow(QWidget):
             self.remove_grid()
         self.grid = Grid(
             scene=self.scene,
-            screen_size_px=self.screen().size().toTuple(),
+            screen_size_px=self.screen().size().toTuple(),  # type: ignore[arg-type]
             screen_size_mm=screen_size_mm,
-            window_size_px=self.size().toTuple(),
+            window_size_px=self.size().toTuple(),  # type: ignore[arg-type]
             opacity=opacity,
         )
 
@@ -86,9 +86,9 @@ class ImageWindow(QWidget):
         super().resizeEvent(event)
         self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
         if self.grid is not None:
-            self.grid.update_window_px(self.size().toTuple())
+            self.grid.update_window_px(self.size().toTuple())  # type: ignore[arg-type]
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Escape and self.isFullScreen():
+        if event.key() == Qt.Key_Escape and self.isFullScreen():  # type: ignore[attr-defined]
             self.toggle_fullscreen()
         super().keyPressEvent(event)

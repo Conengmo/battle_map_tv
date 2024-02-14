@@ -49,7 +49,7 @@ class StyledButton(QPushButton):
 
 class StyledSlider(QSlider):
     def __init__(self, lower: int, upper: int, default: int, *args, **kwargs):
-        super().__init__(Qt.Horizontal, *args, **kwargs)
+        super().__init__(Qt.Horizontal, *args, **kwargs)  # type: ignore[attr-defined]
         self.setMinimum(lower)
         self.setMaximum(upper)
         self.setValue(default)

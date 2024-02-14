@@ -34,10 +34,10 @@ class GuiWindow(QWidget):
 
         self.screen_size_mm: Tuple[int, int] = (100, 100)
 
-        self.layout = QVBoxLayout(self)
-        self.layout.setAlignment(Qt.AlignVCenter)
-        self.layout.setContentsMargins(80, 80, 80, 80)
-        self.layout.setSpacing(100)
+        self._layout = QVBoxLayout(self)
+        self._layout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
+        self._layout.setContentsMargins(80, 80, 80, 80)
+        self._layout.setSpacing(100)
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
@@ -48,7 +48,7 @@ class GuiWindow(QWidget):
     def _create_container(self):
         container = QHBoxLayout()
         container.setSpacing(20)
-        self.layout.addLayout(container)
+        self._layout.addLayout(container)
         return container
 
     def add_row_app_controls(self):
@@ -70,7 +70,7 @@ class GuiWindow(QWidget):
                 caption="Select an image file",
                 directory=r"C:\Users\frank\Documents\Battle maps\good",
             )
-            file_dialog.setFileMode(QFileDialog.ExistingFile)
+            file_dialog.setFileMode(QFileDialog.ExistingFile)  # type: ignore[attr-defined]
             if file_dialog.exec_():
                 selected_file = file_dialog.selectedFiles()[0]
                 self.image_window.remove_image()
