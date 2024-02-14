@@ -8,9 +8,11 @@ from PySide6.QtWidgets import (
     QWidget,
     QPushButton,
     QApplication,
+    QLineEdit,
 )
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
+from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
 from battle_map_tv.window_image import ImageWindow
 
 
@@ -35,6 +37,7 @@ class GuiWindow(QWidget):
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
+        self.add_row_screen_size()
         self.add_row_app_controls()
 
     def _create_container(self):
@@ -122,3 +125,37 @@ class GuiWindow(QWidget):
         label = QLabel(str(slider.value() / slider_factor))
         label.setMinimumWidth(40)
         container.addWidget(label)
+
+    def add_row_screen_size(self):
+        container = self._create_container()
+
+        label = QLabel("Screen size (mm)")
+        container.addWidget(label)
+
+        screen_width_input = QLineEdit(
+            str(get_from_storage(StorageKeys.width_mm, optional=True) or "")
+        )
+        screen_width_input.setMaxLength(4)
+        screen_width_input.setPlaceholderText("width")
+        container.addWidget(screen_width_input)
+
+        screen_height_input = QLineEdit(
+            str(get_from_storage(StorageKeys.height_mm, optional=True) or "")
+        )
+        screen_height_input.setMaxLength(4)
+        screen_height_input.setPlaceholderText("height")
+        container.addWidget(screen_height_input)
+
+        def set_screen_size_callback():
+            try:
+                width_mm = int(screen_width_input.text())
+                height_mm = int(screen_height_input.text())
+            except ValueError:
+                pass
+            else:
+                set_in_storage(StorageKeys.width_mm, width_mm)
+                set_in_storage(StorageKeys.height_mm, height_mm)
+
+        button = QPushButton("Set")
+        button.clicked.connect(set_screen_size_callback)
+        container.addWidget(button)
