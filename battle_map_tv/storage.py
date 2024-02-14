@@ -62,7 +62,7 @@ def remove_from_storage(key: StorageKeys):
 
 class ImageKeys(Enum):
     scale = "scale"
-    offsets = "offsets"
+    position = "position"
     rotation = "rotation"
 
 
