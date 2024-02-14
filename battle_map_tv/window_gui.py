@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
-from battle_map_tv.ui_elements import StyledButton, StyledLineEdit, StyledSlider
+from battle_map_tv.ui_elements import StyledButton, StyledLineEdit, StyledSlider, get_window_icon
 from battle_map_tv.window_image import ImageWindow
 
 
@@ -22,6 +22,8 @@ class GuiWindow(QWidget):
         self.image_window = image_window
         self.app = app
 
+        self.setWindowTitle("Controls")
+        self.setWindowIcon(get_window_icon())
         self.setStyleSheet(
             """
             background-color: #000000;

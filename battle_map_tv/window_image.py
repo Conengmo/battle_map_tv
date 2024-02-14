@@ -6,11 +6,14 @@ from PySide6.QtWidgets import QWidget, QStackedLayout, QGraphicsView, QGraphicsS
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.storage import get_from_storage, StorageKeys
+from battle_map_tv.ui_elements import get_window_icon
 
 
 class ImageWindow(QWidget):
     def __init__(self):
         super().__init__()
+        self.setWindowTitle("Battle Map TV")
+        self.setWindowIcon(get_window_icon())
         self.setStyleSheet(
             """
             background-color: #000000;

@@ -1,5 +1,13 @@
+import os.path
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QLineEdit, QPushButton, QSlider
+
+
+def get_window_icon():
+    path = os.path.dirname(os.path.abspath(__file__))
+    return QIcon(os.path.join(path, "icon.png"))
 
 
 class StyledLineEdit(QLineEdit):
