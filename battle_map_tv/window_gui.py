@@ -36,8 +36,8 @@ class GuiWindow(QWidget):
 
         self._layout = QVBoxLayout(self)
         self._layout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
-        self._layout.setContentsMargins(80, 80, 80, 80)
-        self._layout.setSpacing(100)
+        self._layout.setContentsMargins(60, 80, 80, 80)
+        self._layout.setSpacing(50)
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
