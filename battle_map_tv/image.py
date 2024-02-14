@@ -1,8 +1,7 @@
 import os.path
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QLayout, QGraphicsView, QGraphicsScene, QGraphicsPixmapItem
+from PySide6.QtWidgets import QGraphicsPixmapItem
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import (
@@ -44,30 +43,18 @@ class Image:
     def __init__(
         self,
         image_path: str,
-        layout: QLayout,
+        scene,
         window_width_px: int,
         window_height_px: int,
     ):
-        self.layout = layout
-        self.window_width_px = window_width_px
-        self.window_height_px = window_height_px
         self.rotation = 0
-        self.dragging: bool = False
 
         image_path = os.path.abspath(image_path)
         self.filepath: str = image_path
         self.image_filename = os.path.basename(image_path)
         set_in_storage(key=StorageKeys.previous_image, value=image_path)
 
-        self.view = QGraphicsView()
-        self.view.setAlignment(Qt.AlignCenter)
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.view.setStyleSheet("border: 0px")
-
-        self.scene = QGraphicsScene()
-        self.view.setScene(self.scene)
-        layout.addWidget(self.view)
+        self.scene = scene
 
         self.pixmap_item = CustomGraphicsPixmapItem(image_path)
         self.scene.addItem(self.pixmap_item)
@@ -81,7 +68,7 @@ class Image:
         except KeyError:
             pass
         else:
-            self.view.rotate(self.rotation)
+            self.pixmap_item.setRotation(self.rotation)
 
         self._scale: float = 1.0
         try:
@@ -111,20 +98,17 @@ class Image:
         except KeyError:
             pass
         else:
-            rect = self.scene.sceneRect()
             self.pixmap_item.setPos(
                 position[0] - self.pixmap_item.pixmap().width() // 2,
                 position[1] - self.pixmap_item.pixmap().height() // 2,
             )
-            self.scene.setSceneRect(rect)
 
     def delete(self):
-        self.scene.clear()
-        self.layout.removeWidget(self.view)
+        self.scene.removeItem(self.pixmap_item)
 
     def rotate(self):
         self.rotation = (self.rotation + 90) % 360
-        self.view.rotate(90)
+        self.pixmap_item.setRotation(self.rotation)
         set_image_in_storage(self.image_filename, ImageKeys.rotation, self.rotation)
 
     def scale(self, value: float):

@@ -28,8 +28,7 @@ def _dump(data: Dict[str, Any]):
 
 
 class StorageKeys(Enum):
-    width_mm = "width_mm"
-    height_mm = "height_mm"
+    screen_size_mm = "screen_size_mm"
     previous_image = "previous_image"
     thumbnail_0 = "thumbnail_0"
     thumbnail_1 = "thumbnail_1"

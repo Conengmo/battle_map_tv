@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QSlider,
@@ -30,6 +32,8 @@ class GuiWindow(QWidget):
         """
         )
 
+        self.screen_size_mm: Tuple[int, int] = (100, 100)
+
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignVCenter)
         self.layout.setContentsMargins(80, 80, 80, 80)
@@ -38,6 +42,7 @@ class GuiWindow(QWidget):
         self.add_row_image_buttons()
         self.add_row_scale_slider()
         self.add_row_screen_size()
+        self.add_row_grid()
         self.add_row_app_controls()
 
     def _create_container(self):
@@ -132,19 +137,23 @@ class GuiWindow(QWidget):
         label = QLabel("Screen size (mm)")
         container.addWidget(label)
 
-        screen_width_input = QLineEdit(
-            str(get_from_storage(StorageKeys.width_mm, optional=True) or "")
-        )
+        screen_width_input = QLineEdit()
         screen_width_input.setMaxLength(4)
         screen_width_input.setPlaceholderText("width")
         container.addWidget(screen_width_input)
 
-        screen_height_input = QLineEdit(
-            str(get_from_storage(StorageKeys.height_mm, optional=True) or "")
-        )
+        screen_height_input = QLineEdit()
         screen_height_input.setMaxLength(4)
         screen_height_input.setPlaceholderText("height")
         container.addWidget(screen_height_input)
+
+        try:
+            self.screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
+        except KeyError:
+            pass
+        else:
+            screen_width_input.setText(str(self.screen_size_mm[0]))
+            screen_height_input.setText(str(self.screen_size_mm[1]))
 
         def set_screen_size_callback():
             try:
@@ -153,9 +162,23 @@ class GuiWindow(QWidget):
             except ValueError:
                 pass
             else:
-                set_in_storage(StorageKeys.width_mm, width_mm)
-                set_in_storage(StorageKeys.height_mm, height_mm)
+                set_in_storage(StorageKeys.screen_size_mm, (width_mm, height_mm))
+                if self.image_window.grid is not None:
+                    self.image_window.grid.update_screen_mm(width_mm, height_mm)
 
         button = QPushButton("Set")
         button.clicked.connect(set_screen_size_callback)
+        container.addWidget(button)
+
+    def add_row_grid(self):
+        container = self._create_container()
+
+        def toggle_grid_callback():
+            if self.image_window.grid is not None:
+                self.image_window.remove_grid()
+            else:
+                self.image_window.add_grid(self.screen_size_mm)
+
+        button = QPushButton("Toggle grid")
+        button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)
