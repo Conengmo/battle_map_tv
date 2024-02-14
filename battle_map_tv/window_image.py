@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from battle_map_tv.image import Image
+from battle_map_tv.storage import get_from_storage, StorageKeys
 
 
 class ImageWindow(QWidget):
@@ -40,3 +41,12 @@ class ImageWindow(QWidget):
         if self.image is not None:
             self.image.delete()
             self.image = None
+
+    def restore_image(self):
+        try:
+            previous_image = get_from_storage(StorageKeys.previous_image)
+        except KeyError:
+            pass
+        else:
+            self.remove_image()
+            self.add_image(image_path=previous_image)

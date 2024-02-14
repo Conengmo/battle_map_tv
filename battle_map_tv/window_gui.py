@@ -69,7 +69,11 @@ class GuiWindow(QWidget):
         container.addWidget(button)
 
         button = QPushButton("Remove")
-        button.clicked.connect(lambda: self.image_window.remove_image())
+        button.clicked.connect(self.image_window.remove_image)
+        container.addWidget(button)
+
+        button = QPushButton("Restore")
+        button.clicked.connect(self.image_window.restore_image)
         container.addWidget(button)
 
         def callback_button_rotate_image():
