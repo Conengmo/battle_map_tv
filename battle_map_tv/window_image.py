@@ -65,7 +65,7 @@ class ImageWindow(QWidget):
             self.remove_image()
             self.add_image(image_path=previous_image)
 
-    def add_grid(self, screen_size_mm: Tuple[int, int]):
+    def add_grid(self, screen_size_mm: Tuple[int, int], opacity: int):
         if self.grid is not None:
             self.remove_grid()
         self.grid = Grid(
@@ -73,6 +73,7 @@ class ImageWindow(QWidget):
             screen_size_px=self.screen().size().toTuple(),
             screen_size_mm=screen_size_mm,
             window_size_px=self.size().toTuple(),
+            opacity=opacity,
         )
 
     def remove_grid(self):

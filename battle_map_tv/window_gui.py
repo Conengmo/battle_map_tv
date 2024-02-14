@@ -173,12 +173,37 @@ class GuiWindow(QWidget):
     def add_row_grid(self):
         container = self._create_container()
 
+        label = QLabel("Grid opacity")
+        container.addWidget(label)
+
+        slider_factor = 100
+
+        def slider_callback(value: int):
+            if self.image_window.grid is not None:
+                self.image_window.grid.update_opacity(normalize_slider_value(value))
+
+        def normalize_slider_value(value: int) -> int:
+            return int(255 * value / slider_factor)
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(0)
+        slider.setMaximum(slider_factor)
+        slider.setValue(0.7 * slider_factor)
+        slider.setTickPosition(QSlider.TicksBelow)
+        slider.setTickInterval(slider_factor // 10)
+        slider.valueChanged.connect(slider_callback)
+        container.addWidget(slider)
+
         def toggle_grid_callback():
             if self.image_window.grid is not None:
                 self.image_window.remove_grid()
             else:
-                self.image_window.add_grid(self.screen_size_mm)
+                self.image_window.add_grid(
+                    screen_size_mm=self.screen_size_mm,
+                    opacity=normalize_slider_value(slider.value()),
+                )
 
         button = QPushButton("Toggle grid")
+        button.setStyleSheet("padding:5px 20px")
         button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)

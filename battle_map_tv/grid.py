@@ -1,9 +1,9 @@
 import math
 from typing import Tuple, Optional
 
-from PySide6.QtCore import QLineF, Qt
-from PySide6.QtGui import QPen
-from PySide6.QtWidgets import QGraphicsView, QGraphicsItemGroup
+from PySide6.QtCore import QLineF
+from PySide6.QtGui import QPen, QColor
+from PySide6.QtWidgets import QGraphicsView, QGraphicsItemGroup, QGraphicsScene
 
 mm_to_inch = 0.03937007874
 
@@ -14,15 +14,17 @@ class Grid:
 
     def __init__(
         self,
-        scene,
+        scene: QGraphicsScene,
         screen_size_px: tuple[int, int],
         screen_size_mm: tuple[int, int],
         window_size_px: tuple[int, int],
+        opacity: int,
     ):
         self.scene = scene
         self.screen_size_px = screen_size_px
         self.screen_size_mm = screen_size_mm
         self.window_size_px = window_size_px
+        self.opacity = opacity
 
         self.view = QGraphicsView()
         self.group: Optional[QGraphicsItemGroup] = None
@@ -34,6 +36,10 @@ class Grid:
 
     def update_screen_mm(self, width_mm: int, height_mm: int):
         self.screen_size_mm = (width_mm, height_mm)
+        self.reset()
+
+    def update_opacity(self, opacity: int):
+        self.opacity = opacity
         self.reset()
 
     def delete(self):
@@ -55,8 +61,8 @@ class Grid:
         offset_y = (self.window_size_px[1] - ((n_lines_horizontal - 1) * pixels_per_inch_x)) / 2
 
         pen = QPen()
-        pen.setWidth(2)
-        pen.setColor(Qt.white)
+        pen.setWidth(1)
+        pen.setColor(QColor(255, 255, 255, self.opacity))
 
         for i in range(n_lines_vertical):
             line = self.scene.addLine(
