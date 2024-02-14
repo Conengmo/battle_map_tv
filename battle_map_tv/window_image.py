@@ -84,3 +84,8 @@ class ImageWindow(QWidget):
         self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
         if self.grid is not None:
             self.grid.update_window_px(self.size().toTuple())
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.isFullScreen():
+            self.toggle_fullscreen()
+        super().keyPressEvent(event)
