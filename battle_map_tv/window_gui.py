@@ -29,28 +29,22 @@ class GuiWindow(QWidget):
         )
 
         self.layout = QVBoxLayout(self)
+        self.layout.setAlignment(Qt.AlignVCenter)
         self.layout.setContentsMargins(80, 80, 80, 80)
-        self.layout.setSpacing(50)
+        self.layout.setSpacing(100)
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
         self.add_row_app_controls()
 
-    def open_file_dialog(self):
-        file_dialog = QFileDialog(
-            caption="Select an image file",
-            directory=r"C:\Users\frank\Documents\Battle maps\good",
-        )
-        file_dialog.setFileMode(QFileDialog.ExistingFile)
-        if file_dialog.exec_():
-            selected_file = file_dialog.selectedFiles()[0]
-            self.image_window.remove_image()
-            self.image_window.add_image(image_path=selected_file)
-            print(f"Selected file: {selected_file}")
+    def _create_container(self):
+        container = QHBoxLayout()
+        container.setSpacing(20)
+        self.layout.addLayout(container)
+        return container
 
     def add_row_app_controls(self):
-        container = QHBoxLayout()
-        self.layout.addLayout(container)
+        container = self._create_container()
 
         button = QPushButton("Fullscreen")
         button.clicked.connect(self.image_window.toggle_fullscreen)
@@ -61,11 +55,22 @@ class GuiWindow(QWidget):
         container.addWidget(button)
 
     def add_row_image_buttons(self):
-        container = QHBoxLayout()
-        self.layout.addLayout(container)
+        container = self._create_container()
+
+        def open_file_dialog():
+            file_dialog = QFileDialog(
+                caption="Select an image file",
+                directory=r"C:\Users\frank\Documents\Battle maps\good",
+            )
+            file_dialog.setFileMode(QFileDialog.ExistingFile)
+            if file_dialog.exec_():
+                selected_file = file_dialog.selectedFiles()[0]
+                self.image_window.remove_image()
+                self.image_window.add_image(image_path=selected_file)
+                print(f"Selected file: {selected_file}")
 
         button = QPushButton("Add")
-        button.clicked.connect(self.open_file_dialog)
+        button.clicked.connect(open_file_dialog)
         container.addWidget(button)
 
         button = QPushButton("Remove")
@@ -85,8 +90,7 @@ class GuiWindow(QWidget):
         container.addWidget(button)
 
     def add_row_scale_slider(self):
-        container = QHBoxLayout()
-        self.layout.addLayout(container)
+        container = self._create_container()
 
         label = QLabel("Scale")
         container.addWidget(label)
