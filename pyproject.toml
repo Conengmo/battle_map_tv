@@ -41,7 +41,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "pyglet",
+    "PySide6",
     "opencv-python",
     "numpy",
     "scipy",
