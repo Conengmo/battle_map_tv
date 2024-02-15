@@ -5,7 +5,7 @@
 
 # Battle Map TV
 
-Display battle maps for TTRPGs on a tv that lies flat horizontal on your table.
+Display battle maps for TTRPGs on a tv that lies flat horizontally on your table.
 
 This Python application aims to do one thing: quickly show an image on your secondary screen,
 in the right size and with a 1-inch grid.
@@ -28,33 +28,32 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Scale, pan and rotate the image.
 - Store the physical size of your screen to enable grid and autoscaling.
 - Overlay a 1-inch grid.
-- Automatically detect the grid in an image and scale to 1 inch.
+- Automatically detect the grid in an image and scale to a 1 inch grid.
 - Save settings so images load like you had them last time.
 
 
-## Quickstart
+## Installation
 
-This assumes you have Python installed. Probably you also want to create a virtual environment.
+- Open terminal or cmd.
+- Check that you have Python installed by running the `python --version` command.
+  - If you don't have Python, it's easy to install. See here: https://wiki.python.org/moin/BeginnersGuide/Download
+- Install Battle Map TV with this command: `python -m pip install battle-map-tv`
+- Then run it with: `python -m battle_map_tv`
 
-```
-python -m pip install battle-map-tv
-python -m battle_map_tv
-```
 
-Drag the TV window to your TV and make it fullscreen with the 'fullscreen' button.
+## Manual
 
-Then use the 'add' button to load an image.
+- Drag the TV window to your TV and make it fullscreen with the 'fullscreen' button.
+- Ue the 'add' button to load an image.
+- You can drag the image to pan. Zoom with your mouse scroll wheel or use the slider in the controls window.
+- Close the application with the 'exit' button.
 
-There are two text boxes to enter the dimensions of your secondary screen in milimeters.
+There are two text boxes to enter the physical dimensions of your secondary screen in milimeters.
 This is needed to display a grid overlay and autoscale the image to 1 inch.
-
-You can drag the image to pan and zoom with your mouse scroll wheel, or use the slider in the GM window.
-
-Close the application with the 'exit' button.
 
 
 ## Technical
 
-- Uses [PySide6]([https://github.com/pyglet/pyglet](https://wiki.qt.io/Qt_for_Python)) for the graphical user interface.
+- Uses [PySide6](https://wiki.qt.io/Qt_for_Python) for the graphical user interface.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
 - Uses [Hatch](https://hatch.pypa.io/latest/) to build and release the package.
