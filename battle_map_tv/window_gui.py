@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -17,10 +17,16 @@ from battle_map_tv.window_image import ImageWindow
 
 
 class GuiWindow(QWidget):
-    def __init__(self, image_window: ImageWindow, app: QApplication):
+    def __init__(
+            self,
+            image_window: ImageWindow,
+            app: QApplication,
+            default_directory: Optional[str],
+    ):
         super().__init__()
         self.image_window = image_window
         self.app = app
+        self.default_directory = default_directory
 
         self.setWindowTitle("Controls")
         self.setWindowIcon(get_window_icon())
@@ -68,14 +74,13 @@ class GuiWindow(QWidget):
         def open_file_dialog():
             file_dialog = QFileDialog(
                 caption="Select an image file",
-                directory=r"C:\Users\frank\Documents\Battle maps\good",
+                directory=self.default_directory,
             )
             file_dialog.setFileMode(QFileDialog.ExistingFile)  # type: ignore[attr-defined]
             if file_dialog.exec_():
                 selected_file = file_dialog.selectedFiles()[0]
                 self.image_window.remove_image()
                 self.image_window.add_image(image_path=selected_file)
-                print(f"Selected file: {selected_file}")
 
         button = StyledButton("Add")
         button.clicked.connect(open_file_dialog)
