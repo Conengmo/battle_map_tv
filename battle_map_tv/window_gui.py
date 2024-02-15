@@ -74,7 +74,7 @@ class GuiWindow(QWidget):
         def open_file_dialog():
             file_dialog = QFileDialog(
                 caption="Select an image file",
-                directory=self.default_directory,
+                directory=self.default_directory,  # type: ignore[arg-type]
             )
             file_dialog.setFileMode(QFileDialog.ExistingFile)  # type: ignore[attr-defined]
             if file_dialog.exec_():
