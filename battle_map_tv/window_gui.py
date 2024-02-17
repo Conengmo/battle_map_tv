@@ -12,16 +12,22 @@ from PySide6.QtWidgets import (
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
-from battle_map_tv.ui_elements import StyledButton, StyledLineEdit, StyledSlider, get_window_icon
+from battle_map_tv.ui_elements import (
+    StyledButton,
+    StyledLineEdit,
+    StyledSlider,
+    get_window_icon,
+    StyledTextEdit,
+)
 from battle_map_tv.window_image import ImageWindow
 
 
 class GuiWindow(QWidget):
     def __init__(
-            self,
-            image_window: ImageWindow,
-            app: QApplication,
-            default_directory: Optional[str],
+        self,
+        image_window: ImageWindow,
+        app: QApplication,
+        default_directory: Optional[str],
     ):
         super().__init__()
         self.image_window = image_window
@@ -40,10 +46,15 @@ class GuiWindow(QWidget):
 
         self.screen_size_mm: Tuple[int, int] = (100, 100)
 
-        self._layout = QVBoxLayout(self)
-        self._layout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
-        self._layout.setContentsMargins(60, 80, 80, 80)
-        self._layout.setSpacing(50)
+        self._superlayout = QHBoxLayout(self)
+        self._superlayout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
+        self._superlayout.setContentsMargins(60, 80, 80, 80)
+        self._superlayout.setSpacing(50)
+
+        self.add_column_initiative()
+
+        self._layout = QVBoxLayout()
+        self._superlayout.addLayout(self._layout)
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
@@ -205,3 +216,14 @@ class GuiWindow(QWidget):
         button = StyledButton("Toggle grid")
         button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)
+
+    def add_column_initiative(self):
+        text_area = StyledTextEdit()
+        text_area.setPlaceholderText("Display initiative order")
+        self._superlayout.addWidget(text_area)
+
+        def read_text_area():
+            text = text_area.toPlainText().strip()
+            self.image_window.add_initiative(text)
+
+        text_area.connect_text_changed_callback_with_timer(read_text_area)

@@ -1,8 +1,17 @@
 import os.path
+from typing import Callable
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QLineEdit, QPushButton, QSlider
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QIcon, QColor, QFont
+from PySide6.QtWidgets import (
+    QLineEdit,
+    QPushButton,
+    QSlider,
+    QGraphicsTextItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QTextEdit,
+)
 
 
 def get_window_icon():
@@ -72,3 +81,90 @@ class StyledSlider(QSlider):
             }
         """
         )
+
+
+class StyledTextEdit(QTextEdit):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet(
+            """
+            background-color: #101010;
+            color: #E5E5E5;
+            padding: 9px 20px;
+            border: 1px solid #3E3E40;
+            border-radius: 6px;
+        """
+        )
+
+    def connect_text_changed_callback_with_timer(self, callback: Callable):
+        typing_timer = QTimer()
+        typing_timer.setSingleShot(True)
+        typing_timer.timeout.connect(callback)
+
+        def reset_typing_timer():
+            typing_timer.start(700)
+
+        self.textChanged.connect(reset_typing_timer)
+
+
+class InitiativeOverlay:
+    margin = 10
+    padding = 5
+
+    def __init__(self, text: str, scene: QGraphicsScene):
+        self.scene = scene
+
+        self.text_item = QGraphicsTextItem(text)
+        self.text_item.setDefaultTextColor(Qt.black)  # type: ignore[attr-defined]
+        font = QFont()
+        font.setPointSize(20)
+        self.text_item.setFont(font)
+        self.text_item.setZValue(3)
+
+        text_rect = self.text_item.boundingRect()
+        background_rect = text_rect.adjusted(0, 0, 2 * self.padding, 2 * self.padding)
+
+        self.background = QGraphicsRectItem(background_rect)
+        self.background.setBrush(QColor(255, 255, 255, 220))
+        self.background.setPen(QColor(255, 255, 255, 150))  # No border
+        self.background.setZValue(2)
+
+        self._put_text_in_background()
+
+        scene.addItem(self.background)
+        scene.addItem(self.text_item)
+
+    def _put_text_in_background(self):
+        self.text_item.setPos(
+            self.background.x() + self.padding, self.background.y() + self.padding
+        )
+
+    def move_to_bottom_left(self):
+        self.background.setPos(
+            self.margin, self.scene.height() - self.background.boundingRect().height() - self.margin
+        )
+        self._put_text_in_background()
+        return self
+
+    def move_to_top_right(self):
+        self.background.setPos(
+            self.scene.width() - self.background.boundingRect().width() - self.margin, self.margin
+        )
+        self._put_text_in_background()
+        return self
+
+    def flip(self):
+        self.text_item.setRotation(180)
+        self.background.setRotation(180)
+        self.background.setPos(
+            self.background.x() + self.background.boundingRect().width(),
+            self.background.y() + self.background.boundingRect().height(),
+        )
+        self.text_item.setPos(
+            self.background.x() - self.padding, self.background.y() - self.padding
+        )
+        return self
+
+    def remove(self):
+        self.scene.removeItem(self.background)
+        self.scene.removeItem(self.text_item)

@@ -28,6 +28,7 @@ def main(default_directory: Optional[str]):
     image_window.setScreen(screens[-1])
     gui_window.setScreen(screens[0])
 
+    image_window.move(image_window.screen().geometry().center())
     gui_window.move(gui_window.screen().geometry().topLeft())
 
     sys.exit(app.exec())

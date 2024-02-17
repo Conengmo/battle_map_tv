@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QStackedLayout, QGraphicsView, QGraphicsScene
@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QWidget, QStackedLayout, QGraphicsView, QGraphicsS
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.storage import get_from_storage, StorageKeys
-from battle_map_tv.ui_elements import get_window_icon
+from battle_map_tv.ui_elements import get_window_icon, InitiativeOverlay
 
 
 class ImageWindow(QWidget):
@@ -37,6 +37,7 @@ class ImageWindow(QWidget):
 
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
+        self.initiative_overlays: Optional[List[InitiativeOverlay]] = None
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -81,6 +82,20 @@ class ImageWindow(QWidget):
         if self.grid is not None:
             self.grid.delete()
             self.grid = None
+
+    def add_initiative(self, text: str):
+        self.remove_initiative()
+        if text:
+            self.initiative_overlays = [
+                InitiativeOverlay(text, self.scene).move_to_bottom_left(),
+                InitiativeOverlay(text, self.scene).move_to_top_right().flip(),
+            ]
+
+    def remove_initiative(self):
+        if self.initiative_overlays is not None:
+            for overlay in self.initiative_overlays:
+                overlay.remove()
+            self.initiative_overlays = None
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
