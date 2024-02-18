@@ -1,4 +1,5 @@
 import os.path
+import re
 from typing import Callable
 
 from PySide6.QtCore import Qt, QTimer
@@ -114,9 +115,10 @@ class InitiativeOverlay:
     def __init__(self, text: str, scene: QGraphicsScene):
         self.scene = scene
 
+        text = self._format_text(text)
         self.text_item = QGraphicsTextItem(text)
         self.text_item.setDefaultTextColor(Qt.black)  # type: ignore[attr-defined]
-        font = QFont()
+        font = QFont("Courier")
         font.setPointSize(20)
         self.text_item.setFont(font)
         self.text_item.setZValue(3)
@@ -133,6 +135,24 @@ class InitiativeOverlay:
 
         scene.addItem(self.background)
         scene.addItem(self.text_item)
+
+    @staticmethod
+    def _format_text(text: str) -> str:
+        lines = text.split("\n")
+        out = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            # leftpad the number if it has only one digit
+            number_match = re.match(r"^\d+", line)
+            if number_match:
+                number = number_match.group()
+                number_padded = str(number).rjust(2)
+                line = re.sub(r"^\d+", number_padded, line)
+            out.append(line)
+        out = sorted(out)
+        return "\n".join(out)
 
     def _put_text_in_background(self):
         self.text_item.setPos(
