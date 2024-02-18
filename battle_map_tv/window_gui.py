@@ -62,6 +62,14 @@ class GuiWindow(QWidget):
         self.add_row_grid()
         self.add_row_app_controls()
 
+        # take focus away from the text area
+        self.setFocus()
+
+    def mousePressEvent(self, event):
+        # user clicked in the blank space of the GUI, take focus away from other elements
+        self.setFocus()
+        super().mousePressEvent(event)
+
     def _create_container(self):
         container = QHBoxLayout()
         container.setSpacing(20)
