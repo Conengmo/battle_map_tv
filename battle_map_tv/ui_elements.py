@@ -1,6 +1,6 @@
 import os.path
 import re
-from typing import Callable
+from typing import Callable, Dict, Optional, List
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QColor, QFont
@@ -139,7 +139,8 @@ class InitiativeOverlay:
     @staticmethod
     def _format_text(text: str) -> str:
         lines = text.split("\n")
-        out = []
+        # Group by initiative count
+        out: Dict[Optional[str], List[str]] = {}
         for line in lines:
             line = line.strip()
             if not line:
@@ -149,10 +150,18 @@ class InitiativeOverlay:
             if number_match:
                 number = number_match.group()
                 number_padded = str(number).rjust(2)
-                line = re.sub(r"^\d+", number_padded, line)
-            out.append(line)
-        out = sorted(out)
-        return "\n".join(out)
+                line = re.sub(r"^\d+\s?", "", line)
+                out.setdefault(number_padded, []).append(line)
+            else:
+                out.setdefault(None, []).append(line)
+        # sort groups by initiative count descending, then sort lines within each group ascending
+        out_lines = []
+        for key in sorted(out.keys(), key=lambda k: (k is not None, k), reverse=True):
+            for line in sorted(out[key]):
+                if key is not None:
+                    line = f"{key} {line}"
+                out_lines.append(line)
+        return "\n".join(out_lines)
 
     def _put_text_in_background(self):
         self.text_item.setPos(
