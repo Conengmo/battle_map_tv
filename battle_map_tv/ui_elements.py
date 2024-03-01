@@ -2,7 +2,7 @@ import os.path
 import re
 from typing import Callable, Dict, Optional, List
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, QRectF, QPointF
 from PySide6.QtGui import QIcon, QColor, QFont
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -123,10 +123,7 @@ class InitiativeOverlay:
         self.text_item.setFont(font)
         self.text_item.setZValue(3)
 
-        text_rect = self.text_item.boundingRect()
-        background_rect = text_rect.adjusted(0, 0, 2 * self.padding, 2 * self.padding)
-
-        self.background = QGraphicsRectItem(background_rect)
+        self.background = QGraphicsRectItem(self._get_background_rect())
         self.background.setBrush(QColor(255, 255, 255, 220))
         self.background.setPen(QColor(255, 255, 255, 150))  # No border
         self.background.setZValue(2)
@@ -135,6 +132,19 @@ class InitiativeOverlay:
 
         scene.addItem(self.background)
         scene.addItem(self.text_item)
+
+        self.text_item.setTransformOriginPoint(
+            QPointF(
+                self.text_item.boundingRect().x(),
+                self.text_item.boundingRect().y() + self.text_item.boundingRect().height(),
+            )
+        )
+
+    def _get_background_rect(self) -> QRectF:
+        text_rect = self.text_item.boundingRect()
+        print(text_rect)
+        background_rect = text_rect.adjusted(0, 0, 2 * self.padding, 2 * self.padding)
+        return background_rect
 
     @staticmethod
     def _format_text(text: str) -> str:
@@ -193,6 +203,19 @@ class InitiativeOverlay:
             self.background.x() - self.padding, self.background.y() - self.padding
         )
         return self
+
+    def mutate_font_size(self, by: int):
+        current_y = self.text_item.y()
+        current_height = self.text_item.boundingRect().height()
+        font = self.text_item.font()
+        font.setPointSize(font.pointSize() + by)
+        self.text_item.setFont(font)
+        new_y = current_y + (current_height - self.text_item.boundingRect().height())
+        print(current_y, self.text_item.y(), new_y)
+        self.text_item.setPos(self.text_item.y(), new_y)
+        print(self.text_item.y())
+        self.background.setRect(self._get_background_rect())
+        self._put_text_in_background()
 
     def remove(self):
         self.scene.removeItem(self.background)
