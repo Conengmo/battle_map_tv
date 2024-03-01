@@ -2,7 +2,7 @@ import os.path
 import re
 from typing import Callable, Dict, Optional, List
 
-from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, QSizeF
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QColor, QFont
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -112,20 +112,23 @@ class InitiativeOverlay:
     margin = 10
     padding = 5
 
-    def __init__(self, text: str, scene: QGraphicsScene):
+    def __init__(self, text: str, scene: QGraphicsScene, font_size: int):
+        self.text_raw = text
         self.scene = scene
+        self.font_size = font_size
 
         text = self._format_text(text)
         self.text_item = QGraphicsTextItem(text)
         self.text_item.setDefaultTextColor(Qt.black)  # type: ignore[attr-defined]
         font = QFont("Courier")
-        font.setPointSize(20)
+        font.setPointSize(font_size)
         self.text_item.setFont(font)
         self.text_item.setZValue(3)
 
-        self.origin_point = QPointF(self.margin, self.scene.height() - self.margin)
+        text_rect = self.text_item.boundingRect()
+        background_rect = text_rect.adjusted(0, 0, 2 * self.padding, 2 * self.padding)
 
-        self.background = QGraphicsRectItem(self._get_background_rect())
+        self.background = QGraphicsRectItem(background_rect)
         self.background.setBrush(QColor(255, 255, 255, 220))
         self.background.setPen(QColor(255, 255, 255, 150))  # No border
         self.background.setZValue(2)
@@ -134,14 +137,6 @@ class InitiativeOverlay:
 
         scene.addItem(self.background)
         scene.addItem(self.text_item)
-
-    def _get_background_rect(self) -> QRectF:
-        text_size: QSizeF = self.text_item.boundingRect().size()
-        background_size = text_size + QSizeF(2 * self.padding, 2 * self.padding)
-        background_pos = self.origin_point - QPointF(0, background_size.height())
-        background_rect = QRectF(background_pos, background_size)
-        print(background_rect)
-        return background_rect
 
     @staticmethod
     def _format_text(text: str) -> str:
@@ -200,19 +195,6 @@ class InitiativeOverlay:
             self.background.x() - self.padding, self.background.y() - self.padding
         )
         return self
-
-    def mutate_font_size(self, by: int):
-        current_y = self.text_item.y()
-        current_height = self.text_item.boundingRect().height()
-        font = self.text_item.font()
-        font.setPointSize(font.pointSize() + by)
-        self.text_item.setFont(font)
-        new_y = current_y + (current_height - self.text_item.boundingRect().height())
-        print(current_y, self.text_item.y(), new_y)
-        self.text_item.setPos(self.text_item.y(), new_y)
-        print(self.text_item.y())
-        self.background.setRect(self._get_background_rect())
-        self._put_text_in_background()
 
     def remove(self):
         self.scene.removeItem(self.background)

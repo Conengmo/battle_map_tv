@@ -30,6 +30,7 @@ def _dump(data: Dict[str, Any]):
 class StorageKeys(Enum):
     screen_size_mm = "screen_size_mm"
     previous_image = "previous_image"
+    initiative_font_size = "initiative_font_size"
     thumbnail_0 = "thumbnail_0"
     thumbnail_1 = "thumbnail_1"
     thumbnail_2 = "thumbnail_2"
