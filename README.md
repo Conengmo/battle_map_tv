@@ -14,9 +14,9 @@ For GM's with little time or who improvise their sessions: much easier to use in
 
 ![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/fe79eca8-0dfb-4986-99cd-a747a7603604)
 
-  
+
 ## Features
-- Works natively on Linux, macOS and Windows.
+- Works on Linux, macOS and Windows by using Python.
 - Doesn't use a browser.
 - Free and open source
 - Works offline
@@ -30,6 +30,7 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to a 1 inch grid.
 - Save settings so images load like you had them last time.
+- Simple initiative tracker
 
 
 ## Installation
@@ -48,8 +49,17 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - You can drag the image to pan. Zoom with your mouse scroll wheel or use the slider in the controls window.
 - Close the application with the 'exit' button.
 
+### Set screen size
+
 There are two text boxes to enter the physical dimensions of your secondary screen in milimeters.
 This is needed to display a grid overlay and autoscale the image to 1 inch.
+
+### Initiative tracker
+
+In the controls window, you can add players and their initiative. The list will be sorted automatically.
+Just put a number and a name on each line.
+
+The '+' and '-' buttons increase and decrease the font size.
 
 
 ## Technical
