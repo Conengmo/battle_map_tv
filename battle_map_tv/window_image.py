@@ -88,7 +88,7 @@ class ImageWindow(QWidget):
         if text:
             self.initiative_overlays = [
                 InitiativeOverlay(text, self.scene).move_to_bottom_left(),
-                InitiativeOverlay(text, self.scene).move_to_top_right().flip(),
+                # InitiativeOverlay(text, self.scene).move_to_top_right().flip(),
             ]
 
     def initiative_change_font_size(self, by: int):

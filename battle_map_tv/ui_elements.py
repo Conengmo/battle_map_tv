@@ -2,7 +2,7 @@ import os.path
 import re
 from typing import Callable, Dict, Optional, List
 
-from PySide6.QtCore import Qt, QTimer, QRectF, QPointF
+from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, QSizeF
 from PySide6.QtGui import QIcon, QColor, QFont
 from PySide6.QtWidgets import (
     QLineEdit,
@@ -123,6 +123,8 @@ class InitiativeOverlay:
         self.text_item.setFont(font)
         self.text_item.setZValue(3)
 
+        self.origin_point = QPointF(self.margin, self.scene.height() - self.margin)
+
         self.background = QGraphicsRectItem(self._get_background_rect())
         self.background.setBrush(QColor(255, 255, 255, 220))
         self.background.setPen(QColor(255, 255, 255, 150))  # No border
@@ -133,17 +135,12 @@ class InitiativeOverlay:
         scene.addItem(self.background)
         scene.addItem(self.text_item)
 
-        self.text_item.setTransformOriginPoint(
-            QPointF(
-                self.text_item.boundingRect().x(),
-                self.text_item.boundingRect().y() + self.text_item.boundingRect().height(),
-            )
-        )
-
     def _get_background_rect(self) -> QRectF:
-        text_rect = self.text_item.boundingRect()
-        print(text_rect)
-        background_rect = text_rect.adjusted(0, 0, 2 * self.padding, 2 * self.padding)
+        text_size: QSizeF = self.text_item.boundingRect().size()
+        background_size = text_size + QSizeF(2 * self.padding, 2 * self.padding)
+        background_pos = self.origin_point - QPointF(0, background_size.height())
+        background_rect = QRectF(background_pos, background_size)
+        print(background_rect)
         return background_rect
 
     @staticmethod
