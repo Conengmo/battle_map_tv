@@ -17,6 +17,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install Pyside6 dependencies
+      run: |
+        sudo apt update && sudo apt install -y libegl1-mesa-dev
+
     - name: Set up Python 3
       uses: actions/setup-python@v3
 
