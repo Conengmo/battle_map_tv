@@ -226,12 +226,33 @@ class GuiWindow(QWidget):
         container.addWidget(button)
 
     def add_column_initiative(self):
+        container = QVBoxLayout()
+        container.setSpacing(20)
+        self._superlayout.addLayout(container)
+
         text_area = StyledTextEdit()
         text_area.setPlaceholderText("Display initiative order")
-        self._superlayout.addWidget(text_area)
+        container.addWidget(text_area)
 
         def read_text_area():
             text = text_area.toPlainText().strip()
             self.image_window.add_initiative(text)
 
         text_area.connect_text_changed_callback_with_timer(read_text_area)
+
+        increase_font_button = StyledButton("+")
+        decrease_font_button = StyledButton("-")
+
+        increase_font_button.clicked.connect(
+            lambda: self.image_window.initiative_change_font_size(by=2)
+        )
+        decrease_font_button.clicked.connect(
+            lambda: self.image_window.initiative_change_font_size(by=-2)
+        )
+
+        subcontainer = QHBoxLayout()
+        subcontainer.setSpacing(20)
+        container.addLayout(subcontainer)
+
+        subcontainer.addWidget(increase_font_button)
+        subcontainer.addWidget(decrease_font_button)

@@ -112,14 +112,16 @@ class InitiativeOverlay:
     margin = 10
     padding = 5
 
-    def __init__(self, text: str, scene: QGraphicsScene):
+    def __init__(self, text: str, scene: QGraphicsScene, font_size: int):
+        self.text_raw = text
         self.scene = scene
+        self.font_size = font_size
 
         text = self._format_text(text)
         self.text_item = QGraphicsTextItem(text)
         self.text_item.setDefaultTextColor(Qt.black)  # type: ignore[attr-defined]
         font = QFont("Courier")
-        font.setPointSize(20)
+        font.setPointSize(font_size)
         self.text_item.setFont(font)
         self.text_item.setZValue(3)
 
