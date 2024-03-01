@@ -12,7 +12,7 @@ in the right size and with a 1-inch grid.
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/fe79eca8-0dfb-4986-99cd-a747a7603604)
+![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/55b1d72f-3621-49a7-afb1-0d70e542d0c3)
 
 
 ## Features
