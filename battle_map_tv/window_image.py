@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
+from battle_map_tv.aoe import AreaOfEffectHolder, AreaOfEffectCircle, AreaOfEffectSquare
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
@@ -32,6 +33,7 @@ class ImageWindow(QGraphicsView):
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
+        self.area_of_effect_holder = AreaOfEffectHolder(scene=self.scene)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -86,6 +88,14 @@ class ImageWindow(QGraphicsView):
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 
+    def add_area_of_effect(self, shape: str, size: int):
+        if shape == "circle":
+            AreaOfEffectCircle(size=size, holder=self.area_of_effect_holder)
+        elif shape == "square":
+            AreaOfEffectSquare(size=size, holder=self.area_of_effect_holder)
+        else:
+            raise ValueError("Unknown shape: " + shape)
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.scene().setSceneRect(0, 0, self.size().width(), self.size().height())
@@ -96,3 +106,7 @@ class ImageWindow(QGraphicsView):
         if event.key() == Qt.Key_Escape and self.isFullScreen():  # type: ignore[attr-defined]
             self.toggle_fullscreen()
         super().keyPressEvent(event)
+
+    def mousePressEvent(self, event):
+        self.area_of_effect_holder.mouse_press_event(event)
+        super().mousePressEvent(event)

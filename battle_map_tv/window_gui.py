@@ -60,6 +60,7 @@ class GuiWindow(QWidget):
         self.add_row_scale_slider()
         self.add_row_screen_size()
         self.add_row_grid()
+        self.add_row_area_of_effect()
         self.add_row_app_controls()
 
         # take focus away from the text area
@@ -224,6 +225,27 @@ class GuiWindow(QWidget):
         button = StyledButton("Toggle grid")
         button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)
+
+    def add_row_area_of_effect(self):
+        container = self._create_container()
+
+        size_input = StyledLineEdit(max_length=4, placeholder="feet")
+        container.addWidget(size_input)
+
+        def get_area_of_effect_callback(_shape: str):
+            def callback():
+                try:
+                    size = int(size_input.text())
+                except ValueError:
+                    return
+                self.image_window.add_area_of_effect(shape=_shape, size=size)
+
+            return callback
+
+        for shape in ["circle", "square"]:
+            button = StyledButton(shape.title())
+            button.clicked.connect(get_area_of_effect_callback(shape))
+            container.addWidget(button)
 
     def add_column_initiative(self):
         container = QVBoxLayout()
