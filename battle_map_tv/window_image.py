@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
-from battle_map_tv.aoe import AreaOfEffectHolder
+from battle_map_tv.aoe import AreaOfEffectCreator
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
@@ -34,7 +34,7 @@ class ImageWindow(QGraphicsView):
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
-        self.area_of_effect_holder = AreaOfEffectHolder(scene=self.scene)
+        self.area_of_effect_creator = AreaOfEffectCreator(scene=scene)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -90,7 +90,7 @@ class ImageWindow(QGraphicsView):
         self.initiative_overlay_manager.clear()
 
     def add_area_of_effect(self, shape: str, color: str):
-        self.area_of_effect_holder.wait_for(shape=shape, color=color)
+        self.area_of_effect_creator.wait_for(shape=shape, color=color)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -104,13 +104,13 @@ class ImageWindow(QGraphicsView):
         super().keyPressEvent(event)
 
     def mousePressEvent(self, event: QMouseEvent):
-        if not self.area_of_effect_holder.mouse_press_event(event):
+        if not self.area_of_effect_creator.mouse_press_event(event):
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        if not self.area_of_effect_holder.mouse_move_event(event):
+        if not self.area_of_effect_creator.mouse_move_event(event):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent):
-        if not self.area_of_effect_holder.mouse_release_event(event):
+        if not self.area_of_effect_creator.mouse_release_event(event):
             super().mouseReleaseEvent(event)
