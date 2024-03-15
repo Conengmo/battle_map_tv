@@ -1,9 +1,10 @@
 from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
-from battle_map_tv.aoe import AreaOfEffectHolder, AreaOfEffectCircle, AreaOfEffectSquare
+from battle_map_tv.aoe import AreaOfEffectHolder
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
@@ -88,13 +89,8 @@ class ImageWindow(QGraphicsView):
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 
-    def add_area_of_effect(self, shape: str, size: int):
-        if shape == "circle":
-            AreaOfEffectCircle(size=size, holder=self.area_of_effect_holder)
-        elif shape == "square":
-            AreaOfEffectSquare(size=size, holder=self.area_of_effect_holder)
-        else:
-            raise ValueError("Unknown shape: " + shape)
+    def add_area_of_effect(self, shape: str, color: str):
+        self.area_of_effect_holder.wait_for(shape=shape, color=color)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -107,6 +103,14 @@ class ImageWindow(QGraphicsView):
             self.toggle_fullscreen()
         super().keyPressEvent(event)
 
-    def mousePressEvent(self, event):
-        self.area_of_effect_holder.mouse_press_event(event)
-        super().mousePressEvent(event)
+    def mousePressEvent(self, event: QMouseEvent):
+        if not self.area_of_effect_holder.mouse_press_event(event):
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if not self.area_of_effect_holder.mouse_move_event(event):
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        if not self.area_of_effect_holder.mouse_release_event(event):
+            super().mouseReleaseEvent(event)

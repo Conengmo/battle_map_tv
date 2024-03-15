@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSlider,
     QTextEdit,
+    QWidget,
+    QHBoxLayout,
 )
 
 
@@ -102,3 +104,43 @@ class StyledTextEdit(QTextEdit):
             typing_timer.start(700)
 
         self.textChanged.connect(reset_typing_timer)
+
+
+class ColorSelectionButton(QPushButton):
+    def __init__(self, color: str):
+        super().__init__()
+        self.color = color
+        stylesheet_template = """
+            background-color: {color};
+            border: 2px solid {border_color};
+            padding: 6px 0;
+        """
+        self.default_stylesheet = stylesheet_template.format(color=color, border_color="grey")
+        self.selected_stylesheet = stylesheet_template.format(color=color, border_color="white")
+        self.setStyleSheet(self.default_stylesheet)
+
+
+class ColorSelectionWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        QHBoxLayout(self)
+        self.colors = ["red", "green", "blue", "black", "white"]
+        self.buttons = []
+        for color in self.colors:
+            button = ColorSelectionButton(color=color)
+            button.clicked.connect(self.create_color_selected_handler(color))
+            self.layout().addWidget(button)
+            self.buttons.append(button)
+        self.selected_colors: str
+        self.create_color_selected_handler(self.colors[-1])()
+
+    def create_color_selected_handler(self, color):
+        def handler():
+            self.selected_color = color
+            for button in self.buttons:
+                if button.color == color:
+                    button.setStyleSheet(button.selected_stylesheet)
+                else:
+                    button.setStyleSheet(button.default_stylesheet)
+
+        return handler

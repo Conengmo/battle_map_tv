@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
+from battle_map_tv.aoe import area_of_effect_shapes_to_class
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
 from battle_map_tv.ui_elements import (
@@ -18,6 +19,7 @@ from battle_map_tv.ui_elements import (
     StyledSlider,
     get_window_icon,
     StyledTextEdit,
+    ColorSelectionWindow,
 )
 from battle_map_tv.window_image import ImageWindow
 
@@ -229,20 +231,19 @@ class GuiWindow(QWidget):
     def add_row_area_of_effect(self):
         container = self._create_container()
 
-        size_input = StyledLineEdit(max_length=4, placeholder="feet")
-        container.addWidget(size_input)
+        color_selector = ColorSelectionWindow()
+        container.addWidget(color_selector)
 
         def get_area_of_effect_callback(_shape: str):
             def callback():
-                try:
-                    size = int(size_input.text())
-                except ValueError:
-                    return
-                self.image_window.add_area_of_effect(shape=_shape, size=size)
+                self.image_window.add_area_of_effect(
+                    shape=_shape,
+                    color=color_selector.selected_color,
+                )
 
             return callback
 
-        for shape in ["circle", "square"]:
+        for shape in area_of_effect_shapes_to_class.keys():
             button = StyledButton(shape.title())
             button.clicked.connect(get_area_of_effect_callback(shape))
             container.addWidget(button)

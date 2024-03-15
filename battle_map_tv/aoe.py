@@ -1,105 +1,127 @@
 import math
+from functools import partial
 from typing import Dict, Union
 
-from PySide6.QtGui import QColor, QPen, QBrush
+from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt
 from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
 
 
 class AreaOfEffectHolder:
     def __init__(self, scene):
         self.scene = scene
-        self._objects: Dict[int, BaseAreaOfEffect] = {}
+        self._objects: Dict[int, "TypeShapes"] = {}
+        self.event_coords = None
+        self.waiting_for = None
+        self.temp_obj = None
 
-    def add(self, area_of_effect: "BaseAreaOfEffect"):
+    def wait_for(self, shape: str, color: str):
+        shape_cls = area_of_effect_shapes_to_class[shape]
+        self.waiting_for = partial(shape_cls, color=color)
+
+    def add(self, area_of_effect: "TypeShapes"):
         self._objects[id(area_of_effect)] = area_of_effect
+        self.scene.addItem(area_of_effect)
 
-    def remove(self, area_of_effect: "BaseAreaOfEffect"):
+    def remove(self, area_of_effect: "TypeShapes"):
         self._objects.pop(id(area_of_effect), None)
+        self.scene.removeItem(area_of_effect)
 
-    def mouse_press_event(self, event):
-        try:
-            for area_of_effect in self._objects.values():
-                area_of_effect.mouse_press_event(event)
-        except RuntimeError:
-            # only remove one object per click
-            pass
+    def mouse_press_event(self, event: QMouseEvent) -> bool:
+        if self.waiting_for is not None:
+            self.event_coords = (event.pos().x(), event.pos().y())
+            return True
+        return False
+
+    def mouse_move_event(self, event: QMouseEvent):
+        if self.waiting_for is not None:
+            if self.temp_obj is not None:
+                self.scene.removeItem(self.temp_obj)
+            size = self._calculate_size(event=event)
+            self.temp_obj = self.waiting_for(*self.event_coords, size=size, holder=self)
+            self.scene.addItem(self.temp_obj)
+            return True
+        return False
+
+    def mouse_release_event(self, event: QMouseEvent) -> bool:
+        if self.waiting_for is not None:
+            if self.temp_obj is not None:
+                self.scene.removeItem(self.temp_obj)
+            size = self._calculate_size(event=event)
+            if size > 20:
+                self.add(self.waiting_for(*self.event_coords, size=size, holder=self))
+            self.waiting_for = None
+            self.event_coords = None
+            return True
+        return False
+
+    def _calculate_size(self, event: QMouseEvent) -> float:
+        assert self.event_coords
+        x1, y1 = self.event_coords
+        x2, y2 = event.pos().x(), event.pos().y()
+        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        return size
 
 
-class BaseAreaOfEffect:
-    def __init__(self, size: int, holder: AreaOfEffectHolder):
-        self.scene = holder.scene
+class Circle(QGraphicsEllipseItem):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        size: int,
+        color: str,
+        holder: AreaOfEffectHolder,
+    ):
+        super().__init__(
+            x - size,
+            y - size,
+            2 * size,
+            2 * size,
+        )
         self.holder = holder
-        self.holder.add(self)
-        self.waiting_for_click = True
-        self.shape: Union[None, QGraphicsEllipseItem, QGraphicsRectItem] = None
-        self.size = size
+        common_shape_operations(shape=self, color=color)
 
-    def _create_shape(self, x: int, y: int) -> QGraphicsEllipseItem:
-        raise NotImplementedError()
-
-    def _is_click_in_shape(self, x: int, y: int) -> bool:
-        raise NotImplementedError()
-
-    def mouse_press_event(self, event):
-        x, y = event.x(), event.y()
-        if self.waiting_for_click:
-            self.waiting_for_click = False
-            self.shape = self._create_shape(x=x, y=y)
-            self.scene.addItem(self.shape)
-        elif self._is_click_in_shape(x=x, y=y):
-            self.remove()
-
-    def remove(self):
-        if self.shape is not None:
-            self.scene.removeItem(self.shape)
-        self.holder.remove(self)
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
+            self.holder.remove(self)
 
 
-class AreaOfEffectCircle(BaseAreaOfEffect):
-    def _create_shape(self, x: int, y: int):
-        shape = QGraphicsEllipseItem(
-            x - self.size,
-            y - self.size,
-            2 * self.size,
-            2 * self.size,
+class Square(QGraphicsRectItem):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        size: int,
+        color: str,
+        holder: AreaOfEffectHolder,
+    ):
+        super().__init__(
+            x - size,
+            y - size,
+            2 * size,
+            2 * size,
         )
-        shape.setPen(QPen(QColor(255, 0, 0)))
-        shape.setBrush(QBrush(QColor(255, 0, 0, 127)))
-        shape.setZValue(2)
-        return shape
+        self.holder = holder
+        common_shape_operations(shape=self, color=color)
 
-    def _is_click_in_shape(self, x: int, y: int) -> bool:
-        if self.shape is None:
-            return False
-
-        # calculate the distance between the click and the center of the circle
-        dx = x - (self.shape.rect().x() + self.shape.rect().width() / 2)
-        dy = y - (self.shape.rect().y() + self.shape.rect().height() / 2)
-        distance = math.sqrt(dx**2 + dy**2)
-        # check if the click was within the circle
-        return distance <= self.size
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
+            self.holder.remove(self)
 
 
-class AreaOfEffectSquare(BaseAreaOfEffect):
-    def _create_shape(self, x: int, y: int):
-        shape = QGraphicsRectItem(
-            x - self.size,
-            y - self.size,
-            2 * self.size,
-            2 * self.size,
-        )
-        shape.setPen(QPen(QColor(255, 0, 0)))
-        shape.setBrush(QBrush(QColor(255, 0, 0, 127)))
-        shape.setZValue(2)
-        return shape
+def common_shape_operations(shape: "TypeShapes", color: str):
+    color = QColor(color)  # type: ignore[assignment]
+    pen = QPen(color)
+    pen.setWidth(3)
+    shape.setPen(pen)
+    color.setAlpha(127)  # type: ignore[attr-defined]
+    shape.setBrush(QBrush(color))
+    shape.setZValue(1)
+    shape.setFlag(shape.GraphicsItemFlag.ItemIsMovable)
 
-    def _is_click_in_shape(self, x: int, y: int) -> bool:
-        if self.shape is None:
-            return False
 
-        shape_x = self.shape.rect().x()
-        shape_y = self.shape.rect().y()
-        return (
-            shape_x <= x <= shape_x + self.shape.rect().width()
-            and shape_y <= y <= shape_y + self.shape.rect().height()
-        )
+TypeShapes = Union[Circle, Square]
+
+area_of_effect_shapes_to_class = {
+    "circle": Circle,
+    "square": Square,
+}
