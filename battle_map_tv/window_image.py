@@ -1,7 +1,7 @@
 from typing import Optional, Tuple, List
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QStackedLayout, QGraphicsView, QGraphicsScene
+from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
@@ -9,7 +9,7 @@ from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
 from battle_map_tv.ui_elements import get_window_icon, InitiativeOverlay
 
 
-class ImageWindow(QWidget):
+class ImageWindow(QGraphicsView):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Battle Map TV")
@@ -17,23 +17,16 @@ class ImageWindow(QWidget):
         self.setStyleSheet(
             """
             background-color: #000000;
+            border: 0px
         """
         )
-
-        layout = QStackedLayout(self)
-        layout.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        self.view = QGraphicsView()
-        self.view.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
-        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
-        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
-        self.view.setStyleSheet("border: 0px")
-        layout.addWidget(self.view)
+        self.setAlignment(Qt.AlignCenter)  # type: ignore[attr-defined]
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
 
         self.scene = QGraphicsScene()
         self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
-        self.view.setScene(self.scene)
+        self.setScene(self.scene)
 
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
