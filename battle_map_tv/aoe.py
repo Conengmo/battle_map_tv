@@ -2,8 +2,9 @@ import math
 from functools import partial
 from typing import Dict, Union
 
-from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt
-from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
+from PySide6.QtCore import QPointF
+from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF
+from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsPolygonItem
 
 
 class AreaOfEffectHolder:
@@ -36,8 +37,9 @@ class AreaOfEffectHolder:
         if self.waiting_for is not None:
             if self.temp_obj is not None:
                 self.scene.removeItem(self.temp_obj)
-            size = self._calculate_size(event=event)
-            self.temp_obj = self.waiting_for(*self.event_coords, size=size, holder=self)
+            self.temp_obj = self.waiting_for(
+                *self.event_coords, *event.pos().toTuple(), holder=self
+            )
             self.scene.addItem(self.temp_obj)
             return True
         return False
@@ -46,34 +48,31 @@ class AreaOfEffectHolder:
         if self.waiting_for is not None:
             if self.temp_obj is not None:
                 self.scene.removeItem(self.temp_obj)
-            size = self._calculate_size(event=event)
-            if size > 20:
-                self.add(self.waiting_for(*self.event_coords, size=size, holder=self))
+            self.add(self.waiting_for(*self.event_coords, *event.pos().toTuple(), holder=self))
             self.waiting_for = None
             self.event_coords = None
             return True
         return False
 
-    def _calculate_size(self, event: QMouseEvent) -> float:
-        assert self.event_coords
-        x1, y1 = self.event_coords
-        x2, y2 = event.pos().x(), event.pos().y()
-        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-        return size
+
+def _calculate_size(x1: int, y1: int, x2: int, y2: int) -> float:
+    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
 class Circle(QGraphicsEllipseItem):
     def __init__(
         self,
-        x: int,
-        y: int,
-        size: int,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
         color: str,
         holder: AreaOfEffectHolder,
     ):
+        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(
-            x - size,
-            y - size,
+            x1 - size,
+            y1 - size,
             2 * size,
             2 * size,
         )
@@ -88,18 +87,55 @@ class Circle(QGraphicsEllipseItem):
 class Square(QGraphicsRectItem):
     def __init__(
         self,
-        x: int,
-        y: int,
-        size: int,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
         color: str,
         holder: AreaOfEffectHolder,
     ):
+        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(
-            x - size,
-            y - size,
+            x1 - size,
+            y1 - size,
             2 * size,
             2 * size,
         )
+        self.holder = holder
+        common_shape_operations(shape=self, color=color)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
+            self.holder.remove(self)
+
+
+class Cone(QGraphicsPolygonItem):
+    def __init__(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        color: str,
+        holder: AreaOfEffectHolder,
+    ):
+        angle = math.atan2(y2 - y1, x2 - x1)
+        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+
+        # Calculate the coordinates of the other two points
+        xp2 = x1 + size * math.cos(angle + math.pi / 6)
+        yp2 = y1 + size * math.sin(angle + math.pi / 6)
+        xp3 = x1 + size * math.cos(angle - math.pi / 6)
+        yp3 = y1 + size * math.sin(angle - math.pi / 6)
+
+        triangle = QPolygonF.fromList(
+            [
+                QPointF(x1, y1),
+                QPointF(xp2, yp2),
+                QPointF(xp3, yp3),
+            ]
+        )
+        super().__init__(triangle)
         self.holder = holder
         common_shape_operations(shape=self, color=color)
 
@@ -119,9 +155,10 @@ def common_shape_operations(shape: "TypeShapes", color: str):
     shape.setFlag(shape.GraphicsItemFlag.ItemIsMovable)
 
 
-TypeShapes = Union[Circle, Square]
+TypeShapes = Union[Circle, Square, Cone]
 
 area_of_effect_shapes_to_class = {
     "circle": Circle,
     "square": Square,
+    "cone": Cone,
 }
