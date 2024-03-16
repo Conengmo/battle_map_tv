@@ -25,13 +25,13 @@ class ImageWindow(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)  # type: ignore[attr-defined]
 
-        self.scene = QGraphicsScene()
-        self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
-        self.setScene(self.scene)
+        scene = QGraphicsScene()
+        scene.setSceneRect(0, 0, self.size().width(), self.size().height())
+        self.setScene(scene)
 
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
-        self.initiative_overlay_manager = InitiativeOverlayManager(scene=self.scene)
+        self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -42,7 +42,7 @@ class ImageWindow(QGraphicsView):
     def add_image(self, image_path: str):
         self.image = Image(
             image_path=image_path,
-            scene=self.scene,
+            scene=self.scene(),
             window_width_px=self.width(),
             window_height_px=self.height(),
         )
@@ -65,7 +65,7 @@ class ImageWindow(QGraphicsView):
         if self.grid is not None:
             self.remove_grid()
         self.grid = Grid(
-            scene=self.scene,
+            scene=self.scene(),
             screen_size_px=self.screen().size().toTuple(),  # type: ignore[arg-type]
             screen_size_mm=screen_size_mm,
             window_size_px=self.size().toTuple(),  # type: ignore[arg-type]
@@ -88,7 +88,7 @@ class ImageWindow(QGraphicsView):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.scene.setSceneRect(0, 0, self.size().width(), self.size().height())
+        self.scene().setSceneRect(0, 0, self.size().width(), self.size().height())
         if self.grid is not None:
             self.grid.update_window_px(self.size().toTuple())  # type: ignore[arg-type]
 
