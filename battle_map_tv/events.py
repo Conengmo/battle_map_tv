@@ -1,22 +1,22 @@
 from enum import Enum
-from typing import Callable
-
-from pyglet.event import EventDispatcher
+from typing import Callable, Dict
 
 
 class EventKeys(Enum):
     change_scale = "change_scale"
 
 
-class CustomEventDispatcher(EventDispatcher):
-    def dispatch_event(self, event_type: EventKeys, *args):
-        super().dispatch_event(str(event_type), *args)
+class EventDispatcher:
+    def __init__(self):
+        self._store: Dict[EventKeys, Callable] = {}
+
+    def dispatch_event(self, event_type: EventKeys, *args, **kwargs):
+        func = self._store.get(event_type)
+        if func:
+            func(*args, **kwargs)
 
     def add_handler(self, event_type: EventKeys, handler: Callable):
-        super().push_handlers(**{str(event_type): handler})
+        self._store[event_type] = handler
 
 
-CustomEventDispatcher.register_event_type(str(EventKeys.change_scale))
-
-
-global_event_dispatcher = CustomEventDispatcher()
+global_event_dispatcher = EventDispatcher()
