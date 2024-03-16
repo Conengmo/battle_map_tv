@@ -131,7 +131,7 @@ class ColorSelectionWindow(QWidget):
             button.clicked.connect(self.create_color_selected_handler(color))
             self.layout().addWidget(button)
             self.buttons.append(button)
-        self.selected_colors: str
+        self.selected_color: str
         self.create_color_selected_handler(self.colors[-1])()
 
     def create_color_selected_handler(self, color):

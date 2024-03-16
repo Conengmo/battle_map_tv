@@ -108,6 +108,8 @@ class ImageWindow(QGraphicsView):
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent):
+        if event.buttons() != Qt.MouseButton.LeftButton:
+            return
         if not self.area_of_effect_creator.mouse_move_event(event):
             super().mouseMoveEvent(event)
 
