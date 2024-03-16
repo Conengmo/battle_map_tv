@@ -3,12 +3,9 @@ import os.path
 from enum import Enum
 from typing import Any, Dict
 
-import pyglet
+import platformdirs
 
-
-path = pyglet.resource.get_data_path("battle-map-tv")
-if not os.path.exists(path):
-    os.makedirs(path)
+path = platformdirs.user_data_dir("battle-map-tv", ensure_exists=True)
 filepath = os.path.join(path, "config.json")
 
 
