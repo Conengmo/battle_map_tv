@@ -107,13 +107,13 @@ class Circle(DeleteShapeMixin, QGraphicsEllipseItem):
 class Square(DeleteShapeMixin, QGraphicsRectItem):
     def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
         self.color = color
-        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
-        super().__init__(
-            x1 - size,
-            y1 - size,
-            2 * size,
-            2 * size,
-        )
+        left = min(x1, x2)
+        top = min(y1, y2)
+        right = max(x1, x2)
+        bottom = max(y1, y2)
+        width = right - left
+        height = bottom - top
+        super().__init__(left, top, width, height)
 
 
 class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
