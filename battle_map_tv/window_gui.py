@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
+from battle_map_tv.aoe import area_of_effect_shapes_to_class
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
 from battle_map_tv.ui_elements import (
@@ -18,6 +19,8 @@ from battle_map_tv.ui_elements import (
     StyledSlider,
     get_window_icon,
     StyledTextEdit,
+    ColorSelectionWindow,
+    FixedRowGridLayout,
 )
 from battle_map_tv.window_image import ImageWindow
 
@@ -60,6 +63,7 @@ class GuiWindow(QWidget):
         self.add_row_scale_slider()
         self.add_row_screen_size()
         self.add_row_grid()
+        self.add_row_area_of_effect()
         self.add_row_app_controls()
 
         # take focus away from the text area
@@ -223,6 +227,41 @@ class GuiWindow(QWidget):
 
         button = StyledButton("Toggle grid")
         button.clicked.connect(toggle_grid_callback)
+        container.addWidget(button)
+
+    def add_row_area_of_effect(self):
+        container = self._create_container()
+
+        color_selector = ColorSelectionWindow()
+        container.addWidget(color_selector)
+
+        def get_area_of_effect_callback(_shape: str, _button: StyledButton):
+            def callback():
+                if _button.isChecked():
+                    self.image_window.add_area_of_effect(
+                        shape=_shape,
+                        color=color_selector.selected_color,
+                        callback=lambda: _button.setChecked(False),
+                    )
+                    for i in range(grid.count()):
+                        _other_button = grid.itemAt(i).widget()
+                        if _other_button != _button:
+                            _other_button.setChecked(False)  # type: ignore[attr-defined]
+                else:
+                    self.image_window.cancel_area_of_effect()
+
+            return callback
+
+        grid = FixedRowGridLayout(rows=2)
+        container.addLayout(grid)
+
+        for shape in area_of_effect_shapes_to_class.keys():
+            button = StyledButton(shape.title(), checkable=True, padding_factor=0.7)
+            button.clicked.connect(get_area_of_effect_callback(shape, button))
+            grid.add_widget(button)
+
+        button = StyledButton("Clear")
+        button.clicked.connect(self.image_window.clear_area_of_effect)
         container.addWidget(button)
 
     def add_column_initiative(self):

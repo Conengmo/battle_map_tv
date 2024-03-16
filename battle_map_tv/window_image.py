@@ -1,8 +1,10 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
+from battle_map_tv.aoe import AreaOfEffectManager
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
@@ -32,6 +34,7 @@ class ImageWindow(QGraphicsView):
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
+        self.area_of_effect_manager = AreaOfEffectManager(scene=scene)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -86,6 +89,15 @@ class ImageWindow(QGraphicsView):
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 
+    def add_area_of_effect(self, shape: str, color: str, callback: Callable):
+        self.area_of_effect_manager.wait_for(shape=shape, color=color, callback=callback)
+
+    def cancel_area_of_effect(self):
+        self.area_of_effect_manager.cancel()
+
+    def clear_area_of_effect(self):
+        self.area_of_effect_manager.clear_all()
+
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.scene().setSceneRect(0, 0, self.size().width(), self.size().height())
@@ -96,3 +108,17 @@ class ImageWindow(QGraphicsView):
         if event.key() == Qt.Key_Escape and self.isFullScreen():  # type: ignore[attr-defined]
             self.toggle_fullscreen()
         super().keyPressEvent(event)
+
+    def mousePressEvent(self, event: QMouseEvent):
+        if not self.area_of_effect_manager.mouse_press_event(event):
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if event.buttons() != Qt.MouseButton.LeftButton:
+            return
+        if not self.area_of_effect_manager.mouse_move_event(event):
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        if not self.area_of_effect_manager.mouse_release_event(event):
+            super().mouseReleaseEvent(event)

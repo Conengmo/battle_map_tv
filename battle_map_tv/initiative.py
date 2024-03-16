@@ -45,7 +45,6 @@ class InitiativeOverlay:
     def __init__(self, text: str, scene: QGraphicsScene, font_size: int):
         self.text_raw = text
         self.scene = scene
-        self.font_size = font_size
 
         text = self._format_text(text)
         self.text_item = QGraphicsTextItem(text)

@@ -8,6 +8,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QSlider,
     QTextEdit,
+    QWidget,
+    QGridLayout,
 )
 
 
@@ -35,20 +37,24 @@ class StyledLineEdit(QLineEdit):
 
 
 class StyledButton(QPushButton):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, checkable: bool = False, padding_factor: float = 1.0, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setCheckable(checkable)
         self.setStyleSheet(
-            """
-            QPushButton {
+            f"""
+            QPushButton {{
                 background-color: #101010;
-                padding: 10px 20px;
+                padding: {10 * padding_factor:.0f}px {20 * padding_factor:.0f}px;
                 border: 2px solid #3E3E40;
                 border-radius: 6px;
                 min-width: 80px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #202020;
-            }
+            }}
+            QPushButton:checked {{
+                background-color: #808080;
+            }}
         """
         )
 
@@ -102,3 +108,70 @@ class StyledTextEdit(QTextEdit):
             typing_timer.start(700)
 
         self.textChanged.connect(reset_typing_timer)
+
+
+class ColorSelectionButton(QPushButton):
+    def __init__(self, color: str):
+        super().__init__()
+        self.color = color
+        stylesheet_template = """
+            background-color: {color};
+            border: 2px solid {border_color};
+            padding: 6px 0;
+        """
+        self.default_stylesheet = stylesheet_template.format(color=color, border_color="grey")
+        self.selected_stylesheet = stylesheet_template.format(color=color, border_color="white")
+        self.setStyleSheet(self.default_stylesheet)
+
+
+class ColorSelectionWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        grid = FixedRowGridLayout(rows=2)
+        self.setLayout(grid)
+        self.colors = [
+            "#ff3d00",
+            "#48ABB4",
+            "#009E00",
+            "#9702A7",
+            "#FFF800",
+            "grey",
+            "black",
+            "white",
+        ]
+        self.buttons = []
+        for color in self.colors:
+            button = ColorSelectionButton(color=color)
+            button.clicked.connect(self.create_color_selected_handler(color))
+            grid.add_widget(button)
+            self.buttons.append(button)
+        self.selected_color: str
+        self.create_color_selected_handler(self.colors[-1])()
+
+    def create_color_selected_handler(self, color):
+        def handler():
+            self.selected_color = color
+            for button in self.buttons:
+                if button.color == color:
+                    button.setStyleSheet(button.selected_stylesheet)
+                else:
+                    button.setStyleSheet(button.default_stylesheet)
+
+        return handler
+
+
+class FixedRowGridLayout(QGridLayout):
+    def __init__(self, rows: int):
+        super().__init__()
+        self.rows = rows
+        self._i = 0
+        self._j = 0
+        self.setHorizontalSpacing(8)
+        self.setVerticalSpacing(5)
+
+    def add_widget(self, widget):
+        super().addWidget(widget, self._i, self._j)
+        self._i += 1
+        if self._i >= self.rows:
+            self._i = 0
+            self._j += 1
