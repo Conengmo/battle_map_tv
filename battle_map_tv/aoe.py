@@ -112,6 +112,14 @@ class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
         self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
 
 
+class Line(DeleteShapeMixin, QGraphicsRectItem):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
+        self.color = color
+        width = 20
+        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+        super().__init__(0, -width / 2, size, width)
+        self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
+
 
 def common_shape_operations(shape: "TypeShapes"):
     color = QColor(shape.color)  # type: ignore[assignment]
@@ -130,4 +138,5 @@ area_of_effect_shapes_to_class = {
     "circle": Circle,
     "square": Square,
     "cone": Cone,
+    "line": Line,
 }
