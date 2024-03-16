@@ -243,6 +243,10 @@ class GuiWindow(QWidget):
                         color=color_selector.selected_color,
                         callback=lambda: _button.setChecked(False),
                     )
+                    for i in range(grid.count()):
+                        _other_button = grid.itemAt(i).widget()
+                        if _other_button != _button:
+                            _other_button.setChecked(False)  # type: ignore[attr-defined]
                 else:
                     self.image_window.cancel_area_of_effect()
 
