@@ -1,6 +1,6 @@
 import math
 from functools import partial
-from typing import Union, Optional, Type, Callable
+from typing import Union, Optional, Type, Callable, List
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
@@ -12,9 +12,10 @@ from PySide6.QtWidgets import (
 )
 
 
-class AreaOfEffectCreator:
+class AreaOfEffectManager:
     def __init__(self, scene):
         self.scene = scene
+        self._store: List[TypeShapes] = []
         self.waiting_for: Optional[Type[TypeShapes]] = None
         self.temp_obj: Optional[TypeShapes] = None
         self.callback: Optional[Callable] = None
@@ -29,6 +30,11 @@ class AreaOfEffectCreator:
             self.scene.removeItem(self.temp_obj)
         self.waiting_for = None
         self.callback = None
+
+    def clear_all(self):
+        for obj in self._store:
+            self.scene.removeItem(obj)
+        self._store = []
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
@@ -51,7 +57,8 @@ class AreaOfEffectCreator:
     def mouse_release_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
             assert self.callback
-            self._create_shape_obj(event=event)
+            shape_obj = self._create_shape_obj(event=event)
+            self._store.append(shape_obj)
             self.callback()
             self.cancel()
             return True

@@ -252,6 +252,10 @@ class GuiWindow(QWidget):
             button.clicked.connect(get_area_of_effect_callback(shape, button))
             container.addWidget(button)
 
+        button = StyledButton("Clear")
+        button.clicked.connect(self.image_window.clear_area_of_effect)
+        container.addWidget(button)
+
     def add_column_initiative(self):
         container = QVBoxLayout()
         container.setSpacing(20)
