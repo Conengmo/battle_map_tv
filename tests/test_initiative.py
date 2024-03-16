@@ -1,6 +1,6 @@
 import pytest
 
-from battle_map_tv.ui_elements import InitiativeOverlay
+from battle_map_tv.initiative import InitiativeOverlay
 
 
 @pytest.mark.parametrize(

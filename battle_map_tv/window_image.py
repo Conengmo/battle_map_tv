@@ -1,12 +1,13 @@
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
 from battle_map_tv.grid import Grid
 from battle_map_tv.image import Image
-from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
-from battle_map_tv.ui_elements import get_window_icon, InitiativeOverlay
+from battle_map_tv.initiative import InitiativeOverlayManager
+from battle_map_tv.storage import get_from_storage, StorageKeys
+from battle_map_tv.ui_elements import get_window_icon
 
 
 class ImageWindow(QGraphicsView):
@@ -30,7 +31,7 @@ class ImageWindow(QGraphicsView):
 
         self.image: Optional[Image] = None
         self.grid: Optional[Grid] = None
-        self.initiative_overlays: Optional[List[InitiativeOverlay]] = None
+        self.initiative_overlay_manager = InitiativeOverlayManager(scene=self.scene)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -76,35 +77,14 @@ class ImageWindow(QGraphicsView):
             self.grid.delete()
             self.grid = None
 
-    def add_initiative(self, text: str, font_size: Optional[int] = None):
-        if font_size is None:
-            try:
-                font_size = get_from_storage(StorageKeys.initiative_font_size)
-            except KeyError:
-                font_size = 20
-        else:
-            set_in_storage(StorageKeys.initiative_font_size, font_size)
-        self.remove_initiative()
-        if text:
-            self.initiative_overlays = [
-                InitiativeOverlay(text, self.scene, font_size).move_to_bottom_left(),
-                InitiativeOverlay(text, self.scene, font_size).move_to_top_right().flip(),
-            ]
+    def add_initiative(self, text: str):
+        self.initiative_overlay_manager.create(text=text)
 
     def initiative_change_font_size(self, by: int):
-        if self.initiative_overlays is None:
-            return
-        current_font_size = self.initiative_overlays[0].font_size
-        new_font_size = current_font_size + by
-        current_text = self.initiative_overlays[0].text_raw
-        self.remove_initiative()
-        self.add_initiative(text=current_text, font_size=new_font_size)
+        self.initiative_overlay_manager.change_font_size(by=by)
 
     def remove_initiative(self):
-        if self.initiative_overlays is not None:
-            for overlay in self.initiative_overlays:
-                overlay.remove()
-            self.initiative_overlays = None
+        self.initiative_overlay_manager.clear()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
