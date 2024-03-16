@@ -20,6 +20,7 @@ from battle_map_tv.ui_elements import (
     get_window_icon,
     StyledTextEdit,
     ColorSelectionWindow,
+    FixedRowGridLayout,
 )
 from battle_map_tv.window_image import ImageWindow
 
@@ -247,10 +248,13 @@ class GuiWindow(QWidget):
 
             return callback
 
+        grid = FixedRowGridLayout(rows=2)
+        container.addLayout(grid)
+
         for shape in area_of_effect_shapes_to_class.keys():
-            button = StyledButton(shape.title(), checkable=True)
+            button = StyledButton(shape.title(), checkable=True, padding_factor=0.7)
             button.clicked.connect(get_area_of_effect_callback(shape, button))
-            container.addWidget(button)
+            grid.add_widget(button)
 
         button = StyledButton("Clear")
         button.clicked.connect(self.image_window.clear_area_of_effect)
