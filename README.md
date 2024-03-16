@@ -5,14 +5,14 @@
 
 # Battle Map TV
 
-Display battle maps for TTRPGs on a tv that lies flat horizontally on your table.
+Display battle maps for TTRPGs on a tv or monitor that lies flat horizontally on your table.
 
-This Python application aims to do one thing: quickly show an image on your secondary screen,
-in the right size and with a 1-inch grid.
+No more features than needed: just show an image the way you want. Optionally add a grid, initiative order and area of effect shapes.
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![Capture](https://github.com/Conengmo/battle-map-tv/assets/33519926/55b1d72f-3621-49a7-afb1-0d70e542d0c3)
+![Screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/56395c6e-f12a-44e5-93a5-24badca97103)
+
 
 
 ## Features
@@ -31,6 +31,7 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Automatically detect the grid in an image and scale to a 1 inch grid.
 - Save settings so images load like you had them last time.
 - Simple initiative tracker
+- Overlay area of effects
 
 
 ## Installation
@@ -45,7 +46,7 @@ For GM's with little time or who improvise their sessions: much easier to use in
 ## Manual
 
 - Drag the TV window to your TV and make it fullscreen with the 'fullscreen' button.
-- Ue the 'add' button to load an image.
+- Use the 'add' button to load an image.
 - You can drag the image to pan. Zoom with your mouse scroll wheel or use the slider in the controls window.
 - Close the application with the 'exit' button.
 
@@ -60,6 +61,15 @@ In the controls window, you can add players and their initiative. The list will 
 Just put a number and a name on each line.
 
 The '+' and '-' buttons increase and decrease the font size.
+
+## Area of effect
+
+Click on one of the buttons for a shape like 'circle' or 'square'. Then click and drag anywhere in the TV window
+to create the shape in the size you want.
+
+The default color for shapes is white, but you can also toggle another color with the color buttons.
+
+You can delete a shape by right-clicking on it, or by using the 'Clear' button.
 
 
 ## Technical
