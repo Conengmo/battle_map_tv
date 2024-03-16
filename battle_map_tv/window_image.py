@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QMouseEvent
@@ -89,8 +89,11 @@ class ImageWindow(QGraphicsView):
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 
-    def add_area_of_effect(self, shape: str, color: str):
-        self.area_of_effect_creator.wait_for(shape=shape, color=color)
+    def add_area_of_effect(self, shape: str, color: str, callback: Callable):
+        self.area_of_effect_creator.wait_for(shape=shape, color=color, callback=callback)
+
+    def cancel_area_of_effect(self):
+        self.area_of_effect_creator.cancel()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

@@ -4,8 +4,12 @@ from typing import Union, Optional, Type, Callable
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
-from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsPolygonItem, \
-    QGraphicsScene, QGraphicsSceneMouseEvent
+from PySide6.QtWidgets import (
+    QGraphicsEllipseItem,
+    QGraphicsRectItem,
+    QGraphicsPolygonItem,
+    QGraphicsSceneMouseEvent,
+)
 
 
 class AreaOfEffectCreator:
@@ -13,10 +17,18 @@ class AreaOfEffectCreator:
         self.scene = scene
         self.waiting_for: Optional[Type[TypeShapes]] = None
         self.temp_obj: Optional[TypeShapes] = None
+        self.callback: Optional[Callable] = None
 
-    def wait_for(self, shape: str, color: str):
+    def wait_for(self, shape: str, color: str, callback: Callable):
         shape_cls = partial(area_of_effect_shapes_to_class[shape], color=color)
         self.waiting_for = shape_cls  # type: ignore[assignment]
+        self.callback = callback
+
+    def cancel(self):
+        if self.temp_obj is not None:
+            self.scene.removeItem(self.temp_obj)
+        self.waiting_for = None
+        self.callback = None
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
@@ -38,10 +50,10 @@ class AreaOfEffectCreator:
 
     def mouse_release_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
-            if self.temp_obj is not None:
-                self.scene.removeItem(self.temp_obj)
+            assert self.callback
             self._create_shape_obj(event=event)
-            self.waiting_for = None
+            self.callback()
+            self.cancel()
             return True
         return False
 

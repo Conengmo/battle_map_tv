@@ -234,18 +234,22 @@ class GuiWindow(QWidget):
         color_selector = ColorSelectionWindow()
         container.addWidget(color_selector)
 
-        def get_area_of_effect_callback(_shape: str):
+        def get_area_of_effect_callback(_shape: str, _button: StyledButton):
             def callback():
-                self.image_window.add_area_of_effect(
-                    shape=_shape,
-                    color=color_selector.selected_color,
-                )
+                if _button.isChecked():
+                    self.image_window.add_area_of_effect(
+                        shape=_shape,
+                        color=color_selector.selected_color,
+                        callback=lambda: _button.setChecked(False),
+                    )
+                else:
+                    self.image_window.cancel_area_of_effect()
 
             return callback
 
         for shape in area_of_effect_shapes_to_class.keys():
-            button = StyledButton(shape.title())
-            button.clicked.connect(get_area_of_effect_callback(shape))
+            button = StyledButton(shape.title(), checkable=True)
+            button.clicked.connect(get_area_of_effect_callback(shape, button))
             container.addWidget(button)
 
     def add_column_initiative(self):

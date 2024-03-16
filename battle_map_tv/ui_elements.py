@@ -37,8 +37,9 @@ class StyledLineEdit(QLineEdit):
 
 
 class StyledButton(QPushButton):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, checkable: bool = False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setCheckable(checkable)
         self.setStyleSheet(
             """
             QPushButton {
@@ -50,6 +51,9 @@ class StyledButton(QPushButton):
             }
             QPushButton:hover {
                 background-color: #202020;
+            }
+            QPushButton:checked {
+                background-color: #808080;
             }
         """
         )
