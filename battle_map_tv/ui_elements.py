@@ -129,7 +129,16 @@ class ColorSelectionWindow(QWidget):
         super().__init__()
         grid = FixedRowGridLayout(rows=2)
         self.setLayout(grid)
-        self.colors = ["red", "green", "blue", "yellow", "black", "white"]
+        self.colors = [
+            "#ff3d00",
+            "#48ABB4",
+            "#009E00",
+            "#9702A7",
+            "#FFF800",
+            "grey",
+            "black",
+            "white",
+        ]
         self.buttons = []
         for color in self.colors:
             button = ColorSelectionButton(color=color)
