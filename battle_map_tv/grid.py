@@ -16,7 +16,7 @@ class Grid:
         self,
         scene: QGraphicsScene,
         screen_size_px: tuple[int, int],
-        screen_size_mm: tuple[int, int],
+        screen_size_mm: Optional[tuple[int, int]],
         window_size_px: tuple[int, int],
         opacity: int,
     ):
@@ -34,8 +34,8 @@ class Grid:
         self.window_size_px = window_px
         self.reset()
 
-    def update_screen_mm(self, width_mm: int, height_mm: int):
-        self.screen_size_mm = (width_mm, height_mm)
+    def update_screen_mm(self, screen_size_mm: Optional[Tuple[int, int]]):
+        self.screen_size_mm = screen_size_mm
         self.reset()
 
     def update_opacity(self, opacity: int):
@@ -53,12 +53,15 @@ class Grid:
         self.group.setZValue(1)
         self.scene.addItem(self.group)
 
-        pixels_per_inch_x = self.screen_size_px[0] / self.screen_size_mm[0] / mm_to_inch
-        pixels_per_inch_y = self.screen_size_px[1] / self.screen_size_mm[1] / mm_to_inch
+        if self.screen_size_mm is not None:
+            pixels_per_inch_x = self.screen_size_px[0] / self.screen_size_mm[0] / mm_to_inch
+            pixels_per_inch_y = self.screen_size_px[1] / self.screen_size_mm[1] / mm_to_inch
+        else:
+            pixels_per_inch_x, pixels_per_inch_y = 60, 60
         n_lines_vertical = math.ceil(self.window_size_px[0] / pixels_per_inch_x)
         n_lines_horizontal = math.ceil(self.window_size_px[1] / pixels_per_inch_y)
         offset_x = (self.window_size_px[0] - ((n_lines_vertical - 1) * pixels_per_inch_x)) / 2
-        offset_y = (self.window_size_px[1] - ((n_lines_horizontal - 1) * pixels_per_inch_x)) / 2
+        offset_y = (self.window_size_px[1] - ((n_lines_horizontal - 1) * pixels_per_inch_y)) / 2
 
         pen = QPen()
         pen.setWidth(1)

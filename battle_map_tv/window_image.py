@@ -64,7 +64,7 @@ class ImageWindow(QGraphicsView):
             self.remove_image()
             self.add_image(image_path=previous_image)
 
-    def add_grid(self, screen_size_mm: Tuple[int, int], opacity: int):
+    def add_grid(self, screen_size_mm: Optional[tuple[int, int]], opacity: int):
         if self.grid is not None:
             self.remove_grid()
         self.grid = Grid(
@@ -74,6 +74,10 @@ class ImageWindow(QGraphicsView):
             window_size_px=self.size().toTuple(),  # type: ignore[arg-type]
             opacity=opacity,
         )
+
+    def update_screen_size_mm(self, screen_size_mm: Optional[Tuple[int, int]]):
+        if self.grid is not None:
+            self.grid.update_screen_mm(screen_size_mm)
 
     def remove_grid(self):
         if self.grid is not None:

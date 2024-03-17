@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 
 from battle_map_tv.aoe import area_of_effect_shapes_to_class
 from battle_map_tv.events import global_event_dispatcher, EventKeys
-from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage
+from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage, remove_from_storage
 from battle_map_tv.ui_elements import (
     StyledButton,
     StyledLineEdit,
@@ -47,7 +47,7 @@ class GuiWindow(QWidget):
         """
         )
 
-        self.screen_size_mm: Tuple[int, int] = (100, 100)
+        self.screen_size_mm: Optional[Tuple[int, int]] = None
 
         self._superlayout = QHBoxLayout(self)
         self._superlayout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
@@ -179,19 +179,28 @@ class GuiWindow(QWidget):
         except KeyError:
             pass
         else:
+            assert self.screen_size_mm
             screen_width_input.setText(str(self.screen_size_mm[0]))
             screen_height_input.setText(str(self.screen_size_mm[1]))
 
         def set_screen_size_callback():
+            width_str = screen_width_input.text()
+            height_str = screen_height_input.text()
+            if not width_str and not height_str:
+                remove_from_storage(StorageKeys.screen_size_mm)
+                self.screen_size_mm = None
+                self.image_window.update_screen_size_mm(self.screen_size_mm)
+                return
+
             try:
-                width_mm = int(screen_width_input.text())
-                height_mm = int(screen_height_input.text())
+                width_mm = int(width_str)
+                height_mm = int(height_str)
             except ValueError:
                 pass
             else:
-                set_in_storage(StorageKeys.screen_size_mm, (width_mm, height_mm))
-                if self.image_window.grid is not None:
-                    self.image_window.grid.update_screen_mm(width_mm, height_mm)
+                self.screen_size_mm = (width_mm, height_mm)
+                set_in_storage(StorageKeys.screen_size_mm, self.screen_size_mm)
+                self.image_window.update_screen_size_mm(self.screen_size_mm)
 
         button = StyledButton("Set")
         button.clicked.connect(set_screen_size_callback)
