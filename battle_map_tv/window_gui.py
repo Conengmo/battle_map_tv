@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
+from battle_map_tv import global_vars
 from battle_map_tv.aoe import area_of_effect_shapes_to_class
 from battle_map_tv.events import global_event_dispatcher, EventKeys
 from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage, remove_from_storage
@@ -175,21 +176,22 @@ class GuiWindow(QWidget):
         container.addWidget(screen_height_input)
 
         try:
-            self.screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
+            screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
         except KeyError:
             pass
         else:
-            assert self.screen_size_mm
-            screen_width_input.setText(str(self.screen_size_mm[0]))
-            screen_height_input.setText(str(self.screen_size_mm[1]))
+            assert screen_size_mm
+            global_vars.screen_size_mm = screen_size_mm
+            screen_width_input.setText(str(screen_size_mm[0]))
+            screen_height_input.setText(str(screen_size_mm[1]))
 
         def set_screen_size_callback():
             width_str = screen_width_input.text()
             height_str = screen_height_input.text()
             if not width_str and not height_str:
                 remove_from_storage(StorageKeys.screen_size_mm)
-                self.screen_size_mm = None
-                self.image_window.update_screen_size_mm(self.screen_size_mm)
+                global_vars.screen_size_mm = None
+                self.image_window.update_screen_size_mm()
                 return
 
             try:
@@ -198,9 +200,10 @@ class GuiWindow(QWidget):
             except ValueError:
                 pass
             else:
-                self.screen_size_mm = (width_mm, height_mm)
-                set_in_storage(StorageKeys.screen_size_mm, self.screen_size_mm)
-                self.image_window.update_screen_size_mm(self.screen_size_mm)
+                screen_size_mm = (width_mm, height_mm)
+                set_in_storage(StorageKeys.screen_size_mm, screen_size_mm)
+                global_vars.screen_size_mm = screen_size_mm
+                self.image_window.update_screen_size_mm()
 
         button = StyledButton("Set")
         button.clicked.connect(set_screen_size_callback)
@@ -215,8 +218,8 @@ class GuiWindow(QWidget):
         slider_factor = 100
 
         def slider_callback(value: int):
-            if self.image_window.grid is not None:
-                self.image_window.grid.update_opacity(normalize_slider_value(value))
+            if self.image_window.grid_overlay is not None:
+                self.image_window.grid_overlay.update_opacity(normalize_slider_value(value))
 
         def normalize_slider_value(value: int) -> int:
             return int(255 * value / slider_factor)
@@ -226,13 +229,11 @@ class GuiWindow(QWidget):
         container.addWidget(slider)
 
         def toggle_grid_callback():
-            if self.image_window.grid is not None:
+            if self.image_window.grid_overlay is not None:
                 self.image_window.remove_grid()
             else:
-                self.image_window.add_grid(
-                    screen_size_mm=self.screen_size_mm,
-                    opacity=normalize_slider_value(slider.value()),
-                )
+                opacity = normalize_slider_value(slider.value())
+                self.image_window.add_grid(opacity=opacity)
 
         button = StyledButton("Toggle grid")
         button.clicked.connect(toggle_grid_callback)
