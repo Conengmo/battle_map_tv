@@ -34,7 +34,7 @@ class ImageWindow(QGraphicsView):
         self.image: Optional[Image] = None
         self.grid_overlay: Optional[GridOverlay] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
-        self.area_of_effect_manager = AreaOfEffectManager(scene=scene)
+        self.area_of_effect_manager = AreaOfEffectManager(window=self)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -88,7 +88,12 @@ class ImageWindow(QGraphicsView):
         self.initiative_overlay_manager.clear()
 
     def add_area_of_effect(self, shape: str, color: str, callback: Callable):
-        self.area_of_effect_manager.wait_for(shape=shape, color=color, callback=callback)
+        self.area_of_effect_manager.wait_for(
+            shape=shape,
+            color=color,
+            callback=callback,
+            snap_to_grid=self.grid_overlay is not None,
+        )
 
     def cancel_area_of_effect(self):
         self.area_of_effect_manager.cancel()

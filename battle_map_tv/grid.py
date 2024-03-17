@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, Tuple
 
 from PySide6.QtCore import QLineF
 from PySide6.QtGui import QPen, QColor
@@ -58,6 +58,18 @@ class Grid:
     @staticmethod
     def _calc_offset(window_size_px: int, n_lines: int, pixels_per_inch: int) -> int:
         return int((window_size_px - ((n_lines - 1) * pixels_per_inch)) / 2)
+
+    def snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
+        return (
+            int(
+                round(2 * (x - self.offset_x) / self.pixels_per_inch_x) * self.pixels_per_inch_x / 2
+                + self.offset_x
+            ),
+            int(
+                round(2 * (y - self.offset_y) / self.pixels_per_inch_y) * self.pixels_per_inch_y / 2
+                + self.offset_y
+            ),
+        )
 
 
 class GridOverlay:
