@@ -47,21 +47,41 @@ class Grid:
             self.scene.removeItem(self.group)
             self.group = None
 
+    def get_measurements(self) -> Tuple[int, int, int, int, int, int]:
+        if self.screen_size_mm is not None:
+            pixels_per_inch_x = int(self.screen_size_px[0] / self.screen_size_mm[0] / mm_to_inch)
+            pixels_per_inch_y = int(self.screen_size_px[1] / self.screen_size_mm[1] / mm_to_inch)
+        else:
+            pixels_per_inch_x, pixels_per_inch_y = 60, 60
+        n_lines_vertical = math.ceil(self.window_size_px[0] / pixels_per_inch_x)
+        n_lines_horizontal = math.ceil(self.window_size_px[1] / pixels_per_inch_y)
+        offset_x = int((self.window_size_px[0] - ((n_lines_vertical - 1) * pixels_per_inch_x)) / 2)
+        offset_y = int(
+            (self.window_size_px[1] - ((n_lines_horizontal - 1) * pixels_per_inch_y)) / 2
+        )
+        return (
+            pixels_per_inch_x,
+            pixels_per_inch_y,
+            n_lines_vertical,
+            n_lines_horizontal,
+            offset_x,
+            offset_y,
+        )
+
     def reset(self):
         self.delete()
         self.group = QGraphicsItemGroup()
         self.group.setZValue(1)
         self.scene.addItem(self.group)
 
-        if self.screen_size_mm is not None:
-            pixels_per_inch_x = self.screen_size_px[0] / self.screen_size_mm[0] / mm_to_inch
-            pixels_per_inch_y = self.screen_size_px[1] / self.screen_size_mm[1] / mm_to_inch
-        else:
-            pixels_per_inch_x, pixels_per_inch_y = 60, 60
-        n_lines_vertical = math.ceil(self.window_size_px[0] / pixels_per_inch_x)
-        n_lines_horizontal = math.ceil(self.window_size_px[1] / pixels_per_inch_y)
-        offset_x = (self.window_size_px[0] - ((n_lines_vertical - 1) * pixels_per_inch_x)) / 2
-        offset_y = (self.window_size_px[1] - ((n_lines_horizontal - 1) * pixels_per_inch_y)) / 2
+        (
+            pixels_per_inch_x,
+            pixels_per_inch_y,
+            n_lines_vertical,
+            n_lines_horizontal,
+            offset_x,
+            offset_y,
+        ) = self.get_measurements()
 
         pen = QPen()
         pen.setWidth(1)
@@ -70,9 +90,9 @@ class Grid:
         for i in range(n_lines_vertical):
             line = self.scene.addLine(
                 QLineF(
-                    int(i * pixels_per_inch_x + offset_x),
+                    i * pixels_per_inch_x + offset_x,
                     0,
-                    int(i * pixels_per_inch_x + offset_x),
+                    i * pixels_per_inch_x + offset_x,
                     self.window_size_px[1],
                 ),
                 pen,
@@ -83,9 +103,9 @@ class Grid:
             line = self.scene.addLine(
                 QLineF(
                     0,
-                    int(i * pixels_per_inch_y + offset_y),
+                    i * pixels_per_inch_y + offset_y,
                     self.window_size_px[0],
-                    int(i * pixels_per_inch_y + offset_y),
+                    i * pixels_per_inch_y + offset_y,
                 ),
                 pen,
             )
