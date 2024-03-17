@@ -1,6 +1,6 @@
 import math
 from functools import partial
-from typing import Union, Optional, Type, Callable, List
+from typing import Union, Optional, Type, Callable, List, Tuple
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (
     QGraphicsPolygonItem,
     QGraphicsSceneMouseEvent,
 )
+
+from battle_map_tv.utils import sign
 
 
 class AreaOfEffectManager:
@@ -107,6 +109,7 @@ class Circle(DeleteShapeMixin, QGraphicsEllipseItem):
 class Square(DeleteShapeMixin, QGraphicsRectItem):
     def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
         self.color = color
+        x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2)
         left = min(x1, x2)
         top = min(y1, y2)
         right = max(x1, x2)
@@ -114,6 +117,15 @@ class Square(DeleteShapeMixin, QGraphicsRectItem):
         width = right - left
         height = bottom - top
         super().__init__(left, top, width, height)
+
+    @staticmethod
+    def _fix_aspect_ratio(x1: int, y1: int, x2: int, y2: int) -> Tuple[int, int]:
+        dx = x2 - x1
+        dy = y2 - y1
+        d_abs = min(abs(dx), abs(dy))
+        x2 = x1 + sign(dx) * d_abs
+        y2 = y1 + sign(dy) * d_abs
+        return x2, y2
 
 
 class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
