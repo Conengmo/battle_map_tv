@@ -1,6 +1,6 @@
 import math
 from functools import partial
-from typing import Union, Optional, Type, Callable, List, Tuple
+from typing import Union, Optional, Type, Callable, List, Tuple, TYPE_CHECKING
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
@@ -11,27 +11,39 @@ from PySide6.QtWidgets import (
     QGraphicsSceneMouseEvent,
 )
 
+from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
+
+if TYPE_CHECKING:
+    from battle_map_tv.window_image import ImageWindow
 
 
 class AreaOfEffectManager:
-    def __init__(self, scene):
-        self.scene = scene
+    def __init__(self, window: "ImageWindow"):
+        self.window = window
+        self.scene = window.scene()
         self._store: List[TypeShapes] = []
         self.waiting_for: Optional[Type[TypeShapes]] = None
         self.temp_obj: Optional[TypeShapes] = None
         self.callback: Optional[Callable] = None
+        self.grid: Optional[Grid] = None
 
-    def wait_for(self, shape: str, color: str, callback: Callable):
-        shape_cls = partial(area_of_effect_shapes_to_class[shape], color=color)
+    def wait_for(self, shape: str, color: str, callback: Callable, snap_to_grid: bool):
+        shape_cls = partial(
+            area_of_effect_shapes_to_class[shape],
+            color=color,
+        )
         self.waiting_for = shape_cls  # type: ignore[assignment]
         self.callback = callback
+        if snap_to_grid:
+            self.grid = Grid(window=self.window)
 
     def cancel(self):
         if self.temp_obj is not None:
             self.scene.removeItem(self.temp_obj)
         self.waiting_for = None
         self.callback = None
+        self.grid = None
 
     def clear_all(self):
         for obj in self._store:
@@ -40,10 +52,13 @@ class AreaOfEffectManager:
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
+            x1, y1 = event.pos().x(), event.pos().y()
+            if self.grid:
+                x1, y1 = self.grid.snap_to_grid(x1, y1)
             self.waiting_for = partial(  # type: ignore[assignment]
                 self.waiting_for,
-                x1=event.pos().x(),
-                y1=event.pos().y(),
+                x1=x1,
+                y1=y1,
             )
             return True
         return False
@@ -68,7 +83,10 @@ class AreaOfEffectManager:
 
     def _create_shape_obj(self, event):
         assert self.waiting_for
-        shape_obj = self.waiting_for(x2=event.pos().x(), y2=event.pos().y())  # type: ignore[call-arg]
+        x2, y2 = event.pos().x(), event.pos().y()
+        if self.grid:
+            x2, y2 = self.grid.snap_to_grid(x2, y2)
+        shape_obj = self.waiting_for(x2=x2, y2=y2)  # type: ignore[call-arg]
         common_shape_operations(shape=shape_obj)
         self.scene.addItem(shape_obj)
         return shape_obj

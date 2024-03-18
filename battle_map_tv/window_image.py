@@ -1,11 +1,11 @@
-from typing import Optional, Tuple, Callable
+from typing import Optional, Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
 from battle_map_tv.aoe import AreaOfEffectManager
-from battle_map_tv.grid import Grid
+from battle_map_tv.grid import GridOverlay
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
 from battle_map_tv.storage import get_from_storage, StorageKeys
@@ -32,9 +32,9 @@ class ImageWindow(QGraphicsView):
         self.setScene(scene)
 
         self.image: Optional[Image] = None
-        self.grid: Optional[Grid] = None
+        self.grid_overlay: Optional[GridOverlay] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
-        self.area_of_effect_manager = AreaOfEffectManager(scene=scene)
+        self.area_of_effect_manager = AreaOfEffectManager(window=self)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -64,25 +64,19 @@ class ImageWindow(QGraphicsView):
             self.remove_image()
             self.add_image(image_path=previous_image)
 
-    def add_grid(self, screen_size_mm: Optional[tuple[int, int]], opacity: int):
-        if self.grid is not None:
+    def add_grid(self, opacity: int):
+        if self.grid_overlay is not None:
             self.remove_grid()
-        self.grid = Grid(
-            scene=self.scene(),
-            screen_size_px=self.screen().size().toTuple(),  # type: ignore[arg-type]
-            screen_size_mm=screen_size_mm,
-            window_size_px=self.size().toTuple(),  # type: ignore[arg-type]
-            opacity=opacity,
-        )
+        self.grid_overlay = GridOverlay(window=self, opacity=opacity)
 
-    def update_screen_size_mm(self, screen_size_mm: Optional[Tuple[int, int]]):
-        if self.grid is not None:
-            self.grid.update_screen_mm(screen_size_mm)
+    def update_screen_size_mm(self):
+        if self.grid_overlay is not None:
+            self.grid_overlay.reset()
 
     def remove_grid(self):
-        if self.grid is not None:
-            self.grid.delete()
-            self.grid = None
+        if self.grid_overlay is not None:
+            self.grid_overlay.delete()
+            self.grid_overlay = None
 
     def add_initiative(self, text: str):
         self.initiative_overlay_manager.create(text=text)
@@ -94,7 +88,12 @@ class ImageWindow(QGraphicsView):
         self.initiative_overlay_manager.clear()
 
     def add_area_of_effect(self, shape: str, color: str, callback: Callable):
-        self.area_of_effect_manager.wait_for(shape=shape, color=color, callback=callback)
+        self.area_of_effect_manager.wait_for(
+            shape=shape,
+            color=color,
+            callback=callback,
+            snap_to_grid=self.grid_overlay is not None,
+        )
 
     def cancel_area_of_effect(self):
         self.area_of_effect_manager.cancel()
@@ -105,8 +104,8 @@ class ImageWindow(QGraphicsView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.scene().setSceneRect(0, 0, self.size().width(), self.size().height())
-        if self.grid is not None:
-            self.grid.update_window_px(self.size().toTuple())  # type: ignore[arg-type]
+        if self.grid_overlay is not None:
+            self.grid_overlay.reset()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self.isFullScreen():  # type: ignore[attr-defined]
