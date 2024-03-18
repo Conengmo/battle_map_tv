@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGraphicsTextItem,
 )
 
+from battle_map_tv.aoe_rasterization import circle_to_polygon
 from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
 
@@ -187,6 +188,19 @@ class Circle(BaseShape):
             self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
+class CircleSquare(BaseShape):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene):
+        radius = int(self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        polygon = QPolygonF.fromList(
+            [
+                QPointF(*point)
+                for point in circle_to_polygon(x_center=x1, y_center=y1, radius=radius)
+            ]
+        )
+        self.shape = QGraphicsPolygonItem(polygon)
+        super().__init__(scene=scene)
+
+
 class Square(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
@@ -255,4 +269,5 @@ area_of_effect_shapes_to_class = {
     "square": Square,
     "cone": Cone,
     "line": Line,
+    "circlesquare": CircleSquare,
 }
