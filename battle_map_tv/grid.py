@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from PySide6.QtCore import QLineF
 from PySide6.QtGui import QPen, QColor
@@ -18,58 +18,51 @@ class Grid:
         self.window_size_px = size_to_tuple(window.size())
 
         if screen_size_mm is not None:
-            self.pixels_per_inch_x = self._calc_pixels_per_inch(
-                screen_size_px=screen_size_px[0],
-                screen_size_mm=screen_size_mm[0],
-            )
-            self.pixels_per_inch_y = self._calc_pixels_per_inch(
-                screen_size_px=screen_size_px[1],
-                screen_size_mm=screen_size_mm[1],
+            self.pixels_per_inch = self._as_tuple(
+                int(screen_size_px[i] / screen_size_mm[i] / mm_to_inch) for i in range(2)
             )
         else:
-            self.pixels_per_inch_x, self.pixels_per_inch_y = 60, 60
-        self.n_lines_vertical = self._calc_n_lines(
-            window_size_px=self.window_size_px[0],
-            pixels_per_inch=self.pixels_per_inch_x,
+            self.pixels_per_inch = (60, 60)
+
+        self.n_lines = self._as_tuple(
+            math.ceil(self.window_size_px[i] / self.pixels_per_inch[i]) for i in range(2)
         )
-        self.n_lines_horizontal = self._calc_n_lines(
-            window_size_px=self.window_size_px[1],
-            pixels_per_inch=self.pixels_per_inch_y,
-        )
-        self.offset_x = self._calc_offset(
-            window_size_px=self.window_size_px[0],
-            n_lines=self.n_lines_vertical,
-            pixels_per_inch=self.pixels_per_inch_x,
-        )
-        self.offset_y = self._calc_offset(
-            window_size_px=self.window_size_px[1],
-            n_lines=self.n_lines_horizontal,
-            pixels_per_inch=self.pixels_per_inch_y,
+
+        self.offset = self._as_tuple(
+            int((self.window_size_px[i] - ((self.n_lines[i] - 1) * self.pixels_per_inch[i])) / 2)
+            for i in range(2)
         )
 
     @staticmethod
-    def _calc_pixels_per_inch(screen_size_px: int, screen_size_mm: int) -> int:
-        return int(screen_size_px / screen_size_mm / mm_to_inch)
+    def _as_tuple(generator) -> Tuple[int, int]:
+        values = list(generator)
+        return values[0], values[1]
 
-    @staticmethod
-    def _calc_n_lines(window_size_px: int, pixels_per_inch: int) -> int:
-        return math.ceil(window_size_px / pixels_per_inch)
-
-    @staticmethod
-    def _calc_offset(window_size_px: int, n_lines: int, pixels_per_inch: int) -> int:
-        return int((window_size_px - ((n_lines - 1) * pixels_per_inch)) / 2)
+    def get_lines(self, axis: int) -> List[Tuple[int, int, int, int]]:
+        assert axis in (0, 1)
+        lines = []
+        for i in range(self.n_lines[axis]):
+            start_point = (
+                i * self.pixels_per_inch[axis] + self.offset[axis],
+                0,
+            )[:: 1 if axis == 0 else -1]
+            end_point = (
+                i * self.pixels_per_inch[axis] + self.offset[axis],
+                self.window_size_px[1 if axis == 0 else 0],
+            )[:: 1 if axis == 0 else -1]
+            lines.append((start_point[0], start_point[1], end_point[0], end_point[1]))
+        return lines
 
     def snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
-        return (
-            int(
-                round(2 * (x - self.offset_x) / self.pixels_per_inch_x) * self.pixels_per_inch_x / 2
-                + self.offset_x
-            ),
-            int(
-                round(2 * (y - self.offset_y) / self.pixels_per_inch_y) * self.pixels_per_inch_y / 2
-                + self.offset_y
-            ),
+        point = (x, y)
+        return self._as_tuple(
+            self._snap(p=point[i], offset=self.offset[i], ppi=self.pixels_per_inch[i])
+            for i in range(2)
         )
+
+    @staticmethod
+    def _snap(p: int, offset: int, ppi: int) -> int:
+        return int(round(2 * (p - offset) / ppi) * ppi / 2 + offset)
 
 
 class GridOverlay:
@@ -107,26 +100,7 @@ class GridOverlay:
         pen.setWidth(1)
         pen.setColor(QColor(255, 255, 255, self.opacity))
 
-        for i in range(grid.n_lines_vertical):
-            line = self.scene.addLine(
-                QLineF(
-                    i * grid.pixels_per_inch_x + grid.offset_x,
-                    0,
-                    i * grid.pixels_per_inch_x + grid.offset_x,
-                    grid.window_size_px[1],
-                ),
-                pen,
-            )
-            self.group.addToGroup(line)
-
-        for i in range(grid.n_lines_horizontal):
-            line = self.scene.addLine(
-                QLineF(
-                    0,
-                    i * grid.pixels_per_inch_y + grid.offset_y,
-                    grid.window_size_px[0],
-                    i * grid.pixels_per_inch_y + grid.offset_y,
-                ),
-                pen,
-            )
-            self.group.addToGroup(line)
+        for axis in (0, 1):
+            for line_coordinates in grid.get_lines(axis=axis):
+                line = self.scene.addLine(QLineF(*line_coordinates), pen)
+                self.group.addToGroup(line)
