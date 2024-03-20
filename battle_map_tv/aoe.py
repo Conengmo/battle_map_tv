@@ -1,6 +1,5 @@
 import math
-from functools import partial
-from typing import Union, Optional, Type, Callable, List, Tuple, TYPE_CHECKING
+from typing import Union, Optional, Callable, List, Tuple, TYPE_CHECKING
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
@@ -9,6 +8,7 @@ from PySide6.QtWidgets import (
     QGraphicsRectItem,
     QGraphicsPolygonItem,
     QGraphicsSceneMouseEvent,
+    QAbstractGraphicsShapeItem,
 )
 
 from battle_map_tv.grid import Grid
@@ -23,25 +23,23 @@ class AreaOfEffectManager:
         self.window = window
         self.scene = window.scene()
         self._store: List[TypeShapes] = []
-        self.waiting_for: Optional[Type[TypeShapes]] = None
+        self.snap_to_grid = False
+        self.waiting_for: Optional[str] = None
+        self.color = "white"
+        self.start_point: Optional[Tuple[int, int]] = None
         self.temp_obj: Optional[TypeShapes] = None
         self.callback: Optional[Callable] = None
         self.grid: Optional[Grid] = None
 
-    def wait_for(self, shape: str, color: str, callback: Callable, snap_to_grid: bool):
-        shape_cls = partial(
-            area_of_effect_shapes_to_class[shape],
-            color=color,
-        )
-        self.waiting_for = shape_cls  # type: ignore[assignment]
+    def wait_for(self, shape: str, callback: Callable):
+        self.waiting_for = shape
         self.callback = callback
-        if snap_to_grid:
-            self.grid = Grid(window=self.window)
 
     def cancel(self):
         if self.temp_obj is not None:
             self.scene.removeItem(self.temp_obj)
         self.waiting_for = None
+        self.start_point = None
         self.callback = None
         self.grid = None
 
@@ -52,14 +50,7 @@ class AreaOfEffectManager:
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
-            x1, y1 = event.pos().x(), event.pos().y()
-            if self.grid:
-                x1, y1 = self.grid.snap_to_grid(x1, y1)
-            self.waiting_for = partial(  # type: ignore[assignment]
-                self.waiting_for,
-                x1=x1,
-                y1=y1,
-            )
+            self.start_point = (event.pos().x(), event.pos().y())
             return True
         return False
 
@@ -75,18 +66,28 @@ class AreaOfEffectManager:
         if self.waiting_for is not None:
             assert self.callback
             shape_obj = self._create_shape_obj(event=event)
+            shape_obj.setFlag(shape_obj.GraphicsItemFlag.ItemIsMovable)
             self._store.append(shape_obj)
             self.callback()
             self.cancel()
             return True
         return False
 
+    def _optional_snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
+        if self.snap_to_grid:
+            if self.grid is None:
+                self.grid = Grid(window=self.window)
+            x, y = self.grid.snap_to_grid(x=x, y=y)
+        return x, y
+
     def _create_shape_obj(self, event):
         assert self.waiting_for
+        assert self.start_point
+        shape_cls = area_of_effect_shapes_to_class[self.waiting_for]
+        x1, y1 = self._optional_snap_to_grid(*self.start_point)
         x2, y2 = event.pos().x(), event.pos().y()
-        if self.grid:
-            x2, y2 = self.grid.snap_to_grid(x2, y2)
-        shape_obj = self.waiting_for(x2=x2, y2=y2)  # type: ignore[call-arg]
+        x2, y2 = self._optional_snap_to_grid(x=x2, y=y2)
+        shape_obj = shape_cls(x1=x1, y1=y1, x2=x2, y2=y2, color=self.color)
         common_shape_operations(shape=shape_obj)
         self.scene.addItem(shape_obj)
         return shape_obj
@@ -170,18 +171,17 @@ class Line(DeleteShapeMixin, QGraphicsRectItem):
         self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
 
 
-def common_shape_operations(shape: "TypeShapes"):
-    color = QColor(shape.color)  # type: ignore[assignment]
+def common_shape_operations(shape: QAbstractGraphicsShapeItem):
+    color = QColor(shape.color)  # type: ignore[attr-defined]
     pen = QPen(color)
     pen.setWidth(3)
     shape.setPen(pen)
     color.setAlpha(127)  # type: ignore[attr-defined]
     shape.setBrush(QBrush(color))
     shape.setZValue(1)
-    shape.setFlag(shape.GraphicsItemFlag.ItemIsMovable)
 
 
-TypeShapes = Union[Circle, Square, Cone]
+TypeShapes = Union[Circle, Square, Cone, Line]
 
 area_of_effect_shapes_to_class = {
     "circle": Circle,

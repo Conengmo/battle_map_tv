@@ -125,7 +125,7 @@ class ColorSelectionButton(QPushButton):
 
 
 class ColorSelectionWindow(QWidget):
-    def __init__(self):
+    def __init__(self, callback: Callable):
         super().__init__()
         grid = FixedRowGridLayout(rows=2)
         self.setLayout(grid)
@@ -142,13 +142,13 @@ class ColorSelectionWindow(QWidget):
         self.buttons = []
         for color in self.colors:
             button = ColorSelectionButton(color=color)
-            button.clicked.connect(self.create_color_selected_handler(color))
+            button.clicked.connect(self.create_color_selected_handler(color, callback))
             grid.add_widget(button)
             self.buttons.append(button)
         self.selected_color: str
-        self.create_color_selected_handler(self.colors[-1])()
+        self.buttons[-1].click()
 
-    def create_color_selected_handler(self, color):
+    def create_color_selected_handler(self, color: str, callback: Callable):
         def handler():
             self.selected_color = color
             for button in self.buttons:
@@ -156,6 +156,7 @@ class ColorSelectionWindow(QWidget):
                     button.setStyleSheet(button.selected_stylesheet)
                 else:
                     button.setStyleSheet(button.default_stylesheet)
+            callback(color)
 
         return handler
 

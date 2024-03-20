@@ -87,16 +87,20 @@ class ImageWindow(QGraphicsView):
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 
-    def add_area_of_effect(self, shape: str, color: str, callback: Callable):
+    def add_area_of_effect(self, shape: str, callback: Callable):
         self.area_of_effect_manager.wait_for(
             shape=shape,
-            color=color,
             callback=callback,
-            snap_to_grid=self.grid_overlay is not None,
         )
 
     def cancel_area_of_effect(self):
         self.area_of_effect_manager.cancel()
+
+    def toggle_snap_to_grid_area_of_effect(self, enable: bool):
+        self.area_of_effect_manager.snap_to_grid = enable
+
+    def area_of_effect_set_color(self, color: str):
+        self.area_of_effect_manager.color = color
 
     def clear_area_of_effect(self):
         self.area_of_effect_manager.clear_all()

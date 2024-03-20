@@ -228,47 +228,46 @@ class GuiWindow(QWidget):
         slider.valueChanged.connect(slider_callback)
         container.addWidget(slider)
 
-        def toggle_grid_callback():
+        def toggle_grid_callback(value: bool):
             if self.image_window.grid_overlay is not None:
                 self.image_window.remove_grid()
             else:
                 opacity = normalize_slider_value(slider.value())
                 self.image_window.add_grid(opacity=opacity)
+            self.image_window.toggle_snap_to_grid_area_of_effect(enable=value)
 
-        button = StyledButton("Toggle grid")
+        button = StyledButton("Toggle grid", checkable=True)
         button.clicked.connect(toggle_grid_callback)
         container.addWidget(button)
 
     def add_row_area_of_effect(self):
         container = self._create_container()
 
-        color_selector = ColorSelectionWindow()
+        color_selector = ColorSelectionWindow(callback=self.image_window.area_of_effect_set_color)
         container.addWidget(color_selector)
 
         def get_area_of_effect_callback(_shape: str, _button: StyledButton):
             def callback():
+                self.image_window.cancel_area_of_effect()
                 if _button.isChecked():
                     self.image_window.add_area_of_effect(
                         shape=_shape,
-                        color=color_selector.selected_color,
                         callback=lambda: _button.setChecked(False),
                     )
-                    for i in range(grid.count()):
-                        _other_button = grid.itemAt(i).widget()
+                    for i in range(grid_layout_shapes.count()):
+                        _other_button = grid_layout_shapes.itemAt(i).widget()
                         if _other_button != _button:
                             _other_button.setChecked(False)  # type: ignore[attr-defined]
-                else:
-                    self.image_window.cancel_area_of_effect()
 
             return callback
 
-        grid = FixedRowGridLayout(rows=2)
-        container.addLayout(grid)
+        grid_layout_shapes = FixedRowGridLayout(rows=2)
+        container.addLayout(grid_layout_shapes)
 
         for shape in area_of_effect_shapes_to_class.keys():
             button = StyledButton(shape.title(), checkable=True, padding_factor=0.7)
             button.clicked.connect(get_area_of_effect_callback(shape, button))
-            grid.add_widget(button)
+            grid_layout_shapes.add_widget(button)
 
         button = StyledButton("Clear")
         button.clicked.connect(self.image_window.clear_area_of_effect)
