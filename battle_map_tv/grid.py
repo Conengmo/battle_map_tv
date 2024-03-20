@@ -56,13 +56,16 @@ class Grid:
     def snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
         point = (x, y)
         return self._as_tuple(
-            self._snap(p=point[i], offset=self.offset[i], ppi=self.pixels_per_inch[i])
+            self._snap(p=point[i], offset=self.offset[i], ppi=self.pixels_per_inch[i], divide_by=2)
             for i in range(2)
         )
 
+    def normalize_size(self, size: float) -> int:
+        return self._snap(p=size, offset=0, ppi=self.pixels_per_inch[0], divide_by=1)
+
     @staticmethod
-    def _snap(p: int, offset: int, ppi: int) -> int:
-        return int(round(2 * (p - offset) / ppi) * ppi / 2 + offset)
+    def _snap(p: float, offset: int, ppi: int, divide_by: int) -> int:
+        return int(round(divide_by * (p - offset) / ppi) * ppi / divide_by + offset)
 
 
 class GridOverlay:

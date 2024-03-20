@@ -86,15 +86,15 @@ class AreaOfEffectManager:
         shape_cls = area_of_effect_shapes_to_class[self.waiting_for]
         x1, y1 = self._optional_snap_to_grid(*self.start_point)
         x2, y2 = event.pos().x(), event.pos().y()
+        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        if self.snap_to_grid:
+            assert self.grid
+            size = self.grid.normalize_size(size=size)
         x2, y2 = self._optional_snap_to_grid(x=x2, y=y2)
-        shape_obj = shape_cls(x1=x1, y1=y1, x2=x2, y2=y2, color=self.color)
-        common_shape_operations(shape=shape_obj)
+        shape_obj = shape_cls(x1=x1, y1=y1, x2=x2, y2=y2, size=size)
+        common_shape_operations(shape=shape_obj, color=self.color)
         self.scene.addItem(shape_obj)
         return shape_obj
-
-
-def _calculate_size(x1: int, y1: int, x2: int, y2: int) -> float:
-    return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
 def _get_transform(x1: int, y1: int, x2: int, y2: int) -> QTransform:
@@ -114,9 +114,7 @@ class DeleteShapeMixin:
 
 
 class Circle(DeleteShapeMixin, QGraphicsEllipseItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
-        self.color = color
-        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float):
         super().__init__(
             x1 - size,
             y1 - size,
@@ -126,8 +124,7 @@ class Circle(DeleteShapeMixin, QGraphicsEllipseItem):
 
 
 class Square(DeleteShapeMixin, QGraphicsRectItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
-        self.color = color
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float):
         x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2)
         left = min(x1, x2)
         top = min(y1, y2)
@@ -148,9 +145,7 @@ class Square(DeleteShapeMixin, QGraphicsRectItem):
 
 
 class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
-        self.color = color
-        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float):
         triangle = QPolygonF.fromList(
             [
                 QPointF(0, 0),
@@ -163,21 +158,19 @@ class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
 
 
 class Line(DeleteShapeMixin, QGraphicsRectItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
-        self.color = color
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float):
         width = 20
-        size = _calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(0, -width / 2, size, width)
         self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
 
 
-def common_shape_operations(shape: QAbstractGraphicsShapeItem):
-    color = QColor(shape.color)  # type: ignore[attr-defined]
-    pen = QPen(color)
+def common_shape_operations(shape: QAbstractGraphicsShapeItem, color: str):
+    color_obj = QColor(color)
+    pen = QPen(color_obj)
     pen.setWidth(3)
     shape.setPen(pen)
-    color.setAlpha(127)  # type: ignore[attr-defined]
-    shape.setBrush(QBrush(color))
+    color_obj.setAlpha(127)
+    shape.setBrush(QBrush(color_obj))
     shape.setZValue(1)
 
 
