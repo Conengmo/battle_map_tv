@@ -235,6 +235,7 @@ class GuiWindow(QWidget):
                 opacity = normalize_slider_value(slider.value())
                 self.image_window.add_grid(opacity=opacity)
             self.image_window.toggle_snap_to_grid_area_of_effect(enable=value)
+            global_event_dispatcher.dispatch_event(EventKeys.toggle_grid, value)
 
         button = StyledButton("Toggle grid", checkable=True)
         button.clicked.connect(toggle_grid_callback)
@@ -269,9 +270,27 @@ class GuiWindow(QWidget):
             button.clicked.connect(get_area_of_effect_callback(shape, button))
             grid_layout_shapes.add_widget(button)
 
+        grid_layout_controls = FixedRowGridLayout(rows=2)
+        container.addLayout(grid_layout_controls)
+
+        button_rasterize = StyledButton("Rasterize", checkable=True)
+        button_rasterize.clicked.connect(self.image_window.toggle_rasterize_area_of_effect)
+        grid_layout_controls.addWidget(button_rasterize)
+
+        def rasterize_button_callback_toggle_grid(value_grid: bool):
+            button_rasterize.setEnabled(value_grid)
+            if value_grid is False:
+                button_rasterize.setChecked(False)
+                self.image_window.toggle_rasterize_area_of_effect(False)
+
+        button_rasterize.setEnabled(False)
+        global_event_dispatcher.add_handler(
+            EventKeys.toggle_grid, rasterize_button_callback_toggle_grid
+        )
+
         button = StyledButton("Clear")
         button.clicked.connect(self.image_window.clear_area_of_effect)
-        container.addWidget(button)
+        grid_layout_controls.addWidget(button)
 
     def add_column_initiative(self):
         container = QVBoxLayout()
