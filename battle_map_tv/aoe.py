@@ -1,8 +1,8 @@
 import math
-from typing import Union, Optional, Callable, List, Tuple, TYPE_CHECKING
+from typing import Optional, Callable, List, Tuple, TYPE_CHECKING
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
+from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform, QFont
 from PySide6.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsRectItem,
@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QGraphicsSceneMouseEvent,
     QAbstractGraphicsShapeItem,
     QGraphicsScene,
+    QGraphicsTextItem,
 )
 
 from battle_map_tv.grid import Grid
@@ -28,7 +29,7 @@ class AreaOfEffectManager:
         self.waiting_for: Optional[str] = None
         self.color = "white"
         self.start_point: Optional[Tuple[int, int]] = None
-        self.temp_obj: Optional[TypeShapes] = None
+        self.temp_obj: Optional[BaseShape] = None
         self.callback: Optional[Callable] = None
         self.grid: Optional[Grid] = None
 
@@ -98,6 +99,8 @@ class AreaOfEffectManager:
 
 class BaseShape:
     shape: QAbstractGraphicsShapeItem
+    label: QGraphicsTextItem
+    label_background: QGraphicsRectItem
 
     def __init__(self, scene: QGraphicsScene):
         self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
@@ -106,6 +109,11 @@ class BaseShape:
 
     def remove(self):
         self.scene.removeItem(self.shape)
+        try:
+            self.scene.removeItem(self.label)
+            self.scene.removeItem(self.label_background)
+        except AttributeError:
+            pass
 
     def _mouse_press_event(self, event: QGraphicsSceneMouseEvent):
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
@@ -137,6 +145,27 @@ class BaseShape:
     def set_is_movable(self):
         self.shape.setFlag(self.shape.GraphicsItemFlag.ItemIsMovable)
 
+    def add_label(self, x: int, y: int, value: float):
+        self.label = QGraphicsTextItem()
+        font = QFont()
+        font.setPointSize(16)
+        self.label.setFont(font)
+        self.label.setDefaultTextColor(QColor("black"))
+        self.label.setPlainText(f"{value:.0f}")
+
+        self.label_background = QGraphicsRectItem(self.label.boundingRect())
+        self.label_background.setBrush(QColor(255, 255, 255, 220))
+        self.label_background.setPen(QColor(255, 255, 255, 255))
+
+        self.label.setPos(x + 25, y + 15)
+        self.label_background.setPos(self.label.pos())
+
+        self.label.setZValue(3)
+        self.label_background.setZValue(2)
+
+        self.scene.addItem(self.label)
+        self.scene.addItem(self.label_background)
+
 
 class Circle(BaseShape):
     def __init__(
@@ -150,24 +179,15 @@ class Circle(BaseShape):
             2 * size,
         )
         super().__init__(scene=scene)
-
-        # # Create a QGraphicsTextItem
-        # self.label = QGraphicsTextItem()
-        #
-        # # Set the text to the size of the circle
-        # self.label.setPlainText(str(size))
-        #
-        # # Position the label at the center of the circle
-        # self.label.setPos(x1, y1)
-        #
-        # # Add the label to the scene
-        # self.scene().addItem(self.label)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 class Square(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
+        x2_org, y2_org = x2, y2
         x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         left = min(x1, x2)
         top = min(y1, y2)
@@ -177,6 +197,8 @@ class Square(BaseShape):
         height = bottom - top
         self.shape = QGraphicsRectItem(left, top, width, height)
         super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2_org, y=y2_org, value=grid.pixels_to_feet(value=width))
 
     @staticmethod
     def _fix_aspect_ratio(
@@ -207,6 +229,8 @@ class Cone(BaseShape):
         self.shape = QGraphicsPolygonItem(triangle)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 class Line(BaseShape):
@@ -218,9 +242,9 @@ class Line(BaseShape):
         self.shape = QGraphicsRectItem(0, -width / 2, size, width)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
-
-TypeShapes = Union[Circle, Square, Cone, Line]
 
 area_of_effect_shapes_to_class = {
     "circle": Circle,

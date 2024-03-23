@@ -23,6 +23,7 @@ class Grid:
             )
         else:
             self.pixels_per_inch = (60, 60)
+        self.pixels_per_inch_mean = sum(self.pixels_per_inch) / 2
 
         self.n_lines = self._as_tuple(
             math.ceil(self.window_size_px[i] / self.pixels_per_inch[i]) for i in range(2)
@@ -61,11 +62,14 @@ class Grid:
         )
 
     def normalize_size(self, size: float) -> int:
-        return self._snap(p=size, offset=0, ppi=self.pixels_per_inch[0], divide_by=1)
+        return self._snap(p=size, offset=0, ppi=self.pixels_per_inch_mean, divide_by=1)
 
     @staticmethod
-    def _snap(p: float, offset: int, ppi: int, divide_by: int) -> int:
+    def _snap(p: float, offset: int, ppi: float, divide_by: int) -> int:
         return int(round(divide_by * (p - offset) / ppi) * ppi / divide_by + offset)
+
+    def pixels_to_feet(self, value: float) -> float:
+        return 5 * value / self.pixels_per_inch_mean
 
 
 class GridOverlay:
