@@ -63,6 +63,10 @@ class AreaOfEffectManager:
             if self.temp_obj is not None:
                 self.temp_obj.remove()
             self.temp_obj = self._create_shape_obj(event=event)
+            if self.snap_to_grid:
+                assert self.grid
+                assert self.temp_obj
+                self.temp_obj.add_label(x=event.pos().x(), y=event.pos().y(), grid=self.grid)
             return True
         return False
 
@@ -108,6 +112,7 @@ class BaseShape:
     shape: QAbstractGraphicsShapeItem
     label: QGraphicsTextItem
     label_background: QGraphicsRectItem
+    size: float
 
     def __init__(self, scene: QGraphicsScene):
         self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
@@ -156,12 +161,14 @@ class BaseShape:
     def set_is_movable(self):
         self.shape.setFlag(self.shape.GraphicsItemFlag.ItemIsMovable)
 
-    def add_label(self, x: int, y: int, value: float):
+    def add_label(self, x: int, y: int, grid: Grid):
         self.label = QGraphicsTextItem()
         font = QFont()
         font.setPointSize(16)
         self.label.setFont(font)
         self.label.setDefaultTextColor(QColor("black"))
+
+        value = grid.pixels_to_feet(self.size)
         self.label.setPlainText(f"{value:.0f}")
 
         self.label_background = QGraphicsRectItem(self.label.boundingRect())
@@ -182,37 +189,35 @@ class Circle(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
-        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsEllipseItem(
-            x1 - size,
-            y1 - size,
-            2 * size,
-            2 * size,
+            x1 - self.size,
+            y1 - self.size,
+            2 * self.size,
+            2 * self.size,
         )
         super().__init__(scene=scene)
-        if grid is not None:
-            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 class CircleRasterized(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
-        size = int(self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        self.size = int(self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
         polygon = QPolygonF.fromList(
-            [QPointF(*point) for point in circle_to_polygon(x_center=x1, y_center=y1, radius=size)]
+            [
+                QPointF(*point)
+                for point in circle_to_polygon(x_center=x1, y_center=y1, radius=self.size)
+            ]
         )
         self.shape = QGraphicsPolygonItem(polygon)
         super().__init__(scene=scene)
-        if grid is not None:
-            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 class Square(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
-        x2_org, y2_org = x2, y2
         x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         left = min(x1, x2)
         top = min(y1, y2)
@@ -221,9 +226,8 @@ class Square(BaseShape):
         width = right - left
         height = bottom - top
         self.shape = QGraphicsRectItem(left, top, width, height)
+        self.size = width
         super().__init__(scene=scene)
-        if grid is not None:
-            self.add_label(x=x2_org, y=y2_org, value=grid.pixels_to_feet(value=width))
 
     @staticmethod
     def _fix_aspect_ratio(
@@ -243,19 +247,17 @@ class Cone(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
-        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         triangle = QPolygonF.fromList(
             [
                 QPointF(0, 0),
-                QPointF(size, size / 2),
-                QPointF(size, -size / 2),
+                QPointF(self.size, self.size / 2),
+                QPointF(self.size, -self.size / 2),
             ]
         )
         self.shape = QGraphicsPolygonItem(triangle)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
         super().__init__(scene=scene)
-        if grid is not None:
-            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 class Line(BaseShape):
@@ -263,12 +265,10 @@ class Line(BaseShape):
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
         width = 20
-        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        self.shape = QGraphicsRectItem(0, -width / 2, size, width)
+        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.shape = QGraphicsRectItem(0, -width / 2, self.size, width)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
         super().__init__(scene=scene)
-        if grid is not None:
-            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
 area_of_effect_shapes_to_class = {
