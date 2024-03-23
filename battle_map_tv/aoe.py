@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QGraphicsPolygonItem,
     QGraphicsSceneMouseEvent,
     QAbstractGraphicsShapeItem,
+    QGraphicsScene,
 )
 
 from battle_map_tv.grid import Grid
@@ -75,26 +76,21 @@ class AreaOfEffectManager:
             return True
         return False
 
-    def _optional_snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
-        if self.snap_to_grid:
-            if self.grid is None:
-                self.grid = Grid(window=self.window)
-            x, y = self.grid.snap_to_grid(x=x, y=y)
-        return x, y
-
     def _create_shape_obj(self, event):
         assert self.waiting_for
         assert self.start_point
         shape_cls = area_of_effect_shapes_to_class[self.waiting_for]
-        x1, y1 = self._optional_snap_to_grid(*self.start_point)
-        x2, y2 = event.pos().x(), event.pos().y()
-        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        x1, y1 = self.start_point
         if self.snap_to_grid:
-            assert self.grid
-            size = self.grid.normalize_size(size=size)
-        x2, y2 = self._optional_snap_to_grid(x=x2, y=y2)
+            self.grid = Grid(window=self.window)
+            x1, y1 = self.grid.snap_to_grid(x=x1, y=y1)
         shape_obj = shape_cls(
-            x1=x1, y1=y1, x2=x2, y2=y2, size=size, grid=self.grid, scene=self.scene
+            x1=x1,
+            y1=y1,
+            x2=event.pos().x(),
+            y2=event.pos().y(),
+            grid=self.grid,
+            scene=self.scene,
         )
         shape_obj.set_color(color=self.color)
         return shape_obj
@@ -103,7 +99,7 @@ class AreaOfEffectManager:
 class BaseShape:
     shape: QAbstractGraphicsShapeItem
 
-    def __init__(self, scene):
+    def __init__(self, scene: QGraphicsScene):
         self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
         self.scene = scene
         self.scene.addItem(self.shape)
@@ -122,6 +118,13 @@ class BaseShape:
         transform.rotate(math.degrees(angle))
         self.shape.setTransform(transform)
 
+    @staticmethod
+    def _calculate_size(x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
+        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        if grid is not None:
+            size = grid.normalize_size(size=size)
+        return size
+
     def set_color(self, color):
         color_obj = QColor(color)
         pen = QPen(color_obj)
@@ -137,8 +140,9 @@ class BaseShape:
 
 class Circle(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid], scene
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsEllipseItem(
             x1 - size,
             y1 - size,
@@ -162,7 +166,7 @@ class Circle(BaseShape):
 
 class Square(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid], scene
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
         x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         left = min(x1, x2)
@@ -190,8 +194,9 @@ class Square(BaseShape):
 
 class Cone(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid], scene
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         triangle = QPolygonF.fromList(
             [
                 QPointF(0, 0),
@@ -206,9 +211,10 @@ class Cone(BaseShape):
 
 class Line(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid], scene
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
     ):
         width = 20
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsRectItem(0, -width / 2, size, width)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2)
         super().__init__(scene=scene)
