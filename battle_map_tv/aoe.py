@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGraphicsTextItem,
 )
 
+from battle_map_tv.aoe_rasterization import circle_to_polygon
 from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
 
@@ -25,6 +26,7 @@ class AreaOfEffectManager:
         self.window = window
         self.scene = window.scene()
         self._store: List[BaseShape] = []
+        self.rasterize = False
         self.snap_to_grid = False
         self.waiting_for: Optional[str] = None
         self.color = "white"
@@ -80,7 +82,12 @@ class AreaOfEffectManager:
     def _create_shape_obj(self, event):
         assert self.waiting_for
         assert self.start_point
-        shape_cls = area_of_effect_shapes_to_class[self.waiting_for]
+        shapes_dict = (
+            area_of_effect_rasterized_shapes_to_class
+            if self.rasterize
+            else area_of_effect_shapes_to_class
+        )
+        shape_cls = shapes_dict[self.waiting_for]
         x1, y1 = self.start_point
         if self.snap_to_grid:
             self.grid = Grid(window=self.window)
@@ -187,6 +194,20 @@ class Circle(BaseShape):
             self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
+class CircleRasterized(BaseShape):
+    def __init__(
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+    ):
+        size = int(self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        polygon = QPolygonF.fromList(
+            [QPointF(*point) for point in circle_to_polygon(x_center=x1, y_center=y1, radius=size)]
+        )
+        self.shape = QGraphicsPolygonItem(polygon)
+        super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
+
+
 class Square(BaseShape):
     def __init__(
         self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
@@ -252,6 +273,13 @@ class Line(BaseShape):
 
 area_of_effect_shapes_to_class = {
     "circle": Circle,
+    "square": Square,
+    "cone": Cone,
+    "line": Line,
+}
+
+area_of_effect_rasterized_shapes_to_class = {
+    "circle": CircleRasterized,
     "square": Square,
     "cone": Cone,
     "line": Line,

@@ -4,6 +4,7 @@ from typing import Callable, Dict
 
 class EventKeys(Enum):
     change_scale = "change_scale"
+    toggle_grid = "toggle_grid"
 
 
 class EventDispatcher:

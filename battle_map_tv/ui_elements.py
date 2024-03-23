@@ -55,6 +55,10 @@ class StyledButton(QPushButton):
             QPushButton:checked {{
                 background-color: #808080;
             }}
+            QPushButton:disabled {{
+                color: #696969;
+                border: 2px solid #2b2b2c;
+            }}
         """
         )
 
