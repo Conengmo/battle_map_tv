@@ -1,14 +1,16 @@
 import math
-from typing import Union, Optional, Callable, List, Tuple, TYPE_CHECKING
+from typing import Optional, Callable, List, Tuple, TYPE_CHECKING
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform
+from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform, QFont
 from PySide6.QtWidgets import (
     QGraphicsEllipseItem,
     QGraphicsRectItem,
     QGraphicsPolygonItem,
     QGraphicsSceneMouseEvent,
     QAbstractGraphicsShapeItem,
+    QGraphicsScene,
+    QGraphicsTextItem,
 )
 
 from battle_map_tv.grid import Grid
@@ -22,12 +24,12 @@ class AreaOfEffectManager:
     def __init__(self, window: "ImageWindow"):
         self.window = window
         self.scene = window.scene()
-        self._store: List[TypeShapes] = []
+        self._store: List[BaseShape] = []
         self.snap_to_grid = False
         self.waiting_for: Optional[str] = None
         self.color = "white"
         self.start_point: Optional[Tuple[int, int]] = None
-        self.temp_obj: Optional[TypeShapes] = None
+        self.temp_obj: Optional[BaseShape] = None
         self.callback: Optional[Callable] = None
         self.grid: Optional[Grid] = None
 
@@ -37,15 +39,15 @@ class AreaOfEffectManager:
 
     def cancel(self):
         if self.temp_obj is not None:
-            self.scene.removeItem(self.temp_obj)
+            self.temp_obj.remove()
         self.waiting_for = None
         self.start_point = None
         self.callback = None
         self.grid = None
 
     def clear_all(self):
-        for obj in self._store:
-            self.scene.removeItem(obj)
+        for shape_obj in self._store:
+            shape_obj.remove()
         self._store = []
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
@@ -57,7 +59,7 @@ class AreaOfEffectManager:
     def mouse_move_event(self, event: QMouseEvent):
         if self.waiting_for is not None:
             if self.temp_obj is not None:
-                self.scene.removeItem(self.temp_obj)
+                self.temp_obj.remove()
             self.temp_obj = self._create_shape_obj(event=event)
             return True
         return False
@@ -65,66 +67,131 @@ class AreaOfEffectManager:
     def mouse_release_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
             assert self.callback
+            if self.temp_obj is not None:
+                self.temp_obj.remove()
             shape_obj = self._create_shape_obj(event=event)
-            shape_obj.setFlag(shape_obj.GraphicsItemFlag.ItemIsMovable)
+            shape_obj.set_is_movable()
             self._store.append(shape_obj)
             self.callback()
             self.cancel()
             return True
         return False
 
-    def _optional_snap_to_grid(self, x: int, y: int) -> Tuple[int, int]:
-        if self.snap_to_grid:
-            if self.grid is None:
-                self.grid = Grid(window=self.window)
-            x, y = self.grid.snap_to_grid(x=x, y=y)
-        return x, y
-
     def _create_shape_obj(self, event):
         assert self.waiting_for
         assert self.start_point
         shape_cls = area_of_effect_shapes_to_class[self.waiting_for]
-        x1, y1 = self._optional_snap_to_grid(*self.start_point)
-        x2, y2 = event.pos().x(), event.pos().y()
-        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        x1, y1 = self.start_point
         if self.snap_to_grid:
-            assert self.grid
-            size = self.grid.normalize_size(size=size)
-        x2, y2 = self._optional_snap_to_grid(x=x2, y=y2)
-        shape_obj = shape_cls(x1=x1, y1=y1, x2=x2, y2=y2, size=size, grid=self.grid)
-        common_shape_operations(shape=shape_obj, color=self.color)
-        self.scene.addItem(shape_obj)
+            self.grid = Grid(window=self.window)
+            x1, y1 = self.grid.snap_to_grid(x=x1, y=y1)
+        shape_obj = shape_cls(
+            x1=x1,
+            y1=y1,
+            x2=event.pos().x(),
+            y2=event.pos().y(),
+            grid=self.grid,
+            scene=self.scene,
+        )
+        shape_obj.set_color(color=self.color)
         return shape_obj
 
 
-def _get_transform(x1: int, y1: int, x2: int, y2: int) -> QTransform:
-    transform = QTransform()
-    transform.translate(x1, y1)
-    angle = math.atan2(y2 - y1, x2 - x1)
-    transform.rotate(math.degrees(angle))
-    return transform
+class BaseShape:
+    shape: QAbstractGraphicsShapeItem
+    label: QGraphicsTextItem
+    label_background: QGraphicsRectItem
 
+    def __init__(self, scene: QGraphicsScene):
+        self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
+        self.scene = scene
+        self.scene.addItem(self.shape)
 
-class DeleteShapeMixin:
-    scene: Callable
+    def remove(self):
+        self.scene.removeItem(self.shape)
+        try:
+            self.scene.removeItem(self.label)
+            self.scene.removeItem(self.label_background)
+        except AttributeError:
+            pass
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+    def _mouse_press_event(self, event: QGraphicsSceneMouseEvent):
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
-            self.scene().removeItem(self)
+            self.remove()
+
+    def _rotate(self, x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int] = None):
+        transform = QTransform()
+        transform.translate(x1, y1)
+        angle_radians = math.atan2(y2 - y1, x2 - x1)
+        angle_degrees = math.degrees(angle_radians)
+        if snap_factor is not None:
+            factor = snap_factor / 360
+            angle_degrees = round(angle_degrees * factor) / factor
+        transform.rotate(angle_degrees)
+        self.shape.setTransform(transform)
+
+    @staticmethod
+    def _calculate_size(x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
+        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        if grid is not None:
+            size = grid.normalize_size(size=size)
+        return size
+
+    def set_color(self, color):
+        color_obj = QColor(color)
+        pen = QPen(color_obj)
+        pen.setWidth(3)
+        self.shape.setPen(pen)
+        color_obj.setAlpha(127)
+        self.shape.setBrush(QBrush(color_obj))
+        self.shape.setZValue(1)
+
+    def set_is_movable(self):
+        self.shape.setFlag(self.shape.GraphicsItemFlag.ItemIsMovable)
+
+    def add_label(self, x: int, y: int, value: float):
+        self.label = QGraphicsTextItem()
+        font = QFont()
+        font.setPointSize(16)
+        self.label.setFont(font)
+        self.label.setDefaultTextColor(QColor("black"))
+        self.label.setPlainText(f"{value:.0f}")
+
+        self.label_background = QGraphicsRectItem(self.label.boundingRect())
+        self.label_background.setBrush(QColor(255, 255, 255, 220))
+        self.label_background.setPen(QColor(255, 255, 255, 255))
+
+        self.label.setPos(x + 25, y + 15)
+        self.label_background.setPos(self.label.pos())
+
+        self.label.setZValue(3)
+        self.label_background.setZValue(2)
+
+        self.scene.addItem(self.label)
+        self.scene.addItem(self.label_background)
 
 
-class Circle(DeleteShapeMixin, QGraphicsEllipseItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid]):
-        super().__init__(
+class Circle(BaseShape):
+    def __init__(
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+    ):
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.shape = QGraphicsEllipseItem(
             x1 - size,
             y1 - size,
             2 * size,
             2 * size,
         )
+        super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
-class Square(DeleteShapeMixin, QGraphicsRectItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid]):
+class Square(BaseShape):
+    def __init__(
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+    ):
+        x2_org, y2_org = x2, y2
         x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         left = min(x1, x2)
         top = min(y1, y2)
@@ -132,7 +199,10 @@ class Square(DeleteShapeMixin, QGraphicsRectItem):
         bottom = max(y1, y2)
         width = right - left
         height = bottom - top
-        super().__init__(left, top, width, height)
+        self.shape = QGraphicsRectItem(left, top, width, height)
+        super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2_org, y=y2_org, value=grid.pixels_to_feet(value=width))
 
     @staticmethod
     def _fix_aspect_ratio(
@@ -148,8 +218,11 @@ class Square(DeleteShapeMixin, QGraphicsRectItem):
         return x2, y2
 
 
-class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid]):
+class Cone(BaseShape):
+    def __init__(
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+    ):
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         triangle = QPolygonF.fromList(
             [
                 QPointF(0, 0),
@@ -157,28 +230,25 @@ class Cone(DeleteShapeMixin, QGraphicsPolygonItem):
                 QPointF(size, -size / 2),
             ]
         )
-        super().__init__(triangle)
-        self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
+        self.shape = QGraphicsPolygonItem(triangle)
+        self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
+        super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
 
-class Line(DeleteShapeMixin, QGraphicsRectItem):
-    def __init__(self, x1: int, y1: int, x2: int, y2: int, size: float, grid: Optional[Grid]):
+class Line(BaseShape):
+    def __init__(
+        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+    ):
         width = 20
-        super().__init__(0, -width / 2, size, width)
-        self.setTransform(_get_transform(x1=x1, y1=y1, x2=x2, y2=y2))
+        size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.shape = QGraphicsRectItem(0, -width / 2, size, width)
+        self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
+        super().__init__(scene=scene)
+        if grid is not None:
+            self.add_label(x=x2, y=y2, value=grid.pixels_to_feet(value=size))
 
-
-def common_shape_operations(shape: QAbstractGraphicsShapeItem, color: str):
-    color_obj = QColor(color)
-    pen = QPen(color_obj)
-    pen.setWidth(3)
-    shape.setPen(pen)
-    color_obj.setAlpha(127)
-    shape.setBrush(QBrush(color_obj))
-    shape.setZValue(1)
-
-
-TypeShapes = Union[Circle, Square, Cone, Line]
 
 area_of_effect_shapes_to_class = {
     "circle": Circle,
