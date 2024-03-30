@@ -222,11 +222,14 @@ class CircleRasterized(BaseShape):
         scene: QGraphicsScene,
         size: Optional[float] = None,
     ):
-        self.size = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        assert grid is not None
+        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
         polygon = QPolygonF.fromList(
             [
                 QPointF(*point)
-                for point in circle_to_polygon(x_center=x1, y_center=y1, radius=self.size)
+                for point in circle_to_polygon(
+                    x_center=x1, y_center=y1, radius=self.size, grid=grid
+                )
             ]
         )
         self.shape = QGraphicsPolygonItem(polygon)

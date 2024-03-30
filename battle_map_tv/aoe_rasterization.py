@@ -1,9 +1,13 @@
 import math
 from typing import List, Tuple
 
+from battle_map_tv.grid import Grid
 
-def circle_to_polygon(x_center: int, y_center: int, radius: int) -> List[Tuple[int, int]]:
-    delta = 60
+
+def circle_to_polygon(
+    x_center: int, y_center: int, radius: int, grid: Grid
+) -> List[Tuple[int, int]]:
+    delta = grid.pixels_per_inch_mean
     radius = radius - radius % delta
     if radius < delta:
         return []
@@ -74,12 +78,3 @@ class CircleEdges:
             final_points.extend(edge)
             flip = False if flip else True
         return final_points
-
-
-if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-
-    fig, ax = plt.subplots()
-    xs, ys = zip(*circle_to_polygon(0, 0, 120))
-    ax.plot(xs, ys, "-")
-    plt.show()
