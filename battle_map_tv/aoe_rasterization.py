@@ -87,18 +87,28 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     size = 4
     a = size
+    # angle between x-axis and center line
     theta = math.radians(10)
+    # angle between center line and edge
     phi = math.atan(0.5)
+    # angle between x-axis and top edge
     gamma_t = theta + phi
+    # size of top edge
     a_t = a / math.cos(phi)
+    # coordinates of top point
     x_t = a_t * math.cos(gamma_t)
     y_t = a_t * math.sin(gamma_t)
+    # coordinates of end of the center line
     x_star = a * math.cos(theta)
     y_star = a * math.sin(theta)
+    # size of bottom edge
     a_b = a_t
+    # angle between x-axis and bottom edge
     gamma_b = theta - phi
+    # coordinates of bottom point
     x_b = a_b * math.cos(gamma_b)
     y_b = a_b * math.sin(gamma_b)
+
     ax.plot([0, x_t], [0, y_t], "r-")
     ax.plot([0, x_b], [0, y_b], "b-")
     ax.plot([x_b, x_t], [y_b, y_t], "g--")
