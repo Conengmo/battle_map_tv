@@ -134,7 +134,9 @@ class BaseShape:
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
             self.remove()
 
-    def _rotate(self, x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int] = None):
+    def _translate_rotate(
+        self, x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int] = None
+    ):
         transform = QTransform()
         transform.translate(x1, y1)
         angle_radians = math.atan2(y2 - y1, x2 - x1)
@@ -287,7 +289,9 @@ class Cone(BaseShape):
             ]
         )
         self.shape = QGraphicsPolygonItem(triangle)
-        self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
+        self._translate_rotate(
+            x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None
+        )
         super().__init__(scene=scene)
 
 
@@ -305,7 +309,9 @@ class Line(BaseShape):
         width = 20
         self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsRectItem(0, -width / 2, self.size, width)
-        self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
+        self._translate_rotate(
+            x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None
+        )
         super().__init__(scene=scene)
 
 
