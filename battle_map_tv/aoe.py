@@ -34,6 +34,7 @@ class AreaOfEffectManager:
         self.temp_obj: Optional[BaseShape] = None
         self.callback: Optional[Callable] = None
         self.grid: Optional[Grid] = None
+        self._previous_size: Optional[float] = None
 
     def wait_for(self, shape: str, callback: Callable):
         self.waiting_for = shape
@@ -103,8 +104,10 @@ class AreaOfEffectManager:
             y2=event.pos().y(),
             grid=self.grid,
             scene=self.scene,
+            size=self._previous_size if event.modifiers() == Qt.ShiftModifier else None,  # type: ignore[attr-defined]
         )
         shape_obj.set_color(color=self.color)
+        self._previous_size = shape_obj.size
         return shape_obj
 
 
@@ -187,9 +190,16 @@ class BaseShape:
 
 class Circle(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
     ):
-        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsEllipseItem(
             x1 - self.size,
             y1 - self.size,
@@ -201,9 +211,16 @@ class Circle(BaseShape):
 
 class CircleRasterized(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
     ):
-        self.size = int(self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        self.size = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
         polygon = QPolygonF.fromList(
             [
                 QPointF(*point)
@@ -216,9 +233,16 @@ class CircleRasterized(BaseShape):
 
 class Square(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
     ):
-        x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        x2, y2 = self._fix_aspect_ratio(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid, size=size)
         left = min(x1, x2)
         top = min(y1, y2)
         right = max(x1, x2)
@@ -231,11 +255,11 @@ class Square(BaseShape):
 
     @staticmethod
     def _fix_aspect_ratio(
-        x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]
+        x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], size: Optional[float] = None
     ) -> Tuple[int, int]:
         dx = x2 - x1
         dy = y2 - y1
-        d_abs = max(abs(dx), abs(dy))
+        d_abs = int(size or max(abs(dx), abs(dy)))
         if grid is not None:
             d_abs = grid.normalize_size(size=d_abs)
         x2 = x1 + sign(dx) * d_abs
@@ -245,9 +269,16 @@ class Square(BaseShape):
 
 class Cone(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
     ):
-        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         triangle = QPolygonF.fromList(
             [
                 QPointF(0, 0),
@@ -262,10 +293,17 @@ class Cone(BaseShape):
 
 class Line(BaseShape):
     def __init__(
-        self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], scene: QGraphicsScene
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
     ):
         width = 20
-        self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsRectItem(0, -width / 2, self.size, width)
         self._rotate(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None)
         super().__init__(scene=scene)
