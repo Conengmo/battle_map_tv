@@ -78,3 +78,36 @@ class CircleEdges:
             final_points.extend(edge)
             flip = False if flip else True
         return final_points
+
+
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, ax = plt.subplots()
+    size = 4
+    a = size
+    theta = math.radians(10)
+    phi = math.atan(0.5)
+    gamma_t = theta + phi
+    a_t = a / math.cos(phi)
+    x_t = a_t * math.cos(gamma_t)
+    y_t = a_t * math.sin(gamma_t)
+    x_star = a * math.cos(theta)
+    y_star = a * math.sin(theta)
+    a_b = a_t
+    gamma_b = theta - phi
+    x_b = a_b * math.cos(gamma_b)
+    y_b = a_b * math.sin(gamma_b)
+    ax.plot([0, x_t], [0, y_t], "r-")
+    ax.plot([0, x_b], [0, y_b], "b-")
+    ax.plot([x_b, x_t], [y_b, y_t], "g--")
+    ax.plot([0, x_star], [0, y_star], "k--")
+
+    print("size top to bottom:", math.sqrt((y_t - y_b) ** 2 + (x_t - x_b) ** 2))
+
+    ax.xaxis.set_ticks(np.arange(0, size + 1, 1.0))
+    ax.yaxis.set_ticks(np.arange(-size / 2, size / 2 + 1, 1.0))
+    ax.grid(True, alpha=0.3)
+    plt.axis("equal")
+    plt.show()
