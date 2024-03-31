@@ -1,6 +1,8 @@
 import math
 from typing import List, Tuple
 
+import numpy as np
+
 from battle_map_tv.grid import Grid
 
 
@@ -114,6 +116,7 @@ def cone_to_polygon(size: int, theta, grid):
     return edges
 
 
+
 def thing(gamma, gamma_next, edges, p_prev, p_final):
     delta = 1
     x_prev, y_prev = p_prev
@@ -163,6 +166,59 @@ def area_under_line(x_prev, x, y_prev, y, y_rast_prev) -> float:
     return area
 
 
+
+def rasterize_cone_by_pixels(three_points):
+    delta = 1
+    delta_half = delta / 2
+    (x1, y1), (x2, y2), (x3, y3) = three_points
+
+    x_min = min(x1, x2, x3)
+    x_max = max(x1, x2, x3)
+    y_min = min(y1, y2, y3)
+    y_max = max(y1, y2, y3)
+
+    x_linspace = np.arange(x_min - delta_half, x_max + delta_half, delta)
+    y_linspace = np.arange(y_min - delta_half, y_max + delta_half, delta)
+
+    x_points, y_points = np.meshgrid(x_linspace, y_linspace)
+    x_points = x_points.ravel()
+    y_points = y_points.ravel()
+
+    out = []
+    for x_a, y_a, x_b, y_b in [
+        (x1, y1, x2, y2),
+        (x2, y2, x3, y3),
+        (x3, y3, x1, y1),
+    ]:
+        det = (y_b - y_a) * (x_points - x_a) - (x_b - x_a) * (y_points - y_a)
+        out.append(np.sign(det).astype(int))
+    out = np.array(out).transpose()
+
+    in_or_out = np.all(out >= 0, axis=1)
+
+    x_points, y_points = x_points[in_or_out], y_points[in_or_out]
+
+    edges = []
+    for i in np.arange(min(x_points), max(x_points) + delta, delta):
+        p = max(y_points[x_points == i]) + delta_half
+        edges.append((i - delta_half, p))
+        edges.append((i + delta_half, p))
+    for i in np.arange(max(y_points), min(y_points) - delta, -delta):
+        p = max(x_points[y_points == i]) + delta_half
+        edges.append((p, i - delta_half))
+        edges.append((p, i + delta_half))
+    for i in np.arange(max(x_points), min(x_points) - delta, -delta):
+        p = min(y_points[x_points == i]) - delta_half
+        edges.append((i + delta_half, p))
+        edges.append((i - delta_half, p))
+    for i in np.arange(max(y_points), min(y_points) - delta, -delta):
+        p = max(x_points[y_points == i]) + delta_half
+        edges.append((p, i - delta_half))
+        edges.append((p, i + delta_half))
+
+    return edges
+
+
 def main():
     import matplotlib.pyplot as plt
     import numpy as np
@@ -199,8 +255,9 @@ def main():
 
     print("size top to bottom:", math.sqrt((y_t - y_b) ** 2 + (x_t - x_b) ** 2))
 
-    edges = cone_to_polygon(size, theta, grid=None)
+    edges = rasterize_cone_by_pixels([(0, 0), (x_t, y_t), (x_b, y_b)])
     ax.plot(*zip(*edges), "y-")
+    # ax.scatter(x_points, y_points, color="y", linewidth=3)
 
     ax.xaxis.set_ticks(np.arange(0, size + 1, 1.0))
     ax.yaxis.set_ticks(np.arange(-size / 2, size / 2 + 1, 1.0))
