@@ -175,43 +175,29 @@ def rasterize_cone_by_pixels(three_points: List[Tuple[int, int]], delta: int):
 def points_to_edges(x_points, y_points, delta: int):
     delta_half = delta / 2
 
-    edges = ConeEdges()
+    lines = set()
 
     for i in np.arange(min(x_points), max(x_points) + delta, delta):
         p = max(y_points[np.isclose(x_points, i)]) + delta_half
-        edges.add(i - delta_half, p)
-        edges.add(i + delta_half, p)
+        lines.add(((i - delta_half, p), (i + delta_half, p)))
     for i in np.arange(max(y_points), min(y_points) - delta, -delta):
         p = max(x_points[np.isclose(y_points, i)]) + delta_half
-        edges.add(p, i + delta_half)
-        edges.add(p, i - delta_half)
+        lines.add(((p, i - delta_half), (p, i + delta_half)))
     for i in np.arange(max(x_points), min(x_points) - delta, -delta):
         p = min(y_points[np.isclose(x_points, i)]) - delta_half
-        edges.add(i + delta_half, p)
-        edges.add(i - delta_half, p)
+        lines.add(((i - delta_half, p), (i + delta_half, p)))
     for i in np.arange(min(y_points), max(y_points) + delta, delta):
         p = min(x_points[np.isclose(y_points, i)]) - delta_half
-        edges.add(p, i - delta_half)
-        edges.add(p, i + delta_half)
+        lines.add(((p, i - delta_half), (p, i + delta_half)))
 
-    return edges.finalize()
+    lines_lookup = {point_a: (point_a, point_b) for point_a, point_b in lines}
 
+    # lines2 = []
+    # p = (0, 0)
+    # while True:
+    #
 
-class ConeEdges:
-
-    def __init__(self):
-        self.edges = []
-        self.coords_seen = set()
-
-    def add(self, x: float, y: float):
-        coord = round(x), round(y)
-        if coord not in self.coords_seen:
-            self.edges.append(coord)
-            self.coords_seen.add(coord)
-
-    def finalize(self):
-        self.edges.append(self.edges[0])
-        return self.edges
+    return lines
 
 
 def round_to_delta(value, delta):
@@ -223,8 +209,8 @@ def main():
     import numpy as np
 
     fig, ax = plt.subplots()
-    size = 20
-    angle = math.radians(20)
+    size = 30
+    angle = math.radians(80)
     delta = 5
 
     point_1, point_2 = calculate_points_from_size(size=size, angle=angle)
@@ -236,8 +222,9 @@ def main():
     x_points, y_points = rasterize_cone_by_pixels([(0, 0), point_1, point_2], delta)
     ax.scatter(x_points, y_points, linewidth=3)
 
-    edges = points_to_edges(x_points, y_points, delta)
-    ax.plot(*zip(*edges), "y-")
+    lines = points_to_edges(x_points, y_points, delta)
+    for line in lines:
+        ax.plot(*zip(*line), "y-")
 
     ax.xaxis.set_ticks(
         np.arange(
