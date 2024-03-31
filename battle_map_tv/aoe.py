@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QGraphicsTextItem,
 )
 
-from battle_map_tv.aoe_rasterization import circle_to_polygon
+from battle_map_tv.aoe_rasterization import circle_to_polygon, rasterize_cone
 from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
 
@@ -134,12 +134,21 @@ class BaseShape:
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
             self.remove()
 
+    @staticmethod
+    def _get_angle_radians(x1: int, y1: int, x2: int, y2: int) -> float:
+        return math.atan2(y2 - y1, x2 - x1)
+
+    def _translate(self, x1: int, y1: int):
+        transform = QTransform()
+        transform.translate(x1, y1)
+        self.shape.setTransform(transform)
+
     def _translate_rotate(
         self, x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int] = None
     ):
         transform = QTransform()
         transform.translate(x1, y1)
-        angle_radians = math.atan2(y2 - y1, x2 - x1)
+        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
         angle_degrees = math.degrees(angle_radians)
         if snap_factor is not None:
             factor = snap_factor / 360
@@ -298,6 +307,31 @@ class Cone(BaseShape):
         super().__init__(scene=scene)
 
 
+class ConeRasterized(BaseShape):
+    def __init__(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
+    ):
+        assert grid is not None
+        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
+        polygon = QPolygonF.fromList(
+            [
+                QPointF(*point)
+                for point in rasterize_cone(size=self.size, angle=angle, grid=grid)
+            ]
+        )
+        self.shape = QGraphicsPolygonItem(polygon)
+        self._translate(x1=x1, y1=y1)
+        super().__init__(scene=scene)
+
+
 class Line(BaseShape):
     def __init__(
         self,
@@ -328,6 +362,6 @@ area_of_effect_shapes_to_class = {
 area_of_effect_rasterized_shapes_to_class = {
     "circle": CircleRasterized,
     "square": Square,
-    "cone": Cone,
+    "cone": ConeRasterized,
     "line": Line,
 }
