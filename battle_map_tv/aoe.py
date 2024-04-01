@@ -13,7 +13,11 @@ from PySide6.QtWidgets import (
     QGraphicsTextItem,
 )
 
-from battle_map_tv.aoe_rasterization import circle_to_polygon
+from battle_map_tv.aoe_rasterization import (
+    circle_to_polygon,
+    rasterize_cone,
+    calculate_cone_points,
+)
 from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
 
@@ -116,6 +120,7 @@ class BaseShape:
     label: QGraphicsTextItem
     label_background: QGraphicsRectItem
     size: float
+    angle_snap_factor = 32 / 2 / math.pi
 
     def __init__(self, scene: QGraphicsScene):
         self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
@@ -134,18 +139,11 @@ class BaseShape:
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
             self.remove()
 
-    def _translate_rotate(
-        self, x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int] = None
-    ):
-        transform = QTransform()
-        transform.translate(x1, y1)
-        angle_radians = math.atan2(y2 - y1, x2 - x1)
-        angle_degrees = math.degrees(angle_radians)
-        if snap_factor is not None:
-            factor = snap_factor / 360
-            angle_degrees = round(angle_degrees * factor) / factor
-        transform.rotate(angle_degrees)
-        self.shape.setTransform(transform)
+    def _get_angle_radians(self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
+        angle = math.atan2(y2 - y1, x2 - x1)
+        if grid is not None:
+            angle = round(angle * self.angle_snap_factor) / self.angle_snap_factor
+        return angle
 
     @staticmethod
     def _calculate_size(x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
@@ -284,17 +282,34 @@ class Cone(BaseShape):
         size: Optional[float] = None,
     ):
         self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        triangle = QPolygonF.fromList(
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        point_1, point_2 = calculate_cone_points(point_0=(x1, y1), size=self.size, angle=angle)
+        triangle = QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2]])
+        self.shape = QGraphicsPolygonItem(triangle)
+        super().__init__(scene=scene)
+
+
+class ConeRasterized(BaseShape):
+    def __init__(
+        self,
+        x1: int,
+        y1: int,
+        x2: int,
+        y2: int,
+        grid: Optional[Grid],
+        scene: QGraphicsScene,
+        size: Optional[float] = None,
+    ):
+        assert grid is not None
+        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        polygon = QPolygonF.fromList(
             [
-                QPointF(0, 0),
-                QPointF(self.size, self.size / 2),
-                QPointF(self.size, -self.size / 2),
+                QPointF(*point)
+                for point in rasterize_cone(x1=x1, y1=y1, size=self.size, angle=angle, grid=grid)
             ]
         )
-        self.shape = QGraphicsPolygonItem(triangle)
-        self._translate_rotate(
-            x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None
-        )
+        self.shape = QGraphicsPolygonItem(polygon)
         super().__init__(scene=scene)
 
 
@@ -312,9 +327,12 @@ class Line(BaseShape):
         width = 20
         self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         self.shape = QGraphicsRectItem(0, -width / 2, self.size, width)
-        self._translate_rotate(
-            x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32 if grid is not None else None
-        )
+        transform = QTransform()
+        transform.translate(x1, y1)
+        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        angle_degrees = math.degrees(angle_radians)
+        transform.rotate(angle_degrees)
+        self.shape.setTransform(transform)
         super().__init__(scene=scene)
 
 
@@ -328,6 +346,6 @@ area_of_effect_shapes_to_class = {
 area_of_effect_rasterized_shapes_to_class = {
     "circle": CircleRasterized,
     "square": Square,
-    "cone": Cone,
+    "cone": ConeRasterized,
     "line": Line,
 }
