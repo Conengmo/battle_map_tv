@@ -100,7 +100,7 @@ def rasterize_cone(x1: int, y1: int, size: int, angle: float, grid: Grid) -> Lis
 
 
 def calculate_cone_points_from_size(
-    point_0: Tuple[int, int], size: int, angle: float
+    point_0: Tuple[int, int], size: float, angle: float
 ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     x0, y0 = point_0
     # angle between center line and edge
