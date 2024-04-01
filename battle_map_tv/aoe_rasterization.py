@@ -83,49 +83,21 @@ class CircleEdges:
         return final_points
 
 
-def cone_to_polygon(size: int, theta, grid):
-    delta = 1  # grid.pixels_per_inch_mean  # noqa
-
-    edges = []
-    start_point = (0, 0)
-    edges.append(start_point)
-    x_prev, y_prev = start_point
-
-    # angle between center line and edge
-    phi = math.atan(0.5)
-    # angle between x-axis and top/bottom edge
-    gamma_t = theta + phi
-    gamma_b = theta - phi  # noqa
-    # angle between y-axis and far edge
-    gamma_z = math.radians(180) - phi + gamma_t
-
-    # angle between center line and edge
-    phi = math.atan(0.5)
-    # size of top edge
-    a_t = size / math.cos(phi)
-    # coordinate of top point
-    x_t_final = a_t * math.cos(gamma_t)
-    y_t_final = a_t * math.sin(gamma_t)
-    edges, x_prev, y_prev = thing(
-        gamma=gamma_t,
-        gamma_next=gamma_z,
-        edges=edges,
-        p_prev=(x_prev, y_prev),
-        p_final=(x_t_final, y_t_final),
-    )
-
-    return edges
-
-
 def rasterize_cone(size: int, angle: float, grid: Grid) -> List[Tuple[int, int]]:
+    if size == 0:
+        return []
     delta = grid.pixels_per_inch_mean
-    point_1, point_2 = calculate_points_from_size(size=size, angle=angle)
+    point_1, point_2 = calculate_cone_points_from_size(size=size, angle=angle)
     x_points, y_points = rasterize_cone_by_pixels([(0, 0), point_1, point_2], delta=delta)
-    line = points_to_line(x_points, y_points, delta=delta)
+    if len(x_points) == 0:
+        return []
+    line = cone_points_to_line(x_points, y_points, delta=delta)
     return line
 
 
-def calculate_points_from_size(size: int, angle: float):
+def calculate_cone_points_from_size(
+    size: int, angle: float
+) -> Tuple[Tuple[float, float], Tuple[float, float]]:
     # angle between center line and edge
     phi = math.atan(0.5)
     # angle between x-axis and top edge
@@ -142,7 +114,10 @@ def calculate_points_from_size(size: int, angle: float):
     y_b = size_top_edge * math.sin(gamma_b)
     return (x_t, y_t), (x_b, y_b)
 
-def rasterize_cone_by_pixels(three_points: List[Tuple[int, int]], delta: int):
+
+def rasterize_cone_by_pixels(
+    three_points: List[Tuple[float, float]], delta: int
+) -> Tuple[np.ndarray, np.ndarray]:
     delta_half = delta / 2
     (x1, y1), (x2, y2), (x3, y3) = three_points
 
@@ -166,14 +141,14 @@ def rasterize_cone_by_pixels(three_points: List[Tuple[int, int]], delta: int):
     ]:
         det = (y_b - y_a) * (x_points - x_a) - (x_b - x_a) * (y_points - y_a)
         out.append(np.sign(det).astype(int))
-    out = np.array(out).transpose()
+    out_array = np.array(out).transpose()
 
-    in_or_out = np.all(out >= 0, axis=1)
+    in_or_out = np.all(out_array >= 0, axis=1)
 
     return x_points[in_or_out], y_points[in_or_out]
 
 
-def points_to_line(x_points, y_points, delta: int):
+def cone_points_to_line(x_points, y_points, delta: int) -> List[Tuple[int, int]]:
     delta_half = delta / 2
 
     lines = set()
@@ -220,7 +195,7 @@ def points_to_line(x_points, y_points, delta: int):
     return line
 
 
-def round_to_delta(value, delta):
+def round_to_delta(value: float, delta: int) -> int:
     return delta * round(value / delta)
 
 
@@ -233,7 +208,7 @@ def main():
     angle = math.radians(80)
     delta = 5
 
-    point_1, point_2 = calculate_points_from_size(size=size, angle=angle)
+    point_1, point_2 = calculate_cone_points_from_size(size=size, angle=angle)
 
     ax.plot([0, point_1[0]], [0, point_1[1]], "r-")
     ax.plot([0, point_2[0]], [0, point_2[1]], "b-")
@@ -242,10 +217,8 @@ def main():
     x_points, y_points = rasterize_cone_by_pixels([(0, 0), point_1, point_2], delta)
     ax.scatter(x_points, y_points, linewidth=3)
 
-    lines = points_to_line(x_points, y_points, delta)
+    lines = cone_points_to_line(x_points, y_points, delta)
     ax.plot(*zip(*lines), "y-")
-    # for line in lines:
-    #     ax.plot(*zip(*line), "y-")
 
     ax.xaxis.set_ticks(
         np.arange(
