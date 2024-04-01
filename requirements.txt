@@ -1,5 +1,5 @@
 numpy
 opencv-python
 platformdirs
-PySide6
+PySide6!=6.6.3
 scipy
