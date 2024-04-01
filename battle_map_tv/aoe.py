@@ -19,7 +19,6 @@ from battle_map_tv.aoe_rasterization import (
     calculate_cone_points,
 )
 from battle_map_tv.grid import Grid
-from battle_map_tv.utils import sign
 
 if TYPE_CHECKING:
     from battle_map_tv.window_image import ImageWindow
@@ -268,19 +267,6 @@ class Square(BaseShape):
             QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2, point_3]])
         )
         super().__init__(scene=scene)
-
-    @staticmethod
-    def _fix_aspect_ratio(
-        x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid], size: Optional[float] = None
-    ) -> Tuple[int, int]:
-        dx = x2 - x1
-        dy = y2 - y1
-        d_abs = int(size or max(abs(dx), abs(dy)))
-        if grid is not None:
-            d_abs = grid.normalize_size(size=d_abs)
-        x2 = x1 + sign(dx) * d_abs
-        y2 = y1 + sign(dy) * d_abs
-        return x2, y2
 
 
 class Cone(BaseShape):
