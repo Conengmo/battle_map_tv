@@ -88,18 +88,18 @@ def rasterize_cone(x1: int, y1: int, size: int, angle: float, grid: Grid) -> Lis
         return []
     delta = grid.pixels_per_inch_mean
     point_0 = (x1, y1)
-    point_1, point_2 = calculate_cone_points_from_size(point_0=point_0, size=size, angle=angle)
+    point_1, point_2 = calculate_cone_points(point_0=point_0, size=size, angle=angle)
     x_points, y_points = rasterize_cone_by_pixels(
         [point_0, point_1, point_2], delta=delta, grid=grid
     )
     if len(x_points) == 0:
         return []
-    line_segments = cone_points_to_line_segments(x_points, y_points, delta=delta)
-    polygon = line_segments_to_polygon(line_segments)
+    line_segments = cone_pixels_to_line_segments(x_points, y_points, delta=delta)
+    polygon = cone_line_segments_to_polygon(line_segments)
     return polygon
 
 
-def calculate_cone_points_from_size(
+def calculate_cone_points(
     point_0: Tuple[int, int], size: float, angle: float
 ) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     x0, y0 = point_0
@@ -155,7 +155,7 @@ def rasterize_cone_by_pixels(
     return x_points[in_or_out], y_points[in_or_out]
 
 
-def cone_points_to_line_segments(
+def cone_pixels_to_line_segments(
     x_points, y_points, delta: int
 ) -> Set[Tuple[Tuple[int, int], Tuple[int, int]]]:
     delta_half = delta / 2
@@ -179,7 +179,7 @@ def cone_points_to_line_segments(
     return lines
 
 
-def line_segments_to_polygon(
+def cone_line_segments_to_polygon(
     lines: Set[Tuple[Tuple[int, int], Tuple[int, int]]],
 ) -> List[Tuple[int, int]]:
     segments_lookup = defaultdict(list)
@@ -227,7 +227,7 @@ def main():
     delta = 5
     point_0 = (0, 0)
 
-    point_1, point_2 = calculate_cone_points_from_size(point_0=point_0, size=size, angle=angle)
+    point_1, point_2 = calculate_cone_points(point_0=point_0, size=size, angle=angle)
 
     ax.plot([point_0[0], point_1[0]], [point_0[1], point_1[1]], "r-")
     ax.plot([point_0[0], point_2[0]], [point_0[1], point_2[1]], "b-")
@@ -238,8 +238,8 @@ def main():
     x_points, y_points = rasterize_cone_by_pixels([point_0, point_1, point_2], delta, grid)  # type: ignore
     ax.scatter(x_points, y_points, linewidth=3)
 
-    line_segments = cone_points_to_line_segments(x_points, y_points, delta)
-    polygon = line_segments_to_polygon(line_segments)
+    line_segments = cone_pixels_to_line_segments(x_points, y_points, delta)
+    polygon = cone_line_segments_to_polygon(line_segments)
     ax.plot(*zip(*polygon), "y-")
 
     ax.xaxis.set_ticks(

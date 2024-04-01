@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from battle_map_tv.aoe_rasterization import (
     circle_to_polygon,
     rasterize_cone,
-    calculate_cone_points_from_size,
+    calculate_cone_points,
 )
 from battle_map_tv.grid import Grid
 from battle_map_tv.utils import sign
@@ -283,9 +283,7 @@ class Cone(BaseShape):
     ):
         self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
         angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        point_1, point_2 = calculate_cone_points_from_size(
-            point_0=(x1, y1), size=self.size, angle=angle
-        )
+        point_1, point_2 = calculate_cone_points(point_0=(x1, y1), size=self.size, angle=angle)
         triangle = QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2]])
         self.shape = QGraphicsPolygonItem(triangle)
         super().__init__(scene=scene)
