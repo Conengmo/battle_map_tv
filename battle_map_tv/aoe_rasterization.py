@@ -1,4 +1,5 @@
 import math
+from collections import defaultdict
 from typing import List, Tuple
 
 import numpy as np
@@ -120,8 +121,8 @@ def rasterize_cone(size: int, angle: float, grid: Grid) -> List[Tuple[int, int]]
     delta = grid.pixels_per_inch_mean
     point_1, point_2 = calculate_points_from_size(size=size, angle=angle)
     x_points, y_points = rasterize_cone_by_pixels([(0, 0), point_1, point_2], delta=delta)
-    edges = points_to_edges(x_points, y_points, delta=delta)
-    return edges
+    line = points_to_line(x_points, y_points, delta=delta)
+    return line
 
 
 def calculate_points_from_size(size: int, angle: float):
@@ -172,7 +173,7 @@ def rasterize_cone_by_pixels(three_points: List[Tuple[int, int]], delta: int):
     return x_points[in_or_out], y_points[in_or_out]
 
 
-def points_to_edges(x_points, y_points, delta: int):
+def points_to_line(x_points, y_points, delta: int):
     delta_half = delta / 2
 
     lines = set()
@@ -190,14 +191,33 @@ def points_to_edges(x_points, y_points, delta: int):
         p = min(x_points[np.isclose(y_points, i)]) - delta_half
         lines.add(((p, i - delta_half), (p, i + delta_half)))
 
-    lines_lookup = {point_a: (point_a, point_b) for point_a, point_b in lines}
+    lines = {((round(x1), round(y1)), (round(x2), round(y2))) for (x1, y1), (x2, y2) in lines}
 
-    # lines2 = []
-    # p = (0, 0)
-    # while True:
-    #
+    lines_lookup = defaultdict(list)
+    for point_a, point_b in lines:
+        lines_lookup[point_a].append(point_b)
+        lines_lookup[point_b].append(point_a)
 
-    return lines
+    arbitrary_start = next(iter(lines))[0]
+    line = [arbitrary_start]
+    while lines_lookup:
+        candidates = lines_lookup[line[-1]]
+        if len(candidates) == 1:
+            next_coord = candidates[0]
+            del lines_lookup[line[-1]]
+        else:
+            for candidate in candidates:
+                if len(line) == 1 or candidate != line[-2]:
+                    next_coord = candidate
+                    candidates.remove(candidate)
+                    break
+            else:
+                raise ValueError("No candidate found")
+        line.append(next_coord)
+        if next_coord == arbitrary_start:
+            break
+
+    return line
 
 
 def round_to_delta(value, delta):
@@ -222,9 +242,10 @@ def main():
     x_points, y_points = rasterize_cone_by_pixels([(0, 0), point_1, point_2], delta)
     ax.scatter(x_points, y_points, linewidth=3)
 
-    lines = points_to_edges(x_points, y_points, delta)
-    for line in lines:
-        ax.plot(*zip(*line), "y-")
+    lines = points_to_line(x_points, y_points, delta)
+    ax.plot(*zip(*lines), "y-")
+    # for line in lines:
+    #     ax.plot(*zip(*line), "y-")
 
     ax.xaxis.set_ticks(
         np.arange(
