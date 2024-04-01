@@ -323,10 +323,12 @@ class ConeRasterized(BaseShape):
         self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
         angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32)
         polygon = QPolygonF.fromList(
-            [QPointF(*point) for point in rasterize_cone(size=self.size, angle=angle, grid=grid)]
+            [
+                QPointF(*point)
+                for point in rasterize_cone(x1=x1, y1=y1, size=self.size, angle=angle, grid=grid)
+            ]
         )
         self.shape = QGraphicsPolygonItem(polygon)
-        self._translate(x1=x1, y1=y1)
         super().__init__(scene=scene)
 
 
