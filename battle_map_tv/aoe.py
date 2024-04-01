@@ -135,8 +135,12 @@ class BaseShape:
             self.remove()
 
     @staticmethod
-    def _get_angle_radians(x1: int, y1: int, x2: int, y2: int) -> float:
-        return math.atan2(y2 - y1, x2 - x1)
+    def _get_angle_radians(x1: int, y1: int, x2: int, y2: int, snap_factor: Optional[int]) -> float:
+        angle = math.atan2(y2 - y1, x2 - x1)
+        if snap_factor is not None:
+            factor = snap_factor / 2 / math.pi
+            angle = round(angle * factor) / factor
+        return angle
 
     def _translate(self, x1: int, y1: int):
         transform = QTransform()
@@ -148,11 +152,8 @@ class BaseShape:
     ):
         transform = QTransform()
         transform.translate(x1, y1)
-        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
+        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=snap_factor)
         angle_degrees = math.degrees(angle_radians)
-        if snap_factor is not None:
-            factor = snap_factor / 360
-            angle_degrees = round(angle_degrees * factor) / factor
         transform.rotate(angle_degrees)
         self.shape.setTransform(transform)
 
@@ -320,12 +321,9 @@ class ConeRasterized(BaseShape):
     ):
         assert grid is not None
         self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
-        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, snap_factor=32)
         polygon = QPolygonF.fromList(
-            [
-                QPointF(*point)
-                for point in rasterize_cone(size=self.size, angle=angle, grid=grid)
-            ]
+            [QPointF(*point) for point in rasterize_cone(size=self.size, angle=angle, grid=grid)]
         )
         self.shape = QGraphicsPolygonItem(polygon)
         self._translate(x1=x1, y1=y1)
