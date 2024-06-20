@@ -11,8 +11,7 @@ No more features than needed: just show an image the way you want. Optionally ad
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![Screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/56395c6e-f12a-44e5-93a5-24badca97103)
-
+![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/e6b5152f-b4d6-4856-82c8-eac182b2a3a3)
 
 
 ## Features
@@ -32,6 +31,8 @@ For GM's with little time or who improvise their sessions: much easier to use in
 - Save settings so images load like you had them last time.
 - Simple initiative tracker
 - Overlay area of effects
+  - snap to grid
+  - rasterize to grid
 
 
 ## Installation
@@ -70,6 +71,12 @@ to create the shape in the size you want.
 The default color for shapes is white, but you can also toggle another color with the color buttons.
 
 You can delete a shape by right-clicking on it, or by using the 'Clear' button.
+
+If the grid is enabled, points will automatically snap to the grid.
+
+If you click 'rasterize', the edges of the shapes you make will fit the grid.
+
+When creating a shape, hold 'shift' to freeze the size of the shape, but keep rotating.
 
 
 ## Technical
