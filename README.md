@@ -24,7 +24,7 @@ For GM's with little time or who improvise their sessions: much easier to use in
   - one on the TV with your map and grid on it
   - one on your GM laptop with controls
 - Import local image files to display on the tv.
-- Scale, pan and rotate the image.
+- Scale, pan, center and rotate the image.
 - Store the physical size of your screen to enable grid and autoscaling.
 - Overlay a 1-inch grid.
 - Automatically detect the grid in an image and scale to a 1 inch grid.
@@ -59,9 +59,11 @@ This is needed to display a grid overlay and autoscale the image to 1 inch.
 ### Initiative tracker
 
 In the controls window, you can add players and their initiative. The list will be sorted automatically.
-Just put a number and a name on each line.
+Just put a number and a name on each line, for example "1 barbarians" and "20 heroes".
 
 The '+' and '-' buttons increase and decrease the font size.
+
+The 'move' button moves the lists to different positions and rotations on the screen.
 
 ## Area of effect
 
