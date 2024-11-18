@@ -30,6 +30,16 @@ class CustomGraphicsPixmapItem(QGraphicsPixmapItem):
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
+        self.store_position()
+
+    def set_position(self, position: tuple[int, int]):
+        self.setPos(
+            position[0] - self.pixmap().width() // 2,
+            position[1] - self.pixmap().height() // 2,
+        )
+        self.store_position()
+
+    def store_position(self):
         position = (
             self.pos().x() + self.pixmap().width() // 2,
             self.pos().y() + self.pixmap().height() // 2,
@@ -99,15 +109,16 @@ class Image:
                 do_raise=True,
             )
         except KeyError:
-            pass
+            self.center()
         else:
-            self.pixmap_item.setPos(
-                position[0] - self.pixmap_item.pixmap().width() // 2,
-                position[1] - self.pixmap_item.pixmap().height() // 2,
-            )
+            self.pixmap_item.set_position(position)
 
     def delete(self):
         self.scene.removeItem(self.pixmap_item)
+
+    def center(self):
+        position = (int(self.scene.width() // 2), int(self.scene.height() // 2))
+        self.pixmap_item.set_position(position)
 
     def rotate(self):
         self.rotation = (self.rotation + 90) % 360

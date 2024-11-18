@@ -118,6 +118,14 @@ class GuiWindow(QWidget):
         button.clicked.connect(self.image_window.restore_image)
         container.addWidget(button)
 
+        def callback_button_center_image():
+            if self.image_window.image is not None:
+                self.image_window.image.center()
+
+        button = StyledButton("Center")
+        button.clicked.connect(callback_button_center_image)
+        container.addWidget(button)
+
         def callback_button_rotate_image():
             if self.image_window.image is not None:
                 self.image_window.image.rotate()
