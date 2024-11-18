@@ -20,8 +20,8 @@ class InitiativeOverlayManager:
         self.clear()
         if text:
             self.overlays = [
-                InitiativeOverlay(text, self.scene, self.font_size).move_to_bottom_left(),
-                InitiativeOverlay(text, self.scene, self.font_size).move_to_top_right().flip(),
+                InitiativeOverlay(text, self.scene, self.font_size).move(position=0),
+                InitiativeOverlay(text, self.scene, self.font_size).move(position=4),
             ]
 
     def change_font_size(self, by: int):
@@ -31,6 +31,10 @@ class InitiativeOverlayManager:
             current_text = self.overlays[0].text_raw
             self.clear()
             self.create(text=current_text)
+
+    def move(self):
+        for overlay in self.overlays:
+            overlay.move()
 
     def clear(self):
         for overlay in self.overlays:
@@ -62,10 +66,10 @@ class InitiativeOverlay:
         self.background.setPen(QColor(255, 255, 255, 150))
         self.background.setZValue(2)
 
-        self._put_text_in_background()
-
         scene.addItem(self.background)
         scene.addItem(self.text_item)
+
+        self.position: int = 0
 
     @staticmethod
     def _format_text(text: str) -> str:
@@ -94,36 +98,104 @@ class InitiativeOverlay:
                 out_lines.append(line)
         return "\n".join(out_lines)
 
-    def _put_text_in_background(self):
+    def move(self, position: int | None = None) -> "InitiativeOverlay":
+        positions = {
+            0: self.to_top_left,
+            1: self.to_top_right,
+            2: self.to_top_right_rotated,
+            3: self.to_bottom_right_rotated,
+            4: self.to_bottom_right,
+            5: self.to_bottom_left,
+            6: self.to_bottom_left_rotated,
+            7: self.to_top_left_rotated,
+        }
+        if position is not None:
+            self.position = position
+        else:
+            self.position += 1
+            if self.position == 8:
+                self.position = 0
+        positions[self.position]()
+        return self
+
+    def _width(self) -> float:
+        return self.background.boundingRect().width()
+
+    def _height(self) -> float:
+        return self.background.boundingRect().height()
+
+    def to_top_left(self):
+        self.background.setRotation(180)
+        self.text_item.setRotation(180)
+        self.background.setPos(self.margin + self._width(), self.margin + self._height())
+        self.text_item.setPos(
+            self.background.x() - self.padding, self.background.y() - self.padding
+        )
+
+    def to_top_left_rotated(self):
+        self.background.setRotation(90)
+        self.text_item.setRotation(90)
+        self.background.setPos(self.margin + self._height(), self.margin)
+        self.text_item.setPos(
+            self.background.x() - self.padding, self.background.y() + self.padding
+        )
+
+    def to_top_right(self):
+        self.background.setRotation(180)
+        self.text_item.setRotation(180)
+        self.background.setPos(self.scene.width() - self.margin, self.margin + self._height())
+        self.text_item.setPos(
+            self.background.x() - self.padding, self.background.y() - self.padding
+        )
+
+    def to_top_right_rotated(self):
+        self.background.setRotation(270)
+        self.text_item.setRotation(270)
+        self.background.setPos(
+            self.scene.width() - self._height() - self.margin, self.margin + self._width()
+        )
+        self.text_item.setPos(
+            self.background.x() + self.padding, self.background.y() - self.padding
+        )
+
+    def to_bottom_left(self):
+        self.background.setRotation(0)
+        self.text_item.setRotation(0)
+        self.background.setPos(self.margin, self.scene.height() - self._height() - self.margin)
         self.text_item.setPos(
             self.background.x() + self.padding, self.background.y() + self.padding
         )
 
-    def move_to_bottom_left(self):
+    def to_bottom_left_rotated(self):
+        self.background.setRotation(90)
+        self.text_item.setRotation(90)
         self.background.setPos(
-            self.margin, self.scene.height() - self.background.boundingRect().height() - self.margin
-        )
-        self._put_text_in_background()
-        return self
-
-    def move_to_top_right(self):
-        self.background.setPos(
-            self.scene.width() - self.background.boundingRect().width() - self.margin, self.margin
-        )
-        self._put_text_in_background()
-        return self
-
-    def flip(self):
-        self.text_item.setRotation(180)
-        self.background.setRotation(180)
-        self.background.setPos(
-            self.background.x() + self.background.boundingRect().width(),
-            self.background.y() + self.background.boundingRect().height(),
+            self.margin + self._height(), self.scene.height() - self._width() - self.margin
         )
         self.text_item.setPos(
-            self.background.x() - self.padding, self.background.y() - self.padding
+            self.background.x() - self.padding, self.background.y() + self.padding
         )
-        return self
+
+    def to_bottom_right(self):
+        self.background.setRotation(0)
+        self.text_item.setRotation(0)
+        self.background.setPos(
+            self.scene.width() - self._width() - self.margin,
+            self.scene.height() - self._height() - self.margin,
+        )
+        self.text_item.setPos(
+            self.background.x() + self.padding, self.background.y() + self.padding
+        )
+
+    def to_bottom_right_rotated(self):
+        self.background.setRotation(270)
+        self.text_item.setRotation(270)
+        self.background.setPos(
+            self.scene.width() - self._height() - self.margin, self.scene.height() - self.margin
+        )
+        self.text_item.setPos(
+            self.background.x() + self.padding, self.background.y() - self.padding
+        )
 
     def remove(self):
         self.scene.removeItem(self.background)

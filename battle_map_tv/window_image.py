@@ -84,6 +84,9 @@ class ImageWindow(QGraphicsView):
     def initiative_change_font_size(self, by: int):
         self.initiative_overlay_manager.change_font_size(by=by)
 
+    def initiative_move(self):
+        self.initiative_overlay_manager.move()
+
     def remove_initiative(self):
         self.initiative_overlay_manager.clear()
 

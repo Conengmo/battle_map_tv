@@ -317,6 +317,7 @@ class GuiWindow(QWidget):
 
         increase_font_button = StyledButton("+")
         decrease_font_button = StyledButton("-")
+        move_button = StyledButton("move")
 
         increase_font_button.clicked.connect(
             lambda: self.image_window.initiative_change_font_size(by=2)
@@ -324,6 +325,7 @@ class GuiWindow(QWidget):
         decrease_font_button.clicked.connect(
             lambda: self.image_window.initiative_change_font_size(by=-2)
         )
+        move_button.clicked.connect(lambda: self.image_window.initiative_move())
 
         subcontainer = QHBoxLayout()
         subcontainer.setSpacing(20)
@@ -331,3 +333,4 @@ class GuiWindow(QWidget):
 
         subcontainer.addWidget(increase_font_button)
         subcontainer.addWidget(decrease_font_button)
+        subcontainer.addWidget(move_button)
