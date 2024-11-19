@@ -41,10 +41,10 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "PySide6",
+    "PySide6!=6.6.3.*",
     "opencv-python",
     "numpy",
-    "scipy",
+    "platformdirs",
 ]
 
 [project.urls]
