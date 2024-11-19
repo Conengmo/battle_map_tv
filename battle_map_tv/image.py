@@ -1,4 +1,5 @@
 import os.path
+from typing import Tuple
 
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene
@@ -32,7 +33,7 @@ class CustomGraphicsPixmapItem(QGraphicsPixmapItem):
         super().mouseReleaseEvent(event)
         self.store_position()
 
-    def set_position(self, position: tuple[int, int]):
+    def set_position(self, position: Tuple[int, int]):
         self.setPos(
             position[0] - self.pixmap().width() // 2,
             position[1] - self.pixmap().height() // 2,

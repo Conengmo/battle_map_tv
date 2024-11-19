@@ -98,7 +98,7 @@ class InitiativeOverlay:
                 out_lines.append(line)
         return "\n".join(out_lines)
 
-    def move(self, position: int | None = None) -> "InitiativeOverlay":
+    def move(self, position: Optional[int] = None) -> "InitiativeOverlay":
         positions = {
             0: self.to_top_left,
             1: self.to_top_right,
