@@ -37,14 +37,24 @@ For GM's with little time or who improvise their sessions: much easier to use in
 
 ## Installation
 
+There are two options: use a fully ready executable or use Python.
+
+### Windows executable
+
+If you are on Windows, you can get an executable from the latest release. Look for 'battle-map-tv.exe'
+under 'Assets' on https://github.com/Conengmo/battle-map-tv/releases.
+
+### Using Python
+
 - Open terminal or cmd.
 - Check that you have Python installed by running the `python --version` command.
   - If you don't have Python, it's easy to install. See here: https://wiki.python.org/moin/BeginnersGuide/Download
+- Optionally, use a virtual environment
 - Install Battle Map TV with this command: `python -m pip install battle-map-tv`
 - Then run it with: `python -m battle_map_tv`
 
 
-## Manual
+## User guide
 
 - Drag the TV window to your TV and make it fullscreen with the 'fullscreen' button.
 - Use the 'add' button to load an image.
@@ -86,3 +96,18 @@ When creating a shape, hold 'shift' to freeze the size of the shape, but keep ro
 - Uses [PySide6](https://wiki.qt.io/Qt_for_Python) for the graphical user interface.
 - Uses [OpenCV](https://github.com/opencv/opencv-python) to detect the grid on battle maps.
 - Uses [Hatch](https://hatch.pypa.io/latest/) to build and release the package.
+- Uses [Nuitka](https://nuitka.net/) to create executables.
+
+### Nuitka guide
+
+Make sure you have a clean virtualenv with only the packages from requirements.txt.
+First, install `imageio` to be able to convert the icon image. Then create a single executable.
+This will require additional components that Nuitka will guide you through.
+
+```
+python -m pip install imageio
+
+python -m nuitka battle_map_tv/__main__.py --enable-plugin=pyside6 --onefile `
+--windows-console-mode=attach --windows-icon-from-ico=battle_map_tv/icon.png `
+--include-data-files="battle_map_tv/icon.png=battle_map_tv/icon.png"
+```
