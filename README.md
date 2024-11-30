@@ -11,7 +11,7 @@ No more features than needed: just show an image the way you want. Optionally ad
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![screenshot](https://github.com/Conengmo/battle-map-tv/assets/33519926/e6b5152f-b4d6-4856-82c8-eac182b2a3a3)
+![Screenshot](https://github.com/user-attachments/assets/db3c3d8e-2555-4ef0-b94f-4fba94605b59)
 
 
 ## Features
