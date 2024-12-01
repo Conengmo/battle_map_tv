@@ -11,8 +11,9 @@ No more features than needed: just show an image the way you want. Optionally ad
 
 For GM's with little time or who improvise their sessions: much easier to use in-session than a full blown VTT.
 
-![Screenshot](https://github.com/user-attachments/assets/db3c3d8e-2555-4ef0-b94f-4fba94605b59)
+![IMG_4856](https://github.com/user-attachments/assets/e34624eb-d7da-4804-b22b-2291513e68a8)
 
+*My GM laptop that also runs controls and a TV showing the map. Add minis, tokens or gummibears yourself.*
 
 ## Features
 - Works on Linux, macOS and Windows by using Python.
