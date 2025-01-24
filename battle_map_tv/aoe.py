@@ -31,6 +31,7 @@ class AreaOfEffectManager:
         self._store: List[BaseShape] = []
         self.rasterize = False
         self.snap_to_grid = False
+        self.fixed_size_ft: Optional[int] = None
         self.waiting_for: Optional[str] = None
         self.color = "white"
         self.start_point: Optional[Tuple[int, int]] = None
@@ -100,6 +101,13 @@ class AreaOfEffectManager:
         if self.snap_to_grid:
             self.grid = Grid(window=self.window)
             x1, y1 = self.grid.snap_to_grid(x=x1, y=y1)
+        if self.fixed_size_ft:
+            assert self.grid
+            size: Optional[float] = self.grid.feet_to_pixels(self.fixed_size_ft)
+        elif event.modifiers() == Qt.ShiftModifier:  # type: ignore[attr-defined]
+            size = self._previous_size
+        else:
+            size = None
         shape_obj = shape_cls(
             x1=x1,
             y1=y1,
@@ -107,7 +115,7 @@ class AreaOfEffectManager:
             y2=event.pos().y(),
             grid=self.grid,
             scene=self.scene,
-            size=self._previous_size if event.modifiers() == Qt.ShiftModifier else None,  # type: ignore[attr-defined]
+            size=size,
         )
         shape_obj.set_color(color=self.color)
         self._previous_size = shape_obj.size

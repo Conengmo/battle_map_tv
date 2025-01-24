@@ -101,6 +101,7 @@ class ImageWindow(QGraphicsView):
 
     def toggle_snap_to_grid_area_of_effect(self, enable: bool):
         self.area_of_effect_manager.snap_to_grid = enable
+        self.area_of_effect_manager.fixed_size_ft = 150 if enable else None
 
     def toggle_rasterize_area_of_effect(self, enable: bool):
         self.area_of_effect_manager.rasterize = enable

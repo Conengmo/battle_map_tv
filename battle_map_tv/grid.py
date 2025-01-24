@@ -71,6 +71,9 @@ class Grid:
     def pixels_to_feet(self, value: float) -> float:
         return 5 * value / self.pixels_per_inch_mean
 
+    def feet_to_pixels(self, value: int) -> float:
+        return value / self.pixels_to_feet(1)
+
 
 class GridOverlay:
     def __init__(
