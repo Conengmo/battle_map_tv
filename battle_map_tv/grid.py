@@ -76,24 +76,35 @@ class Grid:
         return 5 * value / self.pixels_per_square
 
 
+class GridOverlayColor:
+    min = -255
+    max = 255
+    default = 200
+
+    @classmethod
+    def get_color(cls, value: int) -> QColor:
+        c = 0 if value < 0 else 255
+        return QColor(c, c, c, abs(value))
+
+
 class GridOverlay:
     def __init__(
         self,
         window,
         grid: Grid,
-        opacity: int,
+        color_value: int,
     ):
         self.window = window
         self.scene = window.scene()
         self.grid = grid
-        self.opacity = opacity
+        self.color_value = color_value
 
         self.view = QGraphicsView()
         self.group: Optional[QGraphicsItemGroup] = None
         self.reset()
 
-    def update_opacity(self, opacity: int):
-        self.opacity = opacity
+    def update_color(self, value: int):
+        self.color_value = value
         self.reset()
 
     def delete(self):
@@ -109,7 +120,7 @@ class GridOverlay:
 
         pen = QPen()
         pen.setWidth(1)
-        pen.setColor(QColor(255, 255, 255, self.opacity))
+        pen.setColor(GridOverlayColor.get_color(self.color_value))
 
         for axis in (0, 1):
             for line_coordinates in self.grid.get_lines(axis=axis):
