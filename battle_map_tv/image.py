@@ -76,7 +76,6 @@ class Image:
             self.rotation = get_image_from_storage(
                 self.image_filename,
                 ImageKeys.rotation,
-                do_raise=True,
             )
         except KeyError:
             pass
@@ -89,7 +88,6 @@ class Image:
                 get_image_from_storage(
                     self.image_filename,
                     ImageKeys.scale,
-                    do_raise=True,
                 )
             )
         except KeyError:
@@ -106,7 +104,6 @@ class Image:
             position = get_image_from_storage(
                 self.image_filename,
                 ImageKeys.position,
-                do_raise=True,
             )
         except KeyError:
             self.center()

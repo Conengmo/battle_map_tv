@@ -69,15 +69,14 @@ class ImageKeys(Enum):
 def get_image_from_storage(
     image_filename: str,
     key: ImageKeys,
-    default=None,
-    do_raise: bool = False,
+    default=Undefined,
 ):
     data = _load()
     try:
         image_data = data[image_filename]
         return image_data[key.value]
     except KeyError:
-        if do_raise:
+        if default is Undefined:
             raise
         return default
 
