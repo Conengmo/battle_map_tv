@@ -8,8 +8,6 @@ from PySide6.QtWidgets import QGraphicsView, QGraphicsItemGroup, QWidget
 from battle_map_tv.utils import size_to_tuple
 from storage import get_from_storage, StorageKeys, set_in_storage
 
-mm_to_inch = 0.03937007874
-
 
 class Grid:
     def __init__(self, window: QWidget):
