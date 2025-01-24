@@ -77,17 +77,14 @@ class Grid:
 
 
 class GridOverlayColor:
-    min = -100
-    max = 100
-    default = 70
+    min = -255
+    max = 255
+    default = 200
 
     @classmethod
     def get_color(cls, value: int) -> QColor:
-        opacity = int(255 * abs(value) / 100)
-        if value < 0:
-            return QColor(0, 0, 0, opacity)
-        else:
-            return QColor(255, 255, 255, opacity)
+        c = 0 if value < 0 else 255
+        return QColor(c, c, c, abs(value))
 
 
 class GridOverlay:
