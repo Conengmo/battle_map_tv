@@ -10,7 +10,7 @@ from battle_map_tv.grid import Grid
 def circle_to_polygon(
     x_center: int, y_center: int, radius: int, grid: Grid
 ) -> List[Tuple[int, int]]:
-    delta = grid.pixels_per_inch_mean
+    delta = grid.pixels_per_square
     radius = radius - radius % delta
     if radius < delta:
         return []
@@ -86,7 +86,7 @@ class CircleEdges:
 def rasterize_cone(x1: int, y1: int, size: int, angle: float, grid: Grid) -> List[Tuple[int, int]]:
     if size == 0:
         return []
-    delta = grid.pixels_per_inch_mean
+    delta = grid.pixels_per_square
     point_0 = (x1, y1)
     point_1, point_2 = calculate_cone_points(point_0=point_0, size=size, angle=angle)
     x_points, y_points = rasterize_cone_by_pixels(

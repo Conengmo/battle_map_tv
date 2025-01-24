@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class AreaOfEffectManager:
-    def __init__(self, window: "ImageWindow"):
+    def __init__(self, window: "ImageWindow", grid: Grid):
         self.window = window
         self.scene = window.scene()
         self._store: List[BaseShape] = []
@@ -36,7 +36,7 @@ class AreaOfEffectManager:
         self.start_point: Optional[Tuple[int, int]] = None
         self.temp_obj: Optional[BaseShape] = None
         self.callback: Optional[Callable] = None
-        self.grid: Optional[Grid] = None
+        self.grid = grid
         self._previous_size: Optional[float] = None
 
     def wait_for(self, shape: str, callback: Callable):
@@ -49,7 +49,6 @@ class AreaOfEffectManager:
         self.waiting_for = None
         self.start_point = None
         self.callback = None
-        self.grid = None
 
     def clear_all(self):
         for shape_obj in self._store:
@@ -98,7 +97,6 @@ class AreaOfEffectManager:
         shape_cls = shapes_dict[self.waiting_for]
         x1, y1 = self.start_point
         if self.snap_to_grid:
-            self.grid = Grid(window=self.window)
             x1, y1 = self.grid.snap_to_grid(x=x1, y=y1)
         shape_obj = shape_cls(
             x1=x1,

@@ -5,7 +5,7 @@ from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QGraphicsView, QGraphicsScene
 
 from battle_map_tv.aoe import AreaOfEffectManager
-from battle_map_tv.grid import GridOverlay
+from battle_map_tv.grid import GridOverlay, Grid
 from battle_map_tv.image import Image
 from battle_map_tv.initiative import InitiativeOverlayManager
 from battle_map_tv.storage import get_from_storage, StorageKeys
@@ -32,9 +32,10 @@ class ImageWindow(QGraphicsView):
         self.setScene(scene)
 
         self.image: Optional[Image] = None
+        self.grid = Grid(window=self)
         self.grid_overlay: Optional[GridOverlay] = None
         self.initiative_overlay_manager = InitiativeOverlayManager(scene=scene)
-        self.area_of_effect_manager = AreaOfEffectManager(window=self)
+        self.area_of_effect_manager = AreaOfEffectManager(window=self, grid=self.grid)
 
     def toggle_fullscreen(self):
         if self.isFullScreen():
@@ -67,7 +68,7 @@ class ImageWindow(QGraphicsView):
     def add_grid(self, opacity: int):
         if self.grid_overlay is not None:
             self.remove_grid()
-        self.grid_overlay = GridOverlay(window=self, opacity=opacity)
+        self.grid_overlay = GridOverlay(window=self, grid=self.grid, opacity=opacity)
 
     def update_screen_size_mm(self):
         if self.grid_overlay is not None:
@@ -114,6 +115,7 @@ class ImageWindow(QGraphicsView):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.scene().setSceneRect(0, 0, self.size().width(), self.size().height())
+        self.grid.calculate()
         if self.grid_overlay is not None:
             self.grid_overlay.reset()
 

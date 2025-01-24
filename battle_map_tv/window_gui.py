@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Optional
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -10,13 +10,10 @@ from PySide6.QtWidgets import (
     QApplication,
 )
 
-from battle_map_tv import global_vars
 from battle_map_tv.aoe import area_of_effect_shapes_to_class
 from battle_map_tv.events import global_event_dispatcher, EventKeys
-from battle_map_tv.storage import set_in_storage, StorageKeys, get_from_storage, remove_from_storage
 from battle_map_tv.ui_elements import (
     StyledButton,
-    StyledLineEdit,
     StyledSlider,
     get_window_icon,
     StyledTextEdit,
@@ -48,8 +45,6 @@ class GuiWindow(QWidget):
         """
         )
 
-        self.screen_size_mm: Optional[Tuple[int, int]] = None
-
         self._superlayout = QHBoxLayout(self)
         self._superlayout.setAlignment(Qt.AlignVCenter)  # type: ignore[attr-defined]
         self._superlayout.setContentsMargins(60, 80, 80, 80)
@@ -62,7 +57,6 @@ class GuiWindow(QWidget):
 
         self.add_row_image_buttons()
         self.add_row_scale_slider()
-        self.add_row_screen_size()
         self.add_row_grid()
         self.add_row_area_of_effect()
         self.add_row_app_controls()
@@ -171,76 +165,45 @@ class GuiWindow(QWidget):
         label.setMinimumWidth(40)
         container.addWidget(label)
 
-    def add_row_screen_size(self):
-        container = self._create_container()
-
-        label = QLabel("Screen size (mm)")
-        container.addWidget(label)
-
-        screen_width_input = StyledLineEdit(max_length=4, placeholder="width")
-        container.addWidget(screen_width_input)
-
-        screen_height_input = StyledLineEdit(max_length=4, placeholder="height")
-        container.addWidget(screen_height_input)
-
-        try:
-            screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
-        except KeyError:
-            pass
-        else:
-            assert screen_size_mm
-            global_vars.screen_size_mm = screen_size_mm
-            screen_width_input.setText(str(screen_size_mm[0]))
-            screen_height_input.setText(str(screen_size_mm[1]))
-
-        def set_screen_size_callback():
-            width_str = screen_width_input.text()
-            height_str = screen_height_input.text()
-            if not width_str and not height_str:
-                remove_from_storage(StorageKeys.screen_size_mm)
-                global_vars.screen_size_mm = None
-                self.image_window.update_screen_size_mm()
-                return
-
-            try:
-                width_mm = int(width_str)
-                height_mm = int(height_str)
-            except ValueError:
-                pass
-            else:
-                screen_size_mm = (width_mm, height_mm)
-                set_in_storage(StorageKeys.screen_size_mm, screen_size_mm)
-                global_vars.screen_size_mm = screen_size_mm
-                self.image_window.update_screen_size_mm()
-
-        button = StyledButton("Set")
-        button.clicked.connect(set_screen_size_callback)
-        container.addWidget(button)
-
     def add_row_grid(self):
         container = self._create_container()
 
-        label = QLabel("Grid opacity")
+        label = QLabel("Grid scale")
         container.addWidget(label)
+
+        def slider_grid_size_callback(value: int):
+            self.image_window.grid.set_size(value)
+            if self.image_window.grid_overlay is not None:
+                self.image_window.grid_overlay.reset()
+
+        slider_grid_size = StyledSlider(lower=10, upper=400, default=40)
+        slider_grid_size.valueChanged.connect(slider_grid_size_callback)
+        container.addWidget(slider_grid_size)
 
         slider_factor = 100
 
-        def slider_callback(value: int):
+        def slider_grid_opacity_callback(value: int):
             if self.image_window.grid_overlay is not None:
                 self.image_window.grid_overlay.update_opacity(normalize_slider_value(value))
 
         def normalize_slider_value(value: int) -> int:
+            """Normalize a value between 0 and 100 to 0 and 255"""
             return int(255 * value / slider_factor)
 
-        slider = StyledSlider(lower=0, upper=slider_factor, default=int(0.7 * slider_factor))
-        slider.valueChanged.connect(slider_callback)
-        container.addWidget(slider)
+        label = QLabel("Grid opacity")
+        container.addWidget(label)
+
+        slider_grid_opacity = StyledSlider(
+            lower=0, upper=slider_factor, default=int(0.7 * slider_factor)
+        )
+        slider_grid_opacity.valueChanged.connect(slider_grid_opacity_callback)
+        container.addWidget(slider_grid_opacity)
 
         def toggle_grid_callback(value: bool):
             if self.image_window.grid_overlay is not None:
                 self.image_window.remove_grid()
             else:
-                opacity = normalize_slider_value(slider.value())
+                opacity = normalize_slider_value(slider_grid_opacity.value())
                 self.image_window.add_grid(opacity=opacity)
             self.image_window.toggle_snap_to_grid_area_of_effect(enable=value)
             global_event_dispatcher.dispatch_event(EventKeys.toggle_grid, value)
