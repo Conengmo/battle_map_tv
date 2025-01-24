@@ -5,7 +5,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QGraphicsPixmapItem, QGraphicsScene
 
 from battle_map_tv.events import global_event_dispatcher, EventKeys
-from battle_map_tv.grid import mm_to_inch
+from battle_map_tv.grid import Grid
 from battle_map_tv.scale_detection import find_image_scale
 from battle_map_tv.storage import (
     set_image_in_storage,
@@ -13,7 +13,6 @@ from battle_map_tv.storage import (
     get_image_from_storage,
     set_in_storage,
     StorageKeys,
-    get_from_storage,
 )
 
 
@@ -129,14 +128,7 @@ class Image:
     def scale(self, value: float):
         self.pixmap_item.set_scale(value)
 
-    def autoscale(self):
-        try:
-            screen_size_mm = get_from_storage(StorageKeys.screen_size_mm)
-        except KeyError:
-            return
-
-        screen_px_per_mm = self.scene.views()[0].screen().size().width() / screen_size_mm[0]
-        px_per_inch = find_image_scale(self.filepath)
-        px_per_mm = px_per_inch * mm_to_inch
-        scale = screen_px_per_mm / px_per_mm
+    def autoscale(self, grid: Grid):
+        image_px_per_square = find_image_scale(self.filepath)
+        scale = grid.pixels_per_square / image_px_per_square
         self.scale(scale)
