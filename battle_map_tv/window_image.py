@@ -65,10 +65,10 @@ class ImageWindow(QGraphicsView):
             self.remove_image()
             self.add_image(image_path=previous_image)
 
-    def add_grid(self, opacity: int):
+    def add_grid(self, color_value: int):
         if self.grid_overlay is not None:
             self.remove_grid()
-        self.grid_overlay = GridOverlay(window=self, grid=self.grid, opacity=opacity)
+        self.grid_overlay = GridOverlay(window=self, grid=self.grid, color_value=color_value)
 
     def update_screen_size_mm(self):
         if self.grid_overlay is not None:

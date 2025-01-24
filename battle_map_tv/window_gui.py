@@ -21,6 +21,7 @@ from battle_map_tv.ui_elements import (
     FixedRowGridLayout,
 )
 from battle_map_tv.window_image import ImageWindow
+from grid import GridOverlayColor
 
 
 class GuiWindow(QWidget):
@@ -182,31 +183,24 @@ class GuiWindow(QWidget):
         slider_grid_size.valueChanged.connect(slider_grid_size_callback)
         container.addWidget(slider_grid_size)
 
-        slider_factor = 100
-
-        def slider_grid_opacity_callback(value: int):
+        def slider_grid_color_callback(value: int):
             if self.image_window.grid_overlay is not None:
-                self.image_window.grid_overlay.update_opacity(normalize_slider_value(value))
+                self.image_window.grid_overlay.update_color(value)
 
-        def normalize_slider_value(value: int) -> int:
-            """Normalize a value between 0 and 100 to 0 and 255"""
-            return int(255 * value / slider_factor)
-
-        label = QLabel("Grid opacity")
+        label = QLabel("Grid color")
         container.addWidget(label)
 
-        slider_grid_opacity = StyledSlider(
-            lower=0, upper=slider_factor, default=int(0.7 * slider_factor)
+        slider_grid_color = StyledSlider(
+            lower=GridOverlayColor.min, upper=GridOverlayColor.max, default=GridOverlayColor.default
         )
-        slider_grid_opacity.valueChanged.connect(slider_grid_opacity_callback)
-        container.addWidget(slider_grid_opacity)
+        slider_grid_color.valueChanged.connect(slider_grid_color_callback)
+        container.addWidget(slider_grid_color)
 
         def toggle_grid_callback(value: bool):
             if self.image_window.grid_overlay is not None:
                 self.image_window.remove_grid()
             else:
-                opacity = normalize_slider_value(slider_grid_opacity.value())
-                self.image_window.add_grid(opacity=opacity)
+                self.image_window.add_grid(color_value=slider_grid_color.value())
             self.image_window.toggle_snap_to_grid_area_of_effect(enable=value)
             global_event_dispatcher.dispatch_event(EventKeys.toggle_grid, value)
 
