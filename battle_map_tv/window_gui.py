@@ -130,7 +130,7 @@ class GuiWindow(QWidget):
 
         def button_autoscale_callback():
             if self.image_window.image is not None:
-                self.image_window.image.autoscale()
+                self.image_window.image.autoscale(grid=self.image_window.grid)
 
         button = StyledButton("Autoscale")
         button.clicked.connect(button_autoscale_callback)
