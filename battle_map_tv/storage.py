@@ -25,6 +25,7 @@ def _dump(data: Dict[str, Any]):
 
 
 class StorageKeys(Enum):
+    pixels_per_square = "pixels_per_square"
     previous_image = "previous_image"
     initiative_font_size = "initiative_font_size"
     thumbnail_0 = "thumbnail_0"
@@ -33,15 +34,18 @@ class StorageKeys(Enum):
     thumbnail_3 = "thumbnail_3"
 
 
-def get_from_storage(key: StorageKeys, optional: bool = False):
+class Undefined:
+    pass
+
+
+def get_from_storage(key: StorageKeys, default=Undefined):
     data = _load()
     try:
         return data[key.value]
     except KeyError:
-        if optional:
-            return None
-        else:
+        if default is Undefined:
             raise
+        return default
 
 
 def set_in_storage(key: StorageKeys, value: Any):

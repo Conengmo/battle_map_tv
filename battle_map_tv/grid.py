@@ -6,6 +6,7 @@ from PySide6.QtGui import QPen, QColor
 from PySide6.QtWidgets import QGraphicsView, QGraphicsItemGroup, QWidget
 
 from battle_map_tv.utils import size_to_tuple
+from storage import get_from_storage, StorageKeys, set_in_storage
 
 mm_to_inch = 0.03937007874
 
@@ -14,7 +15,7 @@ class Grid:
     def __init__(self, window: QWidget):
         self.window = window
 
-        self.pixels_per_square: int = 40
+        self.pixels_per_square: int = get_from_storage(StorageKeys.pixels_per_square, default=40)
         self.n_lines: Tuple[int, int]
         self.offset: Tuple[int, int]
 
@@ -40,8 +41,8 @@ class Grid:
         )
 
     def set_size(self, value: int):
-        """Value is in pixels"""
         self.pixels_per_square = value
+        set_in_storage(StorageKeys.pixels_per_square, value)
         self.calculate()
 
     def get_lines(self, axis: int) -> List[Tuple[int, int, int, int]]:

@@ -176,7 +176,9 @@ class GuiWindow(QWidget):
             if self.image_window.grid_overlay is not None:
                 self.image_window.grid_overlay.reset()
 
-        slider_grid_size = StyledSlider(lower=10, upper=400, default=40)
+        slider_grid_size = StyledSlider(
+            lower=10, upper=400, default=self.image_window.grid.pixels_per_square
+        )
         slider_grid_size.valueChanged.connect(slider_grid_size_callback)
         container.addWidget(slider_grid_size)
 

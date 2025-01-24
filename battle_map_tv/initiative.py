@@ -10,10 +10,7 @@ from battle_map_tv.storage import get_from_storage, StorageKeys, set_in_storage
 class InitiativeOverlayManager:
     def __init__(self, scene):
         self.scene = scene
-        try:
-            self.font_size = get_from_storage(StorageKeys.initiative_font_size)
-        except KeyError:
-            self.font_size = 20
+        self.font_size = get_from_storage(StorageKeys.initiative_font_size, default=20)
         self.overlays = []
 
     def create(self, text: str):
