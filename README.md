@@ -26,9 +26,8 @@ For GM's with little time or who improvise their sessions: much easier to use in
   - one on your GM laptop with controls
 - Import local image files to display on the tv.
 - Scale, pan, center and rotate the image.
-- Store the physical size of your screen to enable grid and autoscaling.
-- Overlay a 1-inch grid.
-- Automatically detect the grid in an image and scale to a 1 inch grid.
+- Overlay a grid that you can scale to 1 inch.
+- Automatically detect the lines in an image and scale it to the grid overlay.
 - Save settings so images load like you had them last time.
 - Simple initiative tracker
 - Overlay area of effects
@@ -62,11 +61,6 @@ under 'Assets' on https://github.com/Conengmo/battle-map-tv/releases.
 - You can drag the image to pan. Zoom with your mouse scroll wheel or use the slider in the controls window.
 - Close the application with the 'exit' button.
 
-### Set screen size
-
-There are two text boxes to enter the physical dimensions of your secondary screen in milimeters.
-This is needed to display a grid overlay and autoscale the image to 1 inch.
-
 ### Initiative tracker
 
 In the controls window, you can add players and their initiative. The list will be sorted automatically.
@@ -76,7 +70,7 @@ The '+' and '-' buttons increase and decrease the font size.
 
 The 'move' button moves the lists to different positions and rotations on the screen.
 
-## Area of effect
+### Area of effect
 
 Click on one of the buttons for a shape like 'circle' or 'square'. Then click and drag anywhere in the TV window
 to create the shape in the size you want.
