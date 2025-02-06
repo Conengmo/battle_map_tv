@@ -20,8 +20,8 @@ from battle_map_tv.ui_elements import (
     ColorSelectionWindow,
     FixedRowGridLayout,
 )
-from battle_map_tv.window_image import ImageWindow
-from grid import GridOverlayColor
+from .window_image import ImageWindow
+from .grid import GridOverlayColor
 
 
 class GuiWindow(QWidget):

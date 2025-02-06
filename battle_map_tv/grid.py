@@ -5,8 +5,8 @@ from PySide6.QtCore import QLineF
 from PySide6.QtGui import QPen, QColor
 from PySide6.QtWidgets import QGraphicsView, QGraphicsItemGroup, QWidget
 
-from battle_map_tv.utils import size_to_tuple
-from storage import get_from_storage, StorageKeys, set_in_storage
+from .utils import size_to_tuple
+from .storage import get_from_storage, StorageKeys, set_in_storage
 
 
 class Grid:
