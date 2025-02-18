@@ -103,7 +103,7 @@ class AreaOfEffectManager:
             y1=y1,
             x2=event.pos().x(),
             y2=event.pos().y(),
-            grid=self.grid,
+            grid=self.grid if self.snap_to_grid else None,
             scene=self.scene,
             size=self._previous_size if event.modifiers() == Qt.ShiftModifier else None,  # type: ignore[attr-defined]
         )
