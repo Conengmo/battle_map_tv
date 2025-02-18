@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Callable, List, Tuple, TYPE_CHECKING
+from typing import Optional, Callable, Tuple, TYPE_CHECKING, Dict
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QBrush, QMouseEvent, Qt, QPolygonF, QTransform, QFont
@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (
     QGraphicsPolygonItem,
     QGraphicsSceneMouseEvent,
     QAbstractGraphicsShapeItem,
-    QGraphicsScene,
     QGraphicsTextItem,
 )
 
@@ -28,7 +27,7 @@ class AreaOfEffectManager:
     def __init__(self, window: "ImageWindow", grid: Grid):
         self.window = window
         self.scene = window.scene()
-        self._store: List[BaseShape] = []
+        self.shape_store: Dict[int, BaseShape] = {}
         self.rasterize = False
         self.snap_to_grid = False
         self.waiting_for: Optional[str] = None
@@ -46,14 +45,14 @@ class AreaOfEffectManager:
     def cancel(self):
         if self.temp_obj is not None:
             self.temp_obj.remove()
+            self.temp_obj = None
         self.waiting_for = None
         self.start_point = None
         self.callback = None
 
     def clear_all(self):
-        for shape_obj in self._store:
+        for shape_obj in list(self.shape_store.values()):
             shape_obj.remove()
-        self._store = []
 
     def mouse_press_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
@@ -76,11 +75,9 @@ class AreaOfEffectManager:
     def mouse_release_event(self, event: QMouseEvent) -> bool:
         if self.waiting_for is not None:
             assert self.callback
-            if self.temp_obj is not None:
-                self.temp_obj.remove()
             shape_obj = self._create_shape_obj(event=event)
             shape_obj.set_is_movable()
-            self._store.append(shape_obj)
+            self.shape_store[id(shape_obj)] = shape_obj
             self.callback()
             self.cancel()
             return True
@@ -103,8 +100,7 @@ class AreaOfEffectManager:
             y1=y1,
             x2=event.pos().x(),
             y2=event.pos().y(),
-            grid=self.grid if self.snap_to_grid else None,
-            scene=self.scene,
+            manager=self,
             size=self._previous_size if event.modifiers() == Qt.ShiftModifier else None,  # type: ignore[attr-defined]
         )
         shape_obj.set_color(color=self.color)
@@ -113,40 +109,51 @@ class AreaOfEffectManager:
 
 
 class BaseShape:
+    manager: AreaOfEffectManager
     shape: QAbstractGraphicsShapeItem
     label: QGraphicsTextItem
     label_background: QGraphicsRectItem
     size: float
     angle_snap_factor = 32 / 2 / math.pi
 
-    def __init__(self, scene: QGraphicsScene):
+    def __init__(self, manager: AreaOfEffectManager):
+        self.manager = manager
+
+    def _add_shape(self, shape: QAbstractGraphicsShapeItem):
+        self.shape = shape
         self.shape.mousePressEvent = self._mouse_press_event  # type: ignore[method-assign]
-        self.scene = scene
-        self.scene.addItem(self.shape)
+        self.manager.scene.addItem(self.shape)
 
     def remove(self):
-        self.scene.removeItem(self.shape)
+        self.manager.scene.removeItem(self.shape)
         try:
-            self.scene.removeItem(self.label)
-            self.scene.removeItem(self.label_background)
+            self.manager.scene.removeItem(self.label)
+            self.manager.scene.removeItem(self.label_background)
         except AttributeError:
+            pass
+        try:
+            del self.manager.shape_store[id(self)]
+        except KeyError:
             pass
 
     def _mouse_press_event(self, event: QGraphicsSceneMouseEvent):
         if event.button() == Qt.RightButton:  # type: ignore[attr-defined]
             self.remove()
 
-    def _get_angle_radians(self, x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
+    def _get_angle_radians(self, x1: int, y1: int, x2: int, y2: int) -> float:
         angle = math.atan2(y2 - y1, x2 - x1)
-        if grid is not None:
+        if self.manager.snap_to_grid:
             angle = round(angle * self.angle_snap_factor) / self.angle_snap_factor
         return angle
 
     @staticmethod
-    def _calculate_size(x1: int, y1: int, x2: int, y2: int, grid: Optional[Grid]) -> float:
-        size = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-        if grid is not None:
-            size = grid.normalize_size(size=size)
+    def _calculate_size_without_snapping(x1: int, y1: int, x2: int, y2: int) -> float:
+        return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+    def _calculate_size(self, x1: int, y1: int, x2: int, y2: int) -> float:
+        size = self._calculate_size_without_snapping(x1=x1, y1=y1, x2=x2, y2=y2)
+        if self.manager.snap_to_grid:
+            size = self.manager.grid.normalize_size(size=size)
         return size
 
     def set_color(self, color):
@@ -181,8 +188,8 @@ class BaseShape:
         self.label.setZValue(3)
         self.label_background.setZValue(2)
 
-        self.scene.addItem(self.label)
-        self.scene.addItem(self.label_background)
+        self.manager.scene.addItem(self.label)
+        self.manager.scene.addItem(self.label_background)
 
 
 class Circle(BaseShape):
@@ -192,18 +199,19 @@ class Circle(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
-        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        self.shape = QGraphicsEllipseItem(
-            x1 - self.size,
-            y1 - self.size,
-            2 * self.size,
-            2 * self.size,
+        super().__init__(manager=manager)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+        self._add_shape(
+            QGraphicsEllipseItem(
+                x1 - self.size,
+                y1 - self.size,
+                2 * self.size,
+                2 * self.size,
+            )
         )
-        super().__init__(scene=scene)
 
 
 class CircleRasterized(BaseShape):
@@ -213,22 +221,21 @@ class CircleRasterized(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
-        assert grid is not None
-        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
+        super().__init__(manager=manager)
+        assert manager.snap_to_grid
+        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2))
         polygon = QPolygonF.fromList(
             [
                 QPointF(*point)
                 for point in circle_to_polygon(
-                    x_center=x1, y_center=y1, radius=self.size, grid=grid
+                    x_center=x1, y_center=y1, radius=self.size, grid=manager.grid
                 )
             ]
         )
-        self.shape = QGraphicsPolygonItem(polygon)
-        super().__init__(scene=scene)
+        self._add_shape(QGraphicsPolygonItem(polygon))
 
 
 class Square(BaseShape):
@@ -238,17 +245,19 @@ class Square(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
+        super().__init__(manager=manager)
         if size is not None:
             self.size = size
         else:
-            self.size = self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=None) / math.sqrt(2)
-            if grid is not None:
-                self.size = grid.normalize_size(size=self.size)
-        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+            self.size = self._calculate_size_without_snapping(
+                x1=x1, y1=y1, x2=x2, y2=y2
+            ) / math.sqrt(2)
+            if manager.snap_to_grid:
+                self.size = manager.grid.normalize_size(size=self.size)
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
         point_2 = (
             x1 + self.size * math.sqrt(2) * math.cos(angle),
             y1 + self.size * math.sqrt(2) * math.sin(angle),
@@ -261,10 +270,11 @@ class Square(BaseShape):
             x1 + self.size * math.cos(angle - math.pi / 4),
             y1 + self.size * math.sin(angle - math.pi / 4),
         )
-        self.shape = QGraphicsPolygonItem(
-            QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2, point_3]])
+        self._add_shape(
+            QGraphicsPolygonItem(
+                QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2, point_3]])
+            )
         )
-        super().__init__(scene=scene)
 
 
 class Cone(BaseShape):
@@ -274,16 +284,15 @@ class Cone(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
-        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        super().__init__(manager=manager)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
         point_1, point_2 = calculate_cone_points(point_0=(x1, y1), size=self.size, angle=angle)
         triangle = QPolygonF.fromList([QPointF(*p) for p in [(x1, y1), point_1, point_2]])
-        self.shape = QGraphicsPolygonItem(triangle)
-        super().__init__(scene=scene)
+        self._add_shape(QGraphicsPolygonItem(triangle))
 
 
 class ConeRasterized(BaseShape):
@@ -293,21 +302,22 @@ class ConeRasterized(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
-        assert grid is not None
-        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid))
-        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        super().__init__(manager=manager)
+        assert manager.snap_to_grid
+        self.size: int = int(size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2))
+        angle = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
         polygon = QPolygonF.fromList(
             [
                 QPointF(*point)
-                for point in rasterize_cone(x1=x1, y1=y1, size=self.size, angle=angle, grid=grid)
+                for point in rasterize_cone(
+                    x1=x1, y1=y1, size=self.size, angle=angle, grid=manager.grid
+                )
             ]
         )
-        self.shape = QGraphicsPolygonItem(polygon)
-        super().__init__(scene=scene)
+        self._add_shape(QGraphicsPolygonItem(polygon))
 
 
 class Line(BaseShape):
@@ -317,20 +327,20 @@ class Line(BaseShape):
         y1: int,
         x2: int,
         y2: int,
-        grid: Optional[Grid],
-        scene: QGraphicsScene,
+        manager: AreaOfEffectManager,
         size: Optional[float] = None,
     ):
+        super().__init__(manager=manager)
         width = 20
-        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
-        self.shape = QGraphicsRectItem(0, -width / 2, self.size, width)
+        self.size = size or self._calculate_size(x1=x1, y1=y1, x2=x2, y2=y2)
+        shape = QGraphicsRectItem(0, -width / 2, self.size, width)
         transform = QTransform()
         transform.translate(x1, y1)
-        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2, grid=grid)
+        angle_radians = self._get_angle_radians(x1=x1, y1=y1, x2=x2, y2=y2)
         angle_degrees = math.degrees(angle_radians)
         transform.rotate(angle_degrees)
-        self.shape.setTransform(transform)
-        super().__init__(scene=scene)
+        shape.setTransform(transform)
+        self._add_shape(shape=shape)
 
 
 area_of_effect_shapes_to_class = {
